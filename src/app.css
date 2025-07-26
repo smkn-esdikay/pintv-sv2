@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+
+@layer components {
+
+  h1 {
+    @apply text-[2.4rem];
+  }
+  h2 {
+    @apply text-[2rem];
+  }
+
+};
+
