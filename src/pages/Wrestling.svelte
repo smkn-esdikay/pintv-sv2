@@ -12,7 +12,7 @@
 
 </script>
 
-<div class="page">
+<div class="master-grid">
   <div class="card-red">
 
 
@@ -39,9 +39,12 @@
 
 <style>
   
-  .page {
-    @apply w-full min-h-screen
-      flex flex-row items-start justify-between gap-4;
+  .master-grid {
+    @apply 
+      w-full min-h-screen
+      grid grid-flow-col gap-4
+      p-2
+    ;
   }
 
   .page > * {
@@ -49,7 +52,7 @@
   }
 
   .card-base {
-    @apply flex flex-col w-full 
+    @apply flex flex-col w-full
     sm:p-2 p-1 
     rounded-xl
     border-[0.6px] border-slate-500

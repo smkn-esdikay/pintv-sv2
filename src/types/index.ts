@@ -4,7 +4,7 @@ import type { ZonkClock } from "@/lib/ZonkClock";
  * ----------------------- General -----------------------
  */
 export type WeightUnit = 'lbs' | 'kg';
-
+export type SideColor = 'red' | 'green' | 'blue';
 
 
 /**
@@ -88,6 +88,7 @@ export type WMatch = {
 }
 
 export type WStateSide = {
+  color: SideColor;
   showChoosePos: boolean;
   pos: WPos;
   teamName: string;
