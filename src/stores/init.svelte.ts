@@ -14,6 +14,7 @@ class InitStore {
   get age() { return this.data.age; }
   get periodLengths() { return this.data.periodLengths; }
   get team() { return this.data.team; }
+  get config() { return this.data; }
 
   /**
    * @param {WConfig} newData - set the init data

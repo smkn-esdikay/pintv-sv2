@@ -1,13 +1,12 @@
 <script lang="ts">
-  import { initStore } from "@/stores/init.svelte";
-  import ZonkButton from "@/components/_UI/ZonkButton.svelte";
   import { navigate } from "@/lib/router.svelte";
+  import { initStore } from "@/stores/init.svelte";
+  import { WrestlingManager } from "@/lib/WrestlingManager.svelte";
+  import ZonkButton from "@/components/_UI/ZonkButton.svelte";
 
-  const style = initStore.style;
-  const age = initStore.age;
-  const periodLengths = initStore.periodLengths;
-  const team = initStore.team;
-  
+  const config = initStore.config;
+  const manager = WrestlingManager.getInstance();
+  manager.initializeMatch(config);
   
 
 </script>
@@ -16,10 +15,6 @@
   <div class="card-red">
 
 
-    <div>
-
-      {style} {age} {team}
-    </div>
     <ZonkButton
       color="grey"
       size="md"
@@ -42,7 +37,7 @@
   .master-grid {
     @apply 
       w-full min-h-screen
-      grid grid-flow-col gap-4
+      grid grid-cols-3 gap-4
       p-2
     ;
   }
