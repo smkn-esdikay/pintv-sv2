@@ -1,11 +1,11 @@
 <script lang="ts">
   import ZonkDropdown from '@/components/_UI/ZonkDropdown.svelte';
-  import type { WPos } from '@/types';
+  import type { SideColor } from '@/types';
 
   interface Props {
-    selected: WPos;
+    selected: SideColor;
     className?: string;
-    onSelected: (position: WPos) => void;
+    onSelected: (color: SideColor) => void;
   }
 
   let {
@@ -13,10 +13,10 @@
     onSelected
   }: Props = $props();
 
-  const positions = [
-    { value: 't', label: 'Top' },
-    { value: 'n', label: 'Neutral' },
-    { value: 'b', label: 'Bottom' },
+  const colors = [
+    { value: 'red', label: 'Red' },
+    { value: 'green', label: 'Green' },
+    { value: 'blue', label: 'Blue' },
   ];
 
   $effect(() => {
@@ -28,7 +28,7 @@
 <div class="w-full">
   <ZonkDropdown
     bind:value={selected}
-    options={positions}
+    options={colors}
     className="w-full"
   />
 </div>

@@ -2,32 +2,71 @@
   import { navigate } from "@/lib/router.svelte";
   import { initStore } from "@/stores/init.svelte";
   import { WrestlingManager } from "@/lib/WrestlingManager.svelte";
+
+  import Position from '@/components/Position.svelte';
+  import Color from "@/components/Color.svelte";
   import ZonkButton from "@/components/_UI/ZonkButton.svelte";
+    import type { SideColor, WPos, WSide } from "@/types";
 
   const config = initStore.config;
   const manager = WrestlingManager.getInstance();
   manager.initializeMatch(config);
   
+  // Get reactive state from manager
+  let current = $derived(manager.current);
+  
+  function handlePositionChange(side: WSide, newPosition: WPos) {
+    console.log('pos change', side, newPosition)
+    manager.setPosition(side, newPosition);
+  }
+
+  function handleColorChange(side: WSide, newColor: SideColor) {
+    console.log('col', side, newColor)
+    manager.setColor(side, newColor);
+  }
 
 </script>
 
 <div class="master-grid">
   <div class="card-red">
 
+    <div class="flex flex-row gap-4 items-center">
+      <Position 
+        bind:selected={current.l.pos}
+        onSelected={(pos) => handlePositionChange('l', pos)}
+      />
+      <Color 
+        bind:selected={current.l.color}
+        onSelected={(color) => handleColorChange('l', color)}
+      />
+    </div>
 
-    <ZonkButton
-      color="grey"
-      size="md"
-      onclick={() => navigate("selector")}
-    >
-      back
-    </ZonkButton>
+    <div>
+      <ZonkButton
+        color="grey"
+        size="md"
+        onclick={() => navigate("selector")}
+      >
+        back
+      </ZonkButton>
+    </div>
 
   </div>
   <div class="card-base">
 
   </div>
   <div class="card-blue">
+
+    <div class="flex flex-row gap-4 items-center">
+      <Position 
+        bind:selected={current.r.pos}
+        onSelected={(pos) => handlePositionChange('r', pos)}
+      />
+      <Color 
+        bind:selected={current.r.color}
+        onSelected={(color) => handleColorChange('r', color)}
+      />
+    </div>
 
   </div>
 </div>

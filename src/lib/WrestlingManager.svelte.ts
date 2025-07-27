@@ -220,9 +220,26 @@ export class WrestlingManager {
     return undefined;
   }
 
+
+  setColor(side: WSide, color: SideColor) {
+    const oppSide: WSide = side === 'r' ? 'l' : 'r';
+    const previousColor = this._current[side].color;
+
+    this._current[side].color = color;
+
+    if (this._current[oppSide].color === color) {
+      this._current[oppSide].color === previousColor;
+    }
+  }
+
   // Position management
   setPosition(side: WSide, position: WPos) {
+    const oppSide: WSide = side === 'r' ? 'l' : 'r';
+    let mirrorPos: WPos = 'n';
+    if (position !== 'n')
+      mirrorPos = position === 't' ? 'b' : 't';
     this._current[side].pos = position;
+    this._current[oppSide].pos = mirrorPos;
   }
 
   showPositionChoice(side: WSide, show: boolean = true) {
