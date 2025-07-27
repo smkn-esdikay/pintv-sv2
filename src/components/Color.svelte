@@ -18,17 +18,13 @@
     { value: 'green', label: 'Green' },
     { value: 'blue', label: 'Blue' },
   ];
-
-  $effect(() => {
-    onSelected(selected);
-  });
-
 </script>
 
 <div class="w-full">
   <ZonkDropdown
-    bind:value={selected}
+    value={selected}
     options={colors}
     className="w-full"
+    onchange={(val) => onSelected(val as SideColor)}
   />
 </div>

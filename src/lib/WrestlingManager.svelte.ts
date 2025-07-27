@@ -8,7 +8,7 @@ import type {
   WHistory,
   SideColor
 } from "@/types";
-import { getCnsClock, getCnsPeriods, type TimersEntry } from "@/constants/wrestling.constants";
+import { cnsColors, getCnsClock, getCnsPeriods, type TimersEntry } from "@/constants/wrestling.constants";
 import { ZonkClock } from "./ZonkClock";
 import { co } from "./console";
 
@@ -131,7 +131,17 @@ export class WrestlingManager {
       })
     });
 
-    // 4. ----------------- remaining fields -----------------
+    // 4. ----------------- colors and sides -----------------
+    const colorConstants = cnsColors[this.config.style];
+    let lColor: SideColor = 'red', rColor: SideColor = 'green';
+    if (colorConstants) {
+      lColor = colorConstants.left;
+      rColor = colorConstants.right;
+    }
+    this._current.l = getSideState(lColor);
+    this._current.r = getSideState(rColor);
+    
+    // 5. ----------------- remaining fields -----------------
     this._current.config = this.config;
     this._current.clockInfo = {
       activeId: 'mc',
@@ -139,8 +149,7 @@ export class WrestlingManager {
       lastActivatedAction: '',
     };
     this._current.defer = '';
-    this._current.l = getSideState('red');
-    this._current.r = getSideState('green');
+
   }
 
   private initializeSideClocks(timeConstants: TimersEntry) {
@@ -220,15 +229,14 @@ export class WrestlingManager {
     return undefined;
   }
 
-
-  setColor(side: WSide, color: SideColor) {
+  // Colors
+  setColor(side: WSide, newColor: SideColor) {
     const oppSide: WSide = side === 'r' ? 'l' : 'r';
     const previousColor = this._current[side].color;
+    this._current[side].color = newColor;
 
-    this._current[side].color = color;
-
-    if (this._current[oppSide].color === color) {
-      this._current[oppSide].color === previousColor;
+    if (this._current[oppSide].color === newColor) {
+      this._current[oppSide].color = previousColor;
     }
   }
 

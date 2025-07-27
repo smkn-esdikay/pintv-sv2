@@ -16,19 +16,18 @@
   let current = $derived(manager.current);
   
   function handlePositionChange(side: WSide, newPosition: WPos) {
-    console.log('pos change', side, newPosition)
     manager.setPosition(side, newPosition);
   }
 
   function handleColorChange(side: WSide, newColor: SideColor) {
-    console.log('col', side, newColor)
     manager.setColor(side, newColor);
   }
 
 </script>
 
 <div class="master-grid">
-  <div class="card-red">
+  <!-- LEFT -->
+  <div class={`card-${current.l.color}`}>
 
     <div class="flex flex-row gap-4 items-center">
       <Position 
@@ -52,10 +51,12 @@
     </div>
 
   </div>
+  <!-- CENTER -->
   <div class="card-base">
 
   </div>
-  <div class="card-blue">
+  <!-- RIGHT -->
+  <div class={`card-${current.r.color}`}>
 
     <div class="flex flex-row gap-4 items-center">
       <Position 
@@ -94,10 +95,10 @@
     bg-red-600/80;
   }
 
-  /* .card-green {
+  .card-green {
     @apply card-base 
     bg-green-600/80;
-  } */
+  }
 
   .card-blue {
     @apply card-base 

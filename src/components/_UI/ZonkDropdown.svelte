@@ -10,6 +10,7 @@
     placeholder?: string;
     disabled?: boolean;
     className?: string;
+    onchange?: (newValue: string | number | null) => void;
   }
 
   let {
@@ -17,14 +18,26 @@
     options,
     placeholder = "",
     disabled = false,
-    className = ""
+    className = "",
+    onchange
   }: Props = $props();
+
+  const handleChange = (event: Event) => {
+    const target = event.target as HTMLSelectElement;
+    const newValue = target.value === "" ? null : 
+      (isNaN(Number(target.value)) ? target.value : Number(target.value));
+    
+    value = newValue;
+    onchange?.(newValue);
+  }
+
 </script>
 
 <select 
-  bind:value 
+  {value}
   {disabled}
   class={`${className}`}
+  onchange={handleChange}
 >
   {#if placeholder}
     <option value="" disabled>{placeholder}</option>

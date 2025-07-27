@@ -1,4 +1,4 @@
-import type { WAge, WConfig, WeightUnit, WPos, WStyle } from "@/types";
+import type { SideColor, WAge, WConfig, WeightUnit, WPos, WStyle } from "@/types";
 
 /**
  * All time values are in seconds unless otherwise noted.
@@ -97,7 +97,6 @@ export const getCnsClock = (config: WConfig): TimersEntry | null => {
   });
   return cIdx > -1 ? cnsClocks[cIdx].timers : null;
 }
-
 
 interface WeightListEntry {
   age?: WAge;
@@ -217,6 +216,16 @@ export const cnsThresholds = {
   Freestyle: { techfall: 10, major: 8, decision: 1 } as ThresholdEntry,
   Greco: { techfall: 10, major: 8, decision: 1 } as ThresholdEntry,
 };
+
+interface ColorEntry {
+  left: SideColor;
+  right: SideColor;
+}
+export const cnsColors = {
+  FolkStyle: { left: "red", right: "green" } as ColorEntry,
+  Freestyle: { left: "red", right: "blue" } as ColorEntry,
+  Greco: { left: "red", right: "blue" } as ColorEntry,
+}
 
 export type ActionPoint = number | 'dq';
 interface ActionEntry {

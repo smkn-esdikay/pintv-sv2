@@ -19,16 +19,13 @@
     { value: 'b', label: 'Bottom' },
   ];
 
-  $effect(() => {
-    onSelected(selected);
-  });
-
 </script>
 
 <div class="w-full">
   <ZonkDropdown
-    bind:value={selected}
+    value={selected}
     options={positions}
     className="w-full"
+    onchange={(val) => onSelected(val as WPos)}
   />
 </div>
