@@ -204,6 +204,11 @@ export class WrestlingManager {
     }
   }
 
+  setClockTime(clockId: string, newTimeMs: number) {
+    console.log('set clock time', clockId, newTimeMs)
+    this.setClockById(clockId, new ZonkClock(newTimeMs));
+  }
+
   private stopActiveClock() {
     if (this._current.clockInfo.activeId) {
       const activeClock = this.getClockById(this._current.clockInfo.activeId);
@@ -227,6 +232,42 @@ export class WrestlingManager {
     }
     
     return undefined;
+  }
+
+  private setClockById(clockId: string, newClock: ZonkClock): boolean {
+    if (clockId === 'mc') {
+      this._current.clocks.mc = newClock;
+      return true;
+    }
+    if (clockId === 'rest') {
+      this._current.clocks.rest = newClock;
+      return true;
+    }
+    if (clockId === 'shotclock') {
+      this._current.clocks.shotclock = newClock;
+      return true;
+    }
+    if (clockId === 'ride') {
+      this._current.clocks.ride = newClock;
+      return true;
+    }
+    
+    // Handle side clocks (format: "left_blood", "right_injury", etc.)
+    const [side, clockType] = clockId.split('_');
+    if (side === 'left' || side === 'l') {
+      if (clockType in this._current.l.clocks) {
+        this._current.l.clocks[clockType as keyof typeof this._current.l.clocks] = newClock;
+        return true;
+      }
+    }
+    if (side === 'right' || side === 'r') {
+      if (clockType in this._current.r.clocks) {
+        this._current.r.clocks[clockType as keyof typeof this._current.r.clocks] = newClock;
+        return true;
+      }
+    }
+    
+    return false; // Clock ID not found
   }
 
   // Colors

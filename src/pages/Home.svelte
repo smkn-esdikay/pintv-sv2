@@ -22,6 +22,7 @@
 
     <p>
       <TimeDisplay 
+        id="test"
         {clock} 
         allowEditing={true}
         showElapsed={true}

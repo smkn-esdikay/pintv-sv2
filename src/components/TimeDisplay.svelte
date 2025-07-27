@@ -3,9 +3,10 @@
   import type { ZonkClock } from '@/lib/ZonkClock';
 
   interface Props {
+    id: string;
     clock: ZonkClock;
     className?: string;
-    size?: 'xl' | 'lg';
+    size?: 'xl' | 'lg' | 'md';
     showElapsed?: boolean;
     allowEditing?: boolean;
     onTimeEdit?: (newTimeMs: number) => void;
@@ -13,6 +14,7 @@
   }
 
   let {
+    id,
     clock,
     className = '',
     size = 'lg',
@@ -71,7 +73,8 @@
 
   const { minutes, seconds } = $derived(msToComponents(remaining));
 
-  const clockFontClass = $derived(size === 'lg' ? 'text-4xl font-mono' : 'text-6xl font-mono');
+  const clockBaseClasses = 'font-mono text-black text-center';
+  const clockFontClass = $derived(size === 'lg' ? 'text-4xl font-mono' : 'text-6xl');
   
   // Show precision when 5 seconds or less remain
   const showPrecision = $derived(remaining <= 5000 && isRunning);
@@ -94,16 +97,14 @@
     handleTimeUpdate(minutes, newSeconds);
   }
 
-  // Add visual emphasis when in precision mode
   const precisionClass = $derived(showPrecision ? 'text-red-600' : '');
 
-  // Notify parent when editing starts/stops
   function handleEditingChange(isEditing: boolean) {
     onEditingChange?.(isEditing);
   }
 </script>
 
-<div class={`${className} text-center`}>
+<div class={`${clockBaseClasses} ${className}`}>
   <div class={`${clockFontClass} ${precisionClass}`}>
     {#if canEdit}
       <div class="inline-flex items-center">

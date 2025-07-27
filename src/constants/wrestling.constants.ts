@@ -222,7 +222,7 @@ interface ColorEntry {
   right: SideColor;
 }
 export const cnsColors = {
-  FolkStyle: { left: "red", right: "green" } as ColorEntry,
+  Folkstyle: { left: "red", right: "green" } as ColorEntry,
   Freestyle: { left: "red", right: "blue" } as ColorEntry,
   Greco: { left: "red", right: "blue" } as ColorEntry,
 }

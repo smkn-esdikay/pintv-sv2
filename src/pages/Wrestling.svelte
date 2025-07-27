@@ -2,11 +2,14 @@
   import { navigate } from "@/lib/router.svelte";
   import { initStore } from "@/stores/init.svelte";
   import { WrestlingManager } from "@/lib/WrestlingManager.svelte";
+  import type { SideColor, WPos, WSide } from "@/types";
 
   import Position from '@/components/Position.svelte';
   import Color from "@/components/Color.svelte";
+  import TimeDisplay from '@/components/TimeDisplay.svelte';
+  import TimeControls from '@/components/TimeControls.svelte';
+
   import ZonkButton from "@/components/_UI/ZonkButton.svelte";
-    import type { SideColor, WPos, WSide } from "@/types";
 
   const config = initStore.config;
   const manager = WrestlingManager.getInstance();
@@ -53,6 +56,30 @@
   </div>
   <!-- CENTER -->
   <div class="card-base">
+
+    <div>
+
+      <TimeDisplay 
+        id='mc'
+        clock={current.clocks.mc}
+        allowEditing={true}
+        showElapsed={false}
+        onTimeEdit={(newTimeMs) => manager.setClockTime('mc', newTimeMs)}
+        className="text-white"
+      />
+      
+      <TimeControls 
+        clock={current.clocks.mc}
+        canReset={true}
+        onClockUpdate={(eventName) => {
+          if (eventName === 'start') manager.startClock('mc');
+          else if (eventName === 'stop') manager.stopClock('mc');
+          else if (eventName === 'reset') manager.resetClock('mc');
+        }}
+        className="mt-4"
+      />
+
+    </div>
 
   </div>
   <!-- RIGHT -->
