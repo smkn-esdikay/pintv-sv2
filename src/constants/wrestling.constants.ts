@@ -1,4 +1,4 @@
-import type { WAge, WeightUnit, WPos, WStyle } from "@/types";
+import type { WAge, WConfig, WeightUnit, WPos, WStyle } from "@/types";
 
 /**
  * All time values are in seconds unless otherwise noted.
@@ -19,7 +19,7 @@ import type { WAge, WeightUnit, WPos, WStyle } from "@/types";
  *  twP: Time between periods
  *  twM: Time between matches
  */
-interface TimersEntry {
+export interface TimersEntry {
   p1: number;
   p2: number; 
   p3?: number;
@@ -86,7 +86,17 @@ export const cnsClocks: ClocksEntry[] = [
       rt: false,
     },
   },
-]
+];
+export const getCnsClock = (config: WConfig): TimersEntry | null => {
+  const cIdx = cnsClocks.findIndex(el => {
+    let ageOK = true;
+    if (config.style === "Folkstyle") {
+      ageOK = config.age === el.age;
+    }
+    return config.style === el.style && ageOK;
+  });
+  return cIdx > -1 ? cnsClocks[cIdx].timers : null;
+}
 
 
 interface WeightListEntry {
@@ -164,6 +174,7 @@ export const cnsWinby: WinbyEntry[] = [
 ];
 
 interface PeriodEntry {
+  code: string;
   name: string;
   decisive: boolean;
   chooseAfter: string;
@@ -172,15 +183,15 @@ interface PeriodEntry {
 }
 export const cnsPeriods = {
   Folkstyle: [
-    { name: 'Period 1', decisive: false, chooseAfter: 'both', },
-    { name: 'Period 2', decisive: false, chooseAfter: 'notprevious', },
-    { name: 'Period 3', decisive: true, chooseAfter: 'none', },
+    { code: 'p1', name: 'Period 1', decisive: false, chooseAfter: 'both', },
+    { code: 'p2', name: 'Period 2', decisive: false, chooseAfter: 'notprevious', },
+    { code: 'p3', name: 'Period 3', decisive: true, chooseAfter: 'none', },
 
-    { name: 'Sudden Victory', decisive: true, chooseAfter: 'both', overtime: true, }, // folkstyle college periods 4-6 can repeat 
-    { name: 'Tie Breaker I', decisive: false, chooseAfter: 'notprevious', overtime: true, },
-    { name: 'Tie Breaker II', decisive: true, chooseAfter: 'firstblood', overtime: true, },
+    { code: 'sv', name: 'Sudden Victory', decisive: true, chooseAfter: 'both', overtime: true, }, // folkstyle college periods 4-6 can repeat 
+    { code: 'tb1', name: 'Tie Breaker I', decisive: false, chooseAfter: 'notprevious', overtime: true, },
+    { code: 'tb2', name: 'Tie Breaker II', decisive: true, chooseAfter: 'firstblood', overtime: true, },
     
-    { name: 'Ultimate Tie Breaker', decisive: true, chooseAfter: 'none', }, // only for high school
+    { code: 'tbu', name: 'Ultimate Tie Breaker', decisive: true, chooseAfter: 'none', }, // only for high school
   ] as PeriodEntry[],
 
   Freestyle: [
@@ -191,6 +202,9 @@ export const cnsPeriods = {
     { name: 'Period 1', decisive: false, chooseAfter: 'none', restAfter: true, },
     { name: 'Period 2', decisive: true, chooseAfter: 'none', },
   ] as PeriodEntry[],
+};
+export const getCnsPeriods = (config: WConfig): PeriodEntry[] | null => {
+  return cnsPeriods[config.style] ?? null;
 };
 
 interface ThresholdEntry {

@@ -85,7 +85,6 @@ export type WMatch = {
   winbyIdx?: number; 
   totalElapsedSeconds?: number;
   winPeriod?: number;
-  periods: WPeriod[];
 }
 
 export type WStateSide = {
@@ -109,10 +108,6 @@ export type WHistory = {
 }
 
 export type WStateMain = {
-  // activeClockId: string;
-  // lastActivatedClockId: string;
-  // lastActivatedClockAction: string;
-
   config: WConfig;
   clockInfo: {
     activeId: string;
@@ -125,9 +120,9 @@ export type WStateMain = {
     shotclock?: ZonkClock;
     ride?: ZonkClock;
   };
-
   defer: string;
   l: WStateSide;
   r: WStateSide;
+  periods: WPeriod[];
 }
 

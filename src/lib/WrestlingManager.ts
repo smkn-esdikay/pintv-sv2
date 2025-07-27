@@ -5,11 +5,24 @@ import type {
   WPos, 
   WSide, 
   ClockEvent, 
-  WHistory
+  WHistory,
+  SideColor
 } from "@/types";
+import { getCnsClock, getCnsPeriods, type TimersEntry } from "@/constants/wrestling.constants";
 import { ZonkClock } from "./ZonkClock";
+import { co } from "./console";
 
-
+const getSideState = (color: SideColor): WStateSide => {
+  return {
+    color: color,
+    showChoosePos: false,
+    pos: 'n',
+    teamName: color,
+    athleteName: '',
+    winbyIdx: 0,
+    clocks: {}
+  };
+};
 const placeholderState: WStateMain = {
   config: {
     style: "Greco", 
@@ -24,25 +37,10 @@ const placeholderState: WStateMain = {
   },
   clocks: { mc: new ZonkClock(0) },
   defer: '',
-  l: {
-    color: "red",
-    showChoosePos: false,
-    pos: 'n',
-    teamName: 'Red',
-    athleteName: '',
-    winbyIdx: 0,
-    clocks: {}
-  },
-  r: {
-    color: "green",
-    showChoosePos: false,
-    pos: 'n', 
-    teamName: 'Green',
-    athleteName: '',
-    winbyIdx: 0,
-    clocks: {}
-  }
-}
+  l: getSideState('red'),
+  r: getSideState('green'),
+  periods: [],
+};
 
 export class WrestlingManager {
 
@@ -63,49 +61,89 @@ export class WrestlingManager {
     return this._history;
   }
 
-  initialize() { // build the state using the config
+  initialize() { 
 
-    this._current.config = this.config;
+    // 0. ----------------- get constants -----------------
+    const timeConstants = getCnsClock(this.config);
+    const periodConstants = getCnsPeriods(this.config);
+    if (!timeConstants) {
+      co.error("Wrestling Manager initialize: could not retrieve clock time constants");
+      return;
+    }
+    if (!periodConstants) {
+      co.error("Wrestling Manager initialize: could not retrieve period constants");
+      return;
+    }
     
+    // 2. ----------------- clock setup -----------------
+    this.destroyMainClocks();
+    // main clock
     const firstPeriodMs = (this.config.periodLengths[0]) * 1000;
     this._current.clocks.mc.destroy();
     this._current.clocks.mc = new ZonkClock(firstPeriodMs);
-    
-    this.initializeSideClocks();
+    // ride and shot
+    if (!!timeConstants.rt)
+      this._current.clocks.ride = new ZonkClock(0);
+    if (!!timeConstants.sc) {
+      const scMs = timeConstants.sc * 1000;
+      this._current.clocks.shotclock = new ZonkClock(scMs);
+    }
+    this.initializeSideClocks(timeConstants);
+
+    // 3. ----------------- clock setup -----------------
+    periodConstants.forEach((p, idx) => {
+
+      const cnfLen = this.config.periodLengths[idx] ?? null;
+      const cnsLen = timeConstants[p.code as keyof TimersEntry] as number ?? null;
+      
+      this._current.periods.push({
+        title: p.name,
+        seconds: cnfLen || cnsLen || 120,
+        displayIdx: idx,
+        realIdx: idx,
+        actions: [],
+      })
+    });
+
+    // 4. ----------------- remaining fields -----------------
+    this._current.config = this.config;
+    this._current.clockInfo = {
+      activeId: 'mc',
+      lastActivatedId: '',
+      lastActivatedAction: '',
+    };
+    this._current.defer = '';
+    this._current.l = getSideState('red');
+    this._current.r = getSideState('green');
   }
 
-  // Initialize injury/blood/etc clocks for both sides
-  private initializeSideClocks() {
-    const style = this._current.config.style;
-    
-    // Blood time (5 minutes = 300 seconds)
-    this._current.l.clocks.blood = new ZonkClock(300000);
-    this._current.r.clocks.blood = new ZonkClock(300000);
-    
-    // Injury time varies by style
-    const injuryTime = style === 'Folkstyle' ? 90000 : 120000; // 1.5min vs 2min
-    this._current.l.clocks.injury = new ZonkClock(injuryTime);
-    this._current.r.clocks.injury = new ZonkClock(injuryTime);
-    
-    if (style === 'Folkstyle') {
-      // Recovery time (2 minutes)
-      this._current.l.clocks.recovery = new ZonkClock(120000);
-      this._current.r.clocks.recovery = new ZonkClock(120000);
-      
-      // Head/neck injury (5 minutes)
-      this._current.l.clocks.headneck = new ZonkClock(300000);
-      this._current.r.clocks.headneck = new ZonkClock(300000);
+  private initializeSideClocks(timeConstants: TimersEntry) {
+
+    this.destroySideClocks();
+
+    if (!!timeConstants.bl) {
+      this._current.l.clocks.blood = new ZonkClock(timeConstants.bl);
+      this._current.r.clocks.blood = new ZonkClock(timeConstants.bl);
+    }
+    if (!!timeConstants.hn) {
+      this._current.l.clocks.headneck = new ZonkClock(timeConstants.hn);
+      this._current.r.clocks.headneck = new ZonkClock(timeConstants.hn);
+    }
+    if (!!timeConstants.in) {
+      this._current.l.clocks.injury = new ZonkClock(timeConstants.in);
+      this._current.r.clocks.injury = new ZonkClock(timeConstants.in);
+    }
+    if (!!timeConstants.rc) {
+      this._current.l.clocks.recovery = new ZonkClock(timeConstants.rc);
+      this._current.r.clocks.recovery = new ZonkClock(timeConstants.rc);
     }
   }
-
 
   startClock(clockId: string) {
     const clock = this.getClockById(clockId);
     if (clock) {
-      // Stop currently active clock
       this.stopActiveClock();
       
-      // Start new clock
       clock.start();
       this._current.clockInfo.activeId = clockId;
       this._current.clockInfo.lastActivatedId = clockId;
@@ -192,16 +230,20 @@ export class WrestlingManager {
     return false; // Placeholder
   }
 
-  // Cleanup method
-  destroy() {
-    // Clean up all clocks
+  destroyMainClocks() {
     this._current.clocks.mc?.destroy();
     this._current.clocks.rest?.destroy();
     this._current.clocks.shotclock?.destroy();
     this._current.clocks.ride?.destroy();
-    
-    // Clean up side clocks
+  }
+
+  destroySideClocks() {
     Object.values(this._current.l.clocks).forEach(clock => clock?.destroy());
     Object.values(this._current.r.clocks).forEach(clock => clock?.destroy());
+  }
+
+  destroy() {
+    this.destroyMainClocks();
+    this.destroySideClocks();
   }
 }
