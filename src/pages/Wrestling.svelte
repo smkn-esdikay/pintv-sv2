@@ -47,10 +47,6 @@
     ;
   }
 
-  .page > * {
-    @apply w-1/3;
-  }
-
   .card-base {
     @apply flex flex-col w-full
     sm:p-2 p-1 
@@ -64,10 +60,10 @@
     bg-red-600/80;
   }
 
-  .card-green {
+  /* .card-green {
     @apply card-base 
     bg-green-600/80;
-  }
+  } */
 
   .card-blue {
     @apply card-base 

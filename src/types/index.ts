@@ -69,21 +69,22 @@ export type WAction = {
 
 export type WPeriod = {
   title: string;
+  seconds: number;
   displayIdx: number; // used for display purposes
   realIdx: number; // true index
   actions: WAction[];
 }
 
 export type WMatch = {
-  weight: number;
+  weight?: number;
   ptLeft: number;
   ptRight: number;
   teamPtLeft: number;
   teamPtRight: number;
-  winner: string; // ?
-  winbyIdx: number; 
-  totalElapsedSeconds: number;
-  winPeriod: number;
+  winner?: WSide;
+  winbyIdx?: number; 
+  totalElapsedSeconds?: number;
+  winPeriod?: number;
   periods: WPeriod[];
 }
 
@@ -92,7 +93,7 @@ export type WStateSide = {
   showChoosePos: boolean;
   pos: WPos;
   teamName: string;
-  teamNameAbbr: string;
+  teamNameAbbr?: string;
   athleteName?: string;
   winbyIdx: number;
   clocks: {
@@ -104,22 +105,27 @@ export type WStateSide = {
 }
 
 export type WHistory = {
-  matches: WMatch;
+  matches: WMatch[];
 }
 
 export type WStateMain = {
-  activeClockId: string;
-  lastActivatedClockId: string;
-  lastActivatedClockAction: string;
+  // activeClockId: string;
+  // lastActivatedClockId: string;
+  // lastActivatedClockAction: string;
 
   config: WConfig;
+  clockInfo: {
+    activeId: string;
+    lastActivatedId: string;
+    lastActivatedAction: string;
+  },
   clocks: {
     mc: ZonkClock;
     rest?: ZonkClock;
     shotclock?: ZonkClock;
     ride?: ZonkClock;
   };
-  
+
   defer: string;
   l: WStateSide;
   r: WStateSide;
