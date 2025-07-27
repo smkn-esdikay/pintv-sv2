@@ -56,7 +56,7 @@
 
   /* colors */
   .green {
-    @apply base text-white bg-green-700;
+    @apply base text-white bg-green-600;
   }
   .blue {
     @apply base text-white bg-blue-600;
@@ -65,7 +65,7 @@
     @apply base text-white bg-red-600;
   }
   .grey {
-    @apply base text-white bg-slate-600;
+    @apply base text-white bg-slate-500;
   }
 
 

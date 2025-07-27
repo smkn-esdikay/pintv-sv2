@@ -1,9 +1,11 @@
 <script lang="ts">
   import type { ZonkClock } from '@/lib/ZonkClock';
+  import Button from './_UI/ZonkButton.svelte';
 
   interface Props {
     clock: ZonkClock;
     canReset?: boolean;
+    size?: 'lg' | 'md';
     className?: string;
     onClockUpdate?: (eventName: string) => void;
   }
@@ -11,6 +13,7 @@
   let {
     clock,
     canReset = true,
+    size = 'lg',
     className = '',
     onClockUpdate
   }: Props = $props();
@@ -42,34 +45,38 @@
     clock.reset();
     onClockUpdate?.('reset');
   }
+
 </script>
 
 <div class={className}>
   <div class="flex items-center justify-center gap-2">
     {#if isRunning}
-      <button
+      <Button
         onclick={handleStop}
-        class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+        color="red"
+        {size}
       >
         Stop
-      </button>
+      </Button>
     {:else}
-      <button
+      <Button
         onclick={handleStart}
-        class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
+        color="green"
+        {size}
       >
         Start
-      </button>
+      </Button>
     {/if}
     
     {#if canReset}
-      <button
+      <Button
         disabled={isRunning}
         onclick={handleReset}
-        class="bg-gray-500 hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded"
+        color="grey"
+        {size}
       >
         Reset
-      </button>
+      </Button>
     {/if}
   </div>
 </div>
