@@ -2,6 +2,7 @@
   import { navigate } from "@/lib/router.svelte";
   import { initStore } from "@/stores/init.svelte";
   import { WrestlingManager } from "@/lib/WrestlingManager.svelte";
+  import { KeyboardHandler } from "@/lib/KeyboardHandler";
   import type { SideColor, WPos, WSide } from "@/types";
 
   import Position from '@/components/Position.svelte';
@@ -16,8 +17,32 @@
   const manager = WrestlingManager.getInstance();
   manager.initializeMatch(config);
   
-  // Get reactive state from manager
   let current = $derived(manager.current);
+
+  let keyboardHandler: KeyboardHandler;
+
+  $effect(() => {
+    keyboardHandler = new KeyboardHandler({
+      onLeft: () => { manager.setPosition('l', 't'); },
+      onDown: () => { manager.setPosition('l', 'n'); },
+      onRight: () => { manager.setPosition('r', 't'); },
+      onSpace: () => {
+        const clockRunning = current.clocks.mc.isRunning;
+        let isRunning = false;
+        clockRunning.subscribe(val => isRunning = val)();
+        if (isRunning) 
+          manager.stopClock('mc');
+        else 
+          manager.startClock('mc');
+      }
+    });
+    keyboardHandler.start();
+
+    return () => { // cleanup
+      keyboardHandler?.destroy();
+    };
+  });
+
   
   function handlePositionChange(side: WSide, newPosition: WPos) {
     manager.setPosition(side, newPosition);

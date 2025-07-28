@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { WAction, WPeriod, WPos, WSide, WStyle } from "@/types";
-  import { cnsActions, type ActionEntry } from "@/constants/wrestling.constants";
+  import { cnsActions, type ActionEntry, type ActionPoint } from "@/constants/wrestling.constants";
 
   interface Props {
     side: WSide;
@@ -18,12 +18,17 @@
     onClick,
   }: Props = $props();
 
+  type CalculatedActionEntry = ActionEntry & {
+    currentOppPoints?: ActionPoint;
+  };
+
   const goodActions: ActionEntry[] = $derived(
     cnsActions[style].filter(a => {
       return !a.oppPoints && (!a.show || a.show === pos);
     })
   );
-  const badActions: ActionEntry[] = $derived(
+  const badActions: CalculatedActionEntry[] = $derived(
+    // add calculations based on count for this action
     cnsActions[style].filter(a => {
       return !!a.oppPoints;
     })
