@@ -113,9 +113,10 @@ export type WStateMain = {
     shotclock?: ZonkClock;
     ride?: ZonkClock;
   };
-  defer: string;
   l: WStateSide;
   r: WStateSide;
   periods: WPeriod[];
+  periodIdx: number;
+  defer: string;
 }
 

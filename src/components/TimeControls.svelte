@@ -60,6 +60,7 @@
       </Button>
     {:else}
       <Button
+        disabled={isComplete}
         onclick={handleStart}
         color="green"
         {size}

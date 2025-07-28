@@ -8,6 +8,7 @@
   import Color from "@/components/Color.svelte";
   import TimeDisplay from '@/components/TimeDisplay.svelte';
   import TimeControls from '@/components/TimeControls.svelte';
+  import ActionBoard from "@/components/ActionBoard.svelte";
 
   import ZonkButton from "@/components/_UI/ZonkButton.svelte";
 
@@ -32,7 +33,7 @@
   <!-- LEFT -->
   <div class={`card-${current.l.color}`}>
 
-    <div class="flex flex-row gap-4 items-center">
+    <div class="flex flex-row gap-4 items-center mb-2">
       <Position 
         bind:selected={current.l.pos}
         onSelected={(pos) => handlePositionChange('l', pos)}
@@ -40,6 +41,16 @@
       <Color 
         bind:selected={current.l.color}
         onSelected={(color) => handleColorChange('l', color)}
+      />
+    </div>
+
+    <div class="mb-2">
+      <ActionBoard 
+        side='l'
+        pos={current.l.pos}
+        style={current.config.style}
+        periods={current.periods}
+        onClick={() => {}}
       />
     </div>
 
@@ -65,7 +76,7 @@
         allowEditing={true}
         showElapsed={false}
         onTimeEdit={(newTimeMs) => manager.setClockTime('mc', newTimeMs)}
-        className="text-white"
+        className=""
       />
       
       <TimeControls 
@@ -85,7 +96,7 @@
   <!-- RIGHT -->
   <div class={`card-${current.r.color}`}>
 
-    <div class="flex flex-row gap-4 items-center">
+    <div class="flex flex-row gap-4 items-center mb-2">
       <Position 
         bind:selected={current.r.pos}
         onSelected={(pos) => handlePositionChange('r', pos)}
@@ -93,6 +104,16 @@
       <Color 
         bind:selected={current.r.color}
         onSelected={(color) => handleColorChange('r', color)}
+      />
+    </div>
+
+    <div class="mb-2">
+      <ActionBoard 
+        side='r'
+        pos={current.r.pos}
+        style={current.config.style}
+        periods={current.periods}
+        onClick={() => {}}
       />
     </div>
 

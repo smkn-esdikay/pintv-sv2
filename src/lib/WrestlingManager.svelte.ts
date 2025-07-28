@@ -37,10 +37,11 @@ const placeholderState: WStateMain = {
     lastActivatedAction: '',
   },
   clocks: { mc: new ZonkClock(0) },
-  defer: '',
   l: getSideState('red'),
   r: getSideState('green'),
   periods: [],
+  periodIdx: 0,
+  defer: '',
 };
 
 export class WrestlingManager {
@@ -148,6 +149,8 @@ export class WrestlingManager {
       lastActivatedId: '',
       lastActivatedAction: '',
     };
+    this._current.periods = [];
+    this._current.periodIdx = 0;
     this._current.defer = '';
 
   }
