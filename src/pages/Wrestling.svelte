@@ -171,14 +171,21 @@
       {/if}
     </div>
 
-    <div>
-      <ZonkButton
-        color="grey"
-        size="md"
-        onclick={() => navigate("selector")}
-      >
-        Back
-      </ZonkButton>
+    <div class="h-full flex flex-col items-center justify-end">
+      <div class="flex flex-col items-center justify-center">
+        <div class="text-center text-white/60 mb-2">
+          Press &larr; &darr; &rarr; to change position.
+          <br />
+          SPACE to start/stop the main clock;
+        </div>
+        <ZonkButton
+          color="grey"
+          size="md"
+          onclick={() => navigate("selector")}
+        >
+          Back
+        </ZonkButton>
+      </div>
     </div>
 
   </div>
@@ -229,7 +236,7 @@
       />
     </div>
 
-    <div class="mb-2">
+    <div class="mb-4">
       <ActionBoard 
         side='r'
         pos={current.r.pos}
@@ -379,7 +386,6 @@
     @apply flex flex-row gap-4 items-center justify-between
       py-1 px-4
       bg-white/20;
-    ;
   }
   .side-clock-container > * {
     @apply w-1/3;
