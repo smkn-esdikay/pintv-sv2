@@ -106,14 +106,22 @@
           {/if}
         </div>
       </div>
-      <div id="button" class="flex justify-center">
+      <div id="button" class="flex justify-center gap-4">
         <ZonkButton
           disabled={!canSubmit}
-          color="grey"
+          color="green"
           size="md"
           onclick={initAndStart}
         >
           Start
+        </ZonkButton>
+        <ZonkButton
+          disabled={!canSubmit}
+          color="grey"
+          size="md"
+          onclick={() => navigate("home")}
+        >
+          Back
         </ZonkButton>
       </div>
     </div>
@@ -121,11 +129,6 @@
 </div>
 
 <style>
-  .page {
-    @apply w-full min-h-[99.5vh] 
-      flex items-center justify-center 
-      border-red-700 border-2;
-  }
 
   .control-container {
     @apply w-[60vw] h-[40vh] 

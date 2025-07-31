@@ -74,10 +74,10 @@
     @apply h-7 px-3 text-xs;
   }
   .md {
-    @apply h-9 px-5 text-sm;
+    @apply h-8 px-4 text-sm;
   }
   .lg {
-    @apply h-12 px-6 text-base;
+    @apply h-10 px-5 text-base;
   }
 
 </style>

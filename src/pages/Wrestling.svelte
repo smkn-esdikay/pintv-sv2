@@ -18,6 +18,7 @@
   manager.initializeMatch(config);
   
   let current = $derived(manager.current);
+  $inspect(current);
 
   let keyboardHandler: KeyboardHandler;
 
@@ -69,7 +70,7 @@
       />
     </div>
 
-    <div class="mb-2">
+    <div class="mb-4">
       <ActionBoard 
         side='l'
         pos={current.l.pos}
@@ -79,13 +80,104 @@
       />
     </div>
 
+    <div class="flex flex-col gap-1 mb-4" id="left_sideclocks">
+      {#if current.l.clocks.blood}
+      <div class="side-clock-container">
+        <span>Blood</span>
+        <TimeDisplay 
+          id='l_blood'
+          size="md"
+          clock={current.l.clocks.blood}
+          allowEditing={true}
+          onTimeEdit={(newTimeMs) => manager.setClockTime('l_blood', newTimeMs)}
+          className="bg-white"
+        />
+        <TimeControls 
+          size="md"
+          clock={current.l.clocks.blood}
+          canReset={false}
+          onClockUpdate={(eventName) => {
+            if (eventName === 'start') manager.startClock('l_blood');
+            else if (eventName === 'stop') manager.stopClock('l_blood');
+          }}
+        />
+      </div>
+      {/if}
+      {#if current.l.clocks.injury}
+      <div class="side-clock-container">
+        <span>Injury</span>
+        <TimeDisplay 
+          id='l_injury'
+          size="md"
+          clock={current.l.clocks.injury}
+          allowEditing={true}
+          onTimeEdit={(newTimeMs) => manager.setClockTime('l_injury', newTimeMs)}
+          className="bg-white"
+        />
+        <TimeControls 
+          size="md"
+          clock={current.l.clocks.injury}
+          canReset={false}
+          onClockUpdate={(eventName) => {
+            if (eventName === 'start') manager.startClock('l_injury');
+            else if (eventName === 'stop') manager.stopClock('l_injury');
+          }}
+        />
+      </div>
+      {/if}
+      {#if current.l.clocks.recovery}
+      <div class="side-clock-container">
+        <span>Recovery</span>
+        <TimeDisplay 
+          id='l_recovery'
+          size="md"
+          clock={current.l.clocks.recovery}
+          allowEditing={true}
+          onTimeEdit={(newTimeMs) => manager.setClockTime('l_recovery', newTimeMs)}
+          className="bg-white"
+        />
+        <TimeControls 
+          size="md"
+          clock={current.l.clocks.recovery}
+          canReset={false}
+          onClockUpdate={(eventName) => {
+            if (eventName === 'start') manager.startClock('l_recovery');
+            else if (eventName === 'stop') manager.stopClock('l_recovery');
+          }}
+        />
+      </div>
+      {/if}
+      {#if current.l.clocks.headneck}
+      <div class="side-clock-container">
+        <span>Head/Neck</span>
+        <TimeDisplay 
+          id='l_headneck'
+          size="md"
+          clock={current.l.clocks.headneck}
+          allowEditing={true}
+          onTimeEdit={(newTimeMs) => manager.setClockTime('l_headneck', newTimeMs)}
+          className="bg-white"
+        />
+        <TimeControls 
+          size="md"
+          clock={current.l.clocks.headneck}
+          canReset={false}
+          onClockUpdate={(eventName) => {
+            if (eventName === 'start') manager.startClock('l_headneck');
+            else if (eventName === 'stop') manager.stopClock('l_headneck');
+          }}
+        />
+      </div>
+      {/if}
+    </div>
+
     <div>
       <ZonkButton
         color="grey"
         size="md"
         onclick={() => navigate("selector")}
       >
-        back
+        Back
       </ZonkButton>
     </div>
 
@@ -93,15 +185,20 @@
   <!-- CENTER -->
   <div class="card-base">
 
-    <div>
+    <section>
+      Reset
+    </section>
+
+    <section>
+      <h3>main clock</h3>
 
       <TimeDisplay 
         id='mc'
+        size="lg"
         clock={current.clocks.mc}
         allowEditing={true}
         showElapsed={false}
         onTimeEdit={(newTimeMs) => manager.setClockTime('mc', newTimeMs)}
-        className=""
       />
       
       <TimeControls 
@@ -115,7 +212,7 @@
         className="mt-4"
       />
 
-    </div>
+    </section>
 
   </div>
   <!-- RIGHT -->
@@ -140,6 +237,97 @@
         periods={current.periods}
         onClick={() => {}}
       />
+    </div>
+
+    <div class="flex flex-col gap-1 mb-4" id="right_sideclocks">
+      {#if current.r.clocks.blood}
+      <div class="side-clock-container">
+        <span>Blood</span>
+        <TimeDisplay 
+          id='r_blood'
+          size="md"
+          clock={current.r.clocks.blood}
+          allowEditing={true}
+          onTimeEdit={(newTimeMs) => manager.setClockTime('r_blood', newTimeMs)}
+          className="bg-white"
+        />
+        <TimeControls 
+          size="md"
+          clock={current.r.clocks.blood}
+          canReset={false}
+          onClockUpdate={(eventName) => {
+            if (eventName === 'start') manager.startClock('r_blood');
+            else if (eventName === 'stop') manager.stopClock('r_blood');
+          }}
+        />
+      </div>
+      {/if}
+      {#if current.r.clocks.injury}
+      <div class="side-clock-container">
+        <span>Injury</span>
+        <TimeDisplay 
+          id='r_injury'
+          size="md"
+          clock={current.r.clocks.injury}
+          allowEditing={true}
+          onTimeEdit={(newTimeMs) => manager.setClockTime('r_injury', newTimeMs)}
+          className="bg-white"
+        />
+        <TimeControls 
+          size="md"
+          clock={current.r.clocks.injury}
+          canReset={false}
+          onClockUpdate={(eventName) => {
+            if (eventName === 'start') manager.startClock('r_injury');
+            else if (eventName === 'stop') manager.stopClock('r_injury');
+          }}
+        />
+      </div>
+      {/if}
+      {#if current.r.clocks.recovery}
+      <div class="side-clock-container">
+        <span>Recovery</span>
+        <TimeDisplay 
+          id='r_recovery'
+          size="md"
+          clock={current.r.clocks.recovery}
+          allowEditing={true}
+          onTimeEdit={(newTimeMs) => manager.setClockTime('r_recovery', newTimeMs)}
+          className="bg-white"
+        />
+        <TimeControls 
+          size="md"
+          clock={current.r.clocks.recovery}
+          canReset={false}
+          onClockUpdate={(eventName) => {
+            if (eventName === 'start') manager.startClock('r_recovery');
+            else if (eventName === 'stop') manager.stopClock('r_recovery');
+          }}
+        />
+      </div>
+      {/if}
+      {#if current.r.clocks.headneck}
+      <div class="side-clock-container">
+        <span>Head/Neck</span>
+        <TimeDisplay 
+          id='r_headneck'
+          size="md"
+          clock={current.r.clocks.headneck}
+          allowEditing={true}
+          onTimeEdit={(newTimeMs) => manager.setClockTime('r_headneck', newTimeMs)}
+          className="bg-white"
+        />
+        <TimeControls 
+          size="md"
+          clock={current.r.clocks.headneck}
+          canReset={false}
+          onClockUpdate={(eventName) => {
+            if (eventName === 'start') manager.startClock('r_headneck');
+            else if (eventName === 'stop') manager.stopClock('r_headneck');
+          }}
+        />
+      </div>
+      {/if}
     </div>
 
   </div>
@@ -177,5 +365,28 @@
     @apply card-base 
     bg-blue-600/80;
   }
+
+  section {
+    @apply flex flex-col w-full
+      items-center
+      mb-2
+      sm:p-2 p-1 
+      rounded-lg
+      border-[0.6px] border-slate-300;
+  }
+
+  .side-clock-container {
+    @apply flex flex-row gap-4 items-center justify-between
+      py-1 px-4
+      bg-white/20;
+    ;
+  }
+  .side-clock-container > * {
+    @apply w-1/3;
+  }
+  .side-clock-container > span {
+    @apply text-xl text-white;
+  }
+
 
 </style>

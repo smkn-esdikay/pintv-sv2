@@ -115,7 +115,6 @@ export class WrestlingManager {
       const scMs = timeConstants.sc * 1000;
       this._current.clocks.shotclock = new ZonkClock(scMs);
     }
-    this.initializeSideClocks(timeConstants);
 
     // 3. ----------------- periods setup -----------------
     this._current.periods = []; // Clear existing periods
@@ -141,6 +140,7 @@ export class WrestlingManager {
     }
     this._current.l = getSideState(lColor);
     this._current.r = getSideState(rColor);
+    this.initializeSideClocks(timeConstants);
     
     // 5. ----------------- remaining fields -----------------
     this._current.config = this.config;
@@ -149,7 +149,6 @@ export class WrestlingManager {
       lastActivatedId: '',
       lastActivatedAction: '',
     };
-    this._current.periods = [];
     this._current.periodIdx = 0;
     this._current.defer = '';
 

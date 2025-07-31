@@ -15,6 +15,14 @@
   h2 {
     @apply text-[2rem];
   }
+  h3 {
+    @apply text-[1.4rem];
+  }
+
+  .page {
+    @apply w-full min-h-[99.5vh] 
+      flex items-center justify-center;
+  }
 
   
 

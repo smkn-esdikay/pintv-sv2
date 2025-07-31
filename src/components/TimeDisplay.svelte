@@ -6,7 +6,7 @@
     id: string;
     clock: ZonkClock;
     className?: string;
-    size?: 'xl' | 'lg' | 'md';
+    size?: 'xl' | 'lg' | 'md' | 'sm';
     showElapsed?: boolean;
     allowEditing?: boolean;
     onTimeEdit?: (newTimeMs: number) => void;
@@ -74,7 +74,12 @@
   const { minutes, seconds } = $derived(msToComponents(remaining));
 
   const clockBaseClasses = 'font-mono text-black text-center';
-  const clockFontClass = $derived(size === 'lg' ? 'text-4xl font-mono' : 'text-6xl');
+  const clockFontClass = $derived(
+    size === "md" ? 'text-xl' :
+    size === "lg" ? 'text-4xl' :
+    size === "xl" ? 'text-6xl' :
+    'text-lg' // small
+  );
   
   // Show precision when 5 seconds or less remain
   const showPrecision = $derived(remaining <= 5000 && isRunning);
