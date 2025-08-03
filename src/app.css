@@ -24,5 +24,16 @@
       flex items-center justify-center;
   }
 
+  /* font colors */
+  .c-f-green {
+    @apply text-green-600;
+  }
+  .c-f-blue {
+    @apply text-blue-600;
+  }
+  .c-f-red {
+    @apply text-red-700;
+  }
+
 }
 

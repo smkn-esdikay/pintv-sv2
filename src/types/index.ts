@@ -35,29 +35,32 @@ export type WPosChoice = {
   choice: WPos | 'defer';
 }
 
+export type ClockAction = {
+  clockId: string;
+  event: ClockEvent;
+  timeLeft: number; // ms
+}
+
+export type WrestlingAction = {
+  action: string;
+  actionTitle: string;
+
+  clean: boolean;
+  
+  pt: number;
+  oppPt: number;
+
+  dq: boolean;
+  cnt?: number; // count - might replace this with dynamic count
+}
+
 export type WAction = {
-  clock?: {
-    side: WSide | undefined;
-    clockId: string;
-    event: ClockEvent;
-    timeLeft: number; // ms
-  }
-
-  wrestle?: {
-    action: string;
-    actionTitle: string;
-
-    clean: boolean;
-    
-    pt: number;
-    oppPt: number;
-
-    dq: boolean;
-    cnt: number; // count - might replace this with dynamic count
-  }
-
+  id?: string;
+  clock?: ClockAction;
+  wrestle?: WrestlingAction;
+  side: WSide;
   ts: number; // Date.now()
-  elapsed: number; // seconds into current period
+  elapsed?: number; // seconds into current period
 }
 
 export type WPeriod = {

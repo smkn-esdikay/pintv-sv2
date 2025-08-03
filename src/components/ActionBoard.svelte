@@ -1,6 +1,11 @@
 <script lang="ts">
   import type { WAction, WPeriod, WPos, WSide, WStyle } from "@/types";
-  import { cnsActions, type ActionEntry, type ActionPoint } from "@/constants/wrestling.constants";
+  import { 
+    cnsActions, 
+    type ActionEntry, 
+    type ActionPoint 
+  } from "@/constants/wrestling.constants";
+    import { generateId } from "@/lib/math";
 
   interface Props {
     side: WSide;
@@ -36,6 +41,21 @@
 
   const handleActionClick = (code: string) => {
     console.log('action button clicked', side, code);
+
+    const pl = {
+      id: generateId(),
+      side,
+      wrestle: {
+        action: code,
+        clean: true,
+        pt: 0,
+        oppPt: 0,
+        dq: false,
+      },
+      ts: Date.now(),
+    } as WAction;
+
+    onClick(side, pl);
   };
 
 </script>
