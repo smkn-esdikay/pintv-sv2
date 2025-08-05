@@ -10,6 +10,7 @@
   import TimeDisplay from '@/components/TimeDisplay.svelte';
   import TimeControls from '@/components/TimeControls.svelte';
   import ActionBoard from "@/components/ActionBoard.svelte";
+  import Recap from "@/components/Recap.svelte";
 
   import ZonkButton from "@/components/_UI/ZonkButton.svelte";
 
@@ -76,7 +77,7 @@
         pos={current.l.pos}
         style={current.config.style}
         periods={current.periods}
-        onClick={() => {}}
+        onClick={(actn) => { manager.processAction(actn) }}
       />
     </div>
 
@@ -221,6 +222,15 @@
 
     </section>
 
+    <section>
+      <Recap 
+        periods={current.periods}
+        colorLeft={current.l.color}
+        colorRight={current.r.color}
+      />
+
+    </section>
+
   </div>
   <!-- RIGHT -->
   <div class={`card-${current.r.color}`}>
@@ -242,7 +252,7 @@
         pos={current.r.pos}
         style={current.config.style}
         periods={current.periods}
-        onClick={() => {}}
+        onClick={(actn) => { manager.processAction(actn) }}
       />
     </div>
 

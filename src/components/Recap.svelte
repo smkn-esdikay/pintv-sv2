@@ -71,6 +71,8 @@
   }
 
   function formatTime(action: WAction): string {
+    if (!action.elapsed)
+      return '';
     const minutes = Math.floor(action.elapsed / 60);
     const seconds = Math.floor(action.elapsed % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
@@ -214,7 +216,7 @@
 
 <style>
   .recap-card {
-    @apply border border-gray-300 rounded-lg p-4 bg-white;
+    @apply w-full;
   }
 
   .recap-header {

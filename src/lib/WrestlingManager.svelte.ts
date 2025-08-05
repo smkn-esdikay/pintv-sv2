@@ -6,9 +6,15 @@ import type {
   WSide, 
   ClockEvent, 
   WHistory,
-  SideColor
+  SideColor,
+  WAction
 } from "@/types";
-import { cnsColors, getCnsClock, getCnsPeriods, type TimersEntry } from "@/constants/wrestling.constants";
+import { 
+  cnsColors, 
+  getCnsClock, 
+  getCnsPeriods, 
+  type TimersEntry 
+} from "@/constants/wrestling.constants";
 import { ZonkClock } from "./ZonkClock";
 import { co } from "./console";
 
@@ -270,6 +276,21 @@ export class WrestlingManager {
     }
     
     return false; // Clock ID not found
+  }
+
+  // Actions
+  processAction(actn: WAction) {
+    if (!this._current.periods[this._current.periodIdx]) {
+      return;
+    }
+
+    if (actn.wrestle) { // wrestling action
+      this._current.periods[this._current.periodIdx].actions.push(actn);
+
+    } else { // clock action
+
+    }
+    
   }
 
   // Colors

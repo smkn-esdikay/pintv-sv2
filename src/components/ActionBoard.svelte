@@ -12,7 +12,7 @@
     pos: WPos,
     style: WStyle;
     periods: WPeriod[];
-    onClick: (side: WSide, action: WAction) => void;
+    onClick: (action: WAction) => void;
   }
 
   let {
@@ -42,7 +42,7 @@
   const handleActionClick = (code: string) => {
     console.log('action button clicked', side, code);
 
-    const pl = {
+    const actn = {
       id: generateId(),
       side,
       wrestle: {
@@ -55,7 +55,7 @@
       ts: Date.now(),
     } as WAction;
 
-    onClick(side, pl);
+    onClick(actn);
   };
 
 </script>
