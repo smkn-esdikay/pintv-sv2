@@ -42,8 +42,8 @@ export type ClockAction = {
 }
 
 export type WrestlingAction = {
-  action: string;
-  actionTitle: string;
+  action: string;       // code
+  actionTitle: string;  // title
 
   clean: boolean;
   

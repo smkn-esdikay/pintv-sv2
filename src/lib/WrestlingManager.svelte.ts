@@ -283,6 +283,9 @@ export class WrestlingManager {
     if (!this._current.periods[this._current.periodIdx]) {
       return;
     }
+    
+    const mainClockElapsed = this._current.clocks.mc.getTotalElapsed();
+    actn.elapsed = Math.floor(mainClockElapsed / 1000);
 
     if (actn.wrestle) { // wrestling action
       this._current.periods[this._current.periodIdx].actions.push(actn);

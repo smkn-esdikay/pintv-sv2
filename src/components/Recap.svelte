@@ -18,6 +18,8 @@
     onDelete,
   }: Props = $props();
 
+  $inspect(periods);
+
   let orderMode = $state<'chrono' | 'match'>('chrono');
   let recapContainer: HTMLDivElement;
 
@@ -37,6 +39,14 @@
     else if (color === "green")
       return "c-f-green";
     return "c-f-red";
+  }
+
+  function getSideClass(side: WSide): string {
+    if (side === "l") {
+      return "justify-start";
+    } else {
+      return "justify-end";
+    }
   }
 
 
@@ -71,7 +81,7 @@
   }
 
   function formatTime(action: WAction): string {
-    if (!action.elapsed)
+    if (action.elapsed === undefined)
       return '';
     const minutes = Math.floor(action.elapsed / 60);
     const seconds = Math.floor(action.elapsed % 60);
@@ -92,7 +102,7 @@
     }
   }
 
-  // Auto-scroll when new actions are added
+  // auto scroll
   let previousActionCount = 0;
   $effect(() => {
     const currentCount = periods.reduce((sum, period) => sum + period.actions.length, 0);
@@ -103,7 +113,7 @@
   });
 </script>
 
-<div class="recap-card">
+<div class="recap-wrapper">
   <div class="recap-header">
     <span class="recap-title">Match Recap</span>
     <div class="sort-buttons">
@@ -144,7 +154,7 @@
             {@const isExpanded = expandedActions.has(actionKey)}
             
             <div class="action-item">
-              <div class="action-main">
+              <div class="flexrow text-standard {getSideClass(action.side)}">
                 <span>{formatTime(action)}</span>
                 
                 {#if action.wrestle}
@@ -180,7 +190,7 @@
                 </button>
               </div>
               
-              <div class="timestamp">
+              <div class="flexrow text-grey {getSideClass(action.side)}">
                 {formatTimestamp(action)}
               </div>
             </div>
@@ -215,7 +225,20 @@
 </div>
 
 <style>
-  .recap-card {
+
+  .text-standard {
+    @apply text-xs;
+  }
+  .text-grey {
+    @apply text-xs text-slate-500;
+  }
+
+
+  .flexrow {
+    @apply flex items-center gap-1 flex-wrap;
+  }
+
+  .recap-wrapper {
     @apply w-full;
   }
 
@@ -249,23 +272,15 @@
   }
 
   .period-header {
-    @apply text-center font-semibold text-sm bg-gray-100 py-2 rounded mb-2;
+    @apply text-center font-semibold text-sm bg-gray-100;
   }
 
   .action-item {
-    @apply text-xs;
-  }
-
-  .action-main {
-    @apply flex items-center gap-1 flex-wrap;
-  }
-
-  .timestamp {
-    @apply text-gray-500 mt-1;
+    @apply w-full;
   }
 
   .expand-btn {
-    @apply ml-1 text-gray-500 hover:text-gray-700 p-1 rounded;
+    @apply text-gray-500 hover:text-gray-700 p-1 rounded;
   }
 
   .dq-text {
