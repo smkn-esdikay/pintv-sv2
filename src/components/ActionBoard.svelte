@@ -5,7 +5,7 @@
     type ActionEntry, 
     type ActionPoint 
   } from "@/constants/wrestling.constants";
-    import { generateId } from "@/lib/math";
+  import { generateId } from "@/lib/math";
 
   interface Props {
     side: WSide;
@@ -28,60 +28,68 @@
     currentOppPoints?: ActionPoint;
   };
 
+  // Get all wrestling actions for this side
   const allSideActions = $derived(
     periods
      .flatMap(p => p.actions)
      .filter(a => a.side === side && !!a.wrestle)
   );
 
-  $inspect("all side actions", side, allSideActions)
+  // Create a count map for easier lookup
+  const actionCountMap = $derived(() => {
+    const countMap = new Map<string, number>();
+    
+    allSideActions.forEach(action => {
+      if (action.wrestle?.action) {
+        const currentCount = countMap.get(action.wrestle.action) || 0;
+        countMap.set(action.wrestle.action, currentCount + 1);
+      }
+    });
+    
+    return countMap;
+  });
 
   const goodActions: ActionEntry[] = $derived(
     cnsActions[style].filter(a => {
       return !a.oppPoints && (!a.show || a.show === pos);
     })
   );
+  
   const badActions: CalculatedActionEntry[] = $derived(
-
     cnsActions[style]
       .filter(a => {
         return !!a.oppPoints;
       }).map(a => {
-
-        // add calculations based on count for this action
-        const actionCount = allSideActions.reduce((acc, allAction) => {
-          if (allAction.wrestle?.action === a.code) 
-            return acc + 1;
-          return acc;
-        }, 0);
+        const actionCount = actionCountMap().get(a.code) || 0;
+        
         let currentOppPoints: ActionPoint;
         if (!a.oppPoints) {
           currentOppPoints = 0;
         } else {
-          if (actionCount <= a.oppPoints.length) {
+          if (actionCount < a.oppPoints.length) {
             currentOppPoints = a.oppPoints[actionCount];
           } else {
             currentOppPoints = a.oppPoints[a.oppPoints.length - 1];
           }
         }
+                
         return {
           ...a,
           actionCount,
           currentOppPoints,
         };
-      }) // end .map
+      })
   );
 
   const actionTitleMap = $derived(() => {
     const map = new Map<string, CalculatedActionEntry>();
-    cnsActions[style].forEach(action => {
+    [...badActions, ...goodActions].forEach(action => {
       map.set(action.code, action);
     });
     return map;
   });
 
   const handleActionClick = (code: string) => {
-    
     let actionTitle: string = '', 
       pt: ActionPoint = 0, 
       oppPt: ActionPoint = 0, 
@@ -102,14 +110,19 @@
         action: code,
         actionTitle,
         clean: true,
-        pt: 0,
-        oppPt: 0,
-        dq: false,
+        pt: typeof pt === 'number' ? pt : 0,
+        oppPt: typeof oppPt === 'number' ? oppPt : 0,
+        dq: pt === 'dq' || oppPt === 'dq',
       },
       ts: Date.now(),
     } as WAction;
 
-    console.log('action button clicked', side, code, actionCount);
+    console.log('ActionBoard: Action button clicked', {
+      side, 
+      code, 
+      actionCount,
+      action: actn
+    });
 
     onClick(actn);
   };
@@ -124,6 +137,9 @@
         onclick={() => handleActionClick(action.code)}
       >
         {action.title}
+        {#if action.points && action.points.length > 0}
+          <span class="text-xs">({action.points[0]})</span>
+        {/if}
       </button>
     {/each}
   </div>
@@ -134,10 +150,16 @@
         onclick={() => handleActionClick(action.code)}
       >
         {action.title}
+        {#if action.currentOppPoints}
+          {#if action.currentOppPoints !== "dq"}
+            <span class="text-xs">(-{action.currentOppPoints})</span>
+          {:else}
+            <span class="text-xs">({action.currentOppPoints})</span>
+          {/if}
+        {/if}
       </button>
     {/each}
   </div>
-
 </div>
 
 <style>
@@ -149,5 +171,4 @@
       text-white font-bold
     ;
   }
-
 </style>
