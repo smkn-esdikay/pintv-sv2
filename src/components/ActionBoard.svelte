@@ -6,6 +6,7 @@
     type ActionPoint 
   } from "@/constants/wrestling.constants";
   import { generateId } from "@/lib/math";
+    import { co } from "@/lib/console";
 
   interface Props {
     side: WSide;
@@ -28,14 +29,12 @@
     currentOppPoints?: ActionPoint;
   };
 
-  // Get all wrestling actions for this side
   const allSideActions = $derived(
     periods
      .flatMap(p => p.actions)
      .filter(a => a.side === side && !!a.wrestle)
   );
 
-  // Create a count map for easier lookup
   const actionCountMap = $derived(() => {
     const countMap = new Map<string, number>();
     
@@ -90,18 +89,18 @@
   });
 
   const handleActionClick = (code: string) => {
-    let actionTitle: string = '', 
-      pt: ActionPoint = 0, 
-      oppPt: ActionPoint = 0, 
-      actionCount: number = 0;
 
     const selectedAction = actionTitleMap().get(code);
-    if (!!selectedAction) {
-      actionTitle = selectedAction.title;
-      pt = selectedAction.points?.[0] || 0;
-      oppPt = selectedAction.currentOppPoints || 0;
-      actionCount = selectedAction.actionCount || 0;
+    if (!selectedAction) {
+      co.error('ActionBoard handleActionClick: selected action not found', code);
+      return;
     }
+
+    const actionTitle: string = selectedAction.title;
+    const pt: ActionPoint = selectedAction.points?.[0] || 0;
+    const oppPt: ActionPoint = selectedAction.currentOppPoints || 0;
+    const actionCount: number = selectedAction.actionCount || 0;
+    const newPos: WPos | undefined = selectedAction.resultingPos ?? undefined;
 
     const actn = {
       id: generateId(),
@@ -110,6 +109,7 @@
         action: code,
         actionTitle,
         clean: true,
+        newPos,
         pt: typeof pt === 'number' ? pt : 0,
         oppPt: typeof oppPt === 'number' ? oppPt : 0,
         dq: pt === 'dq' || oppPt === 'dq',

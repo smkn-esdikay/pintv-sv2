@@ -12,15 +12,16 @@
   import ActionBoard from "@/components/ActionBoard.svelte";
   import Recap from "@/components/Recap.svelte";
 
-  import ZonkButton from "@/components/_UI/ZonkButton.svelte";
+  import Button from "@/components/_UI/ZonkButton.svelte";
+  import Modal from "@/components/_UI/ZonkModal.svelte";
 
   const config = initStore.config;
   const manager = WrestlingManager.getInstance();
   manager.initializeMatch(config);
-  
   let current = $derived(manager.current);
 
   let keyboardHandler: KeyboardHandler;
+  let showResetConfirm = $state(false);
 
   $effect(() => {
     keyboardHandler = new KeyboardHandler({
@@ -44,15 +45,6 @@
     };
   });
 
-  
-  function handlePositionChange(side: WSide, newPosition: WPos) {
-    manager.setPosition(side, newPosition);
-  }
-
-  function handleColorChange(side: WSide, newColor: SideColor) {
-    manager.setColor(side, newColor);
-  }
-
 </script>
 
 <div class="master-grid">
@@ -62,11 +54,11 @@
     <div class="flex flex-row gap-4 items-center mb-2">
       <Position 
         bind:selected={current.l.pos}
-        onSelected={(pos) => handlePositionChange('l', pos)}
+        onSelected={(pos) => manager.setPosition('l', pos)}
       />
       <Color 
         bind:selected={current.l.color}
-        onSelected={(color) => handleColorChange('l', color)}
+        onSelected={(color) => manager.setColor('l', color)}
       />
     </div>
 
@@ -178,13 +170,13 @@
           <br />
           SPACE to start/stop the main clock;
         </div>
-        <ZonkButton
+        <Button
           color="grey"
           size="md"
           onclick={() => navigate("selector")}
         >
           Back
-        </ZonkButton>
+        </Button>
       </div>
     </div>
 
@@ -193,7 +185,13 @@
   <div class="card-base">
 
     <section>
-      Reset
+      <Button 
+        color="grey"
+        size="md"
+        onclick={() => showResetConfirm = true}
+      >
+        Reset Match
+      </Button>
     </section>
 
     <section>
@@ -226,6 +224,8 @@
         periods={current.periods}
         colorLeft={current.l.color}
         colorRight={current.r.color}
+        onSwitch={(actionId) => manager.switchActionSide(actionId)}
+        onDelete={(actionId) => manager.deleteAction(actionId)}
       />
 
     </section>
@@ -237,11 +237,11 @@
     <div class="flex flex-row gap-4 items-center mb-2">
       <Position 
         bind:selected={current.r.pos}
-        onSelected={(pos) => handlePositionChange('r', pos)}
+        onSelected={(pos) => manager.setPosition('r', pos)}
       />
       <Color 
         bind:selected={current.r.color}
-        onSelected={(color) => handleColorChange('r', color)}
+        onSelected={(color) => manager.setColor("r", color)}
       />
     </div>
 
@@ -347,7 +347,36 @@
     </div>
 
   </div>
+
+  <Modal 
+    bind:open={showResetConfirm} 
+    onclose={() => showResetConfirm = false}
+    size="md"
+  >
+    <div class="text-center">
+      <h2>Reset Match?</h2>
+      <div class="mt-4 flex flex-row gap-4 items-center justify-center">
+        <Button 
+          color="grey" 
+          onclick={() => showResetConfirm = false}
+        >
+          Cancel
+        </Button>
+        <Button 
+          color="red"
+          onclick={() => {
+            manager.resetMatch();
+            showResetConfirm = false;
+          }}
+        >
+          Reset
+        </Button>
+      </div>
+    </div>
+  </Modal>
+
 </div>
+
 
 <style>
   

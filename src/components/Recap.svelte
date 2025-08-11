@@ -6,8 +6,8 @@
     periods: WPeriod[];
     colorLeft: SideColor;
     colorRight: SideColor;
-    onSwitch?: (periodIndex: number, actionIndex: number) => void;
-    onDelete?: (periodIndex: number, actionIndex: number) => void;
+    onSwitch?: (actionId: string) => void;
+    onDelete?: (actionId: string) => void;
   }
 
   let {
@@ -24,7 +24,6 @@
   let recapContainer: HTMLDivElement;
 
   let expandedActions = $state<Set<string>>(new Set());
-
 
   function getColorClass(side: WSide, opp: boolean = false): string {
     let color; 
@@ -47,34 +46,28 @@
       return "justify-end";
   }
 
-  function getActionKey(periodIndex: number, actionIndex: number): string {
-    return `${periodIndex}-${actionIndex}`;
-  }
-
-  function toggleExpand(periodIndex: number, actionIndex: number) {
-    const key = getActionKey(periodIndex, actionIndex);
+  function toggleExpand(actionId: string) {
     const newExpanded = new Set(expandedActions);
     
-    if (newExpanded.has(key)) {
-      newExpanded.delete(key);
+    if (newExpanded.has(actionId)) {
+      newExpanded.delete(actionId);
     } else {
-      newExpanded.add(key);
+      newExpanded.add(actionId);
     }
     
     expandedActions = newExpanded;
   }
 
-  function deleteAction(periodIndex: number, actionIndex: number) {
-    onDelete?.(periodIndex, actionIndex);
-    const key = getActionKey(periodIndex, actionIndex);
+  function deleteAction(actionId: string) {
+    onDelete?.(actionId);
     const newExpanded = new Set(expandedActions);
-    newExpanded.delete(key);
+    newExpanded.delete(actionId);
     expandedActions = newExpanded;
   }
 
-  function switchAction(periodIndex: number, actionIndex: number) {
-    onSwitch?.(periodIndex, actionIndex);
-    toggleExpand(periodIndex, actionIndex);
+  function switchAction(actionId: string) {
+    onSwitch?.(actionId);
+    toggleExpand(actionId);
   }
 
   function formatTime(action: WAction): string {
@@ -113,7 +106,7 @@
 <div class="recap-wrapper">
   <div class="recap-header">
     <span class="recap-title">Match Recap</span>
-    <div class="fl-rw">
+    <div class="flexrow">
       <button
         onclick={() => orderMode = 'chrono'}
         class={`sort-btn ${orderMode === 'chrono' ? 'active' : ''}`}
@@ -146,12 +139,11 @@
             {period.title}
           </div>
 
-          {#each period.actions as action, actionIndex (action.ts)}
-            {@const actionKey = getActionKey(periodIndex, actionIndex)}
-            {@const isExpanded = expandedActions.has(actionKey)}
+          {#each period.actions as action (action.id)}
+            {@const isExpanded = expandedActions.has(action.id)}
             
             <div class="action-item">
-              <div class="fl-rw text-standard {getSideClass(action.side)}">
+              <div class="flexrow text-standard {getSideClass(action.side)}">
                 <span>{formatTime(action)}</span>
                 
                 {#if action.wrestle}
@@ -179,7 +171,7 @@
                 {/if} -->
                 
                 <button
-                  onclick={() => toggleExpand(periodIndex, actionIndex)}
+                  onclick={() => toggleExpand(action.id)}
                   class="expand-btn"
                   title="Edit action"
                 >
@@ -187,7 +179,7 @@
                 </button>
               </div>
               
-              <div class="fl-rw text-grey {getSideClass(action.side)}">
+              <div class="flexrow text-grey {getSideClass(action.side)}">
                 {formatTimestamp(action)}
               </div>
             </div>
@@ -195,19 +187,19 @@
             {#if isExpanded}
               <div class="action-controls">
                 <button
-                  onclick={() => switchAction(periodIndex, actionIndex)}
+                  onclick={() => switchAction(action.id)}
                   class="control-btn switch"
                 >
                   Switch
                 </button>
                 <button
-                  onclick={() => deleteAction(periodIndex, actionIndex)}
+                  onclick={() => deleteAction(action.id)}
                   class="control-btn delete"
                 >
                   Delete
                 </button>
                 <button
-                  onclick={() => toggleExpand(periodIndex, actionIndex)}
+                  onclick={() => toggleExpand(action.id)}
                   class="control-btn cancel"
                 >
                   Cancel
@@ -244,7 +236,7 @@
     @apply bg-blue-600 text-white font-bold px-1 rounded-md;
   }
 
-  .fl-rw {
+  .flexrow {
     @apply flex items-center gap-1 flex-wrap;
   }
 

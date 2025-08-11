@@ -50,12 +50,14 @@ export type WrestlingAction = {
   pt: number;
   oppPt: number;
 
+  newPos?: WPos;
+
   dq: boolean;
   cnt?: number; // count - might replace this with dynamic count
 }
 
 export type WAction = {
-  id?: string;
+  id: string;
   clock?: ClockAction;
   wrestle?: WrestlingAction;
   side: WSide;

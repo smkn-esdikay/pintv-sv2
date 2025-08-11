@@ -279,6 +279,25 @@ export class WrestlingManager {
   }
 
   // Actions
+
+  getActionById(actionId: string): 
+    { action: WAction; periodIndex: number; actionIndex: number } | null 
+  {
+    for (let periodIndex = 0; periodIndex < this._current.periods.length; periodIndex++) {
+      const period = this._current.periods[periodIndex];
+      for (let actionIndex = 0; actionIndex < period.actions.length; actionIndex++) {
+        if (period.actions[actionIndex].id === actionId) {
+          return {
+            action: period.actions[actionIndex],
+            periodIndex,
+            actionIndex
+          };
+        }
+      }
+    }
+    return null;
+  }
+  
   processAction(actn: WAction) {
     if (!this._current.periods[this._current.periodIdx]) {
       return;
@@ -289,11 +308,32 @@ export class WrestlingManager {
 
     if (actn.wrestle) { // wrestling action
       this._current.periods[this._current.periodIdx].actions.push(actn);
+      if (!!actn.wrestle.newPos) {
+        this.setPosition(actn.side, actn.wrestle.newPos);
+      }
 
     } else { // clock action
 
     }
     
+  }
+
+  switchActionSide(actionId: string) {
+    const result = this.getActionById(actionId);
+    if (!result) return false;
+
+    const { action } = result;
+    const newSide: WSide = action.side === "l" ? "r" : "l";
+    action.side = newSide;
+  }
+
+  deleteAction(actionId: string): boolean {
+    const result = this.getActionById(actionId);
+    if (!result) return false;
+    
+    const { periodIndex, actionIndex } = result;
+    this._current.periods[periodIndex].actions.splice(actionIndex, 1);
+    return true; 
   }
 
   // Colors
@@ -362,7 +402,7 @@ export class WrestlingManager {
     this.destroyMainClocks();
     this.destroySideClocks();
     this.initialized = false;
-    this._current = {...placeholderState};
+    this.initializeMatch(this.config as WConfig);
   }
 
   static destroy() {
