@@ -18,12 +18,11 @@
     onDelete,
   }: Props = $props();
 
-  $inspect(periods);
+  $inspect('periods', periods);
 
   let orderMode = $state<'chrono' | 'match'>('chrono');
   let recapContainer: HTMLDivElement;
 
-  // Track expanded state for actions
   let expandedActions = $state<Set<string>>(new Set());
 
 
@@ -35,20 +34,18 @@
       color = side === "r" ? colorLeft : colorRight;
 
     if (color === "blue")
-      return "c-f-blue";
+      return "text-points-blue";
     else if (color === "green")
-      return "c-f-green";
-    return "c-f-red";
+      return "text-points-green";
+    return "text-points-red";
   }
 
   function getSideClass(side: WSide): string {
-    if (side === "l") {
+    if (side === "l") 
       return "justify-start";
-    } else {
+    else
       return "justify-end";
-    }
   }
-
 
   function getActionKey(periodIndex: number, actionIndex: number): string {
     return `${periodIndex}-${actionIndex}`;
@@ -116,7 +113,7 @@
 <div class="recap-wrapper">
   <div class="recap-header">
     <span class="recap-title">Match Recap</span>
-    <div class="sort-buttons">
+    <div class="fl-rw">
       <button
         onclick={() => orderMode = 'chrono'}
         class={`sort-btn ${orderMode === 'chrono' ? 'active' : ''}`}
@@ -154,7 +151,7 @@
             {@const isExpanded = expandedActions.has(actionKey)}
             
             <div class="action-item">
-              <div class="flexrow text-standard {getSideClass(action.side)}">
+              <div class="fl-rw text-standard {getSideClass(action.side)}">
                 <span>{formatTime(action)}</span>
                 
                 {#if action.wrestle}
@@ -162,18 +159,18 @@
                   
                   {#if action.wrestle.pt !== 0}
                     <span class={getColorClass(action.side)}>
-                      ({Math.abs(action.wrestle.pt)} pts)
+                      {Math.abs(action.wrestle.pt)} pts
                     </span>
                   {/if}
                   
                   {#if action.wrestle.oppPt !== 0}
                     <span class={getColorClass(action.side, true)}>
-                      ({Math.abs(action.wrestle.oppPt)} pts)
+                      {Math.abs(action.wrestle.oppPt)} pts
                     </span>
                   {/if}
                   
                   {#if action.wrestle.dq}
-                    <span class="dq-text"> &gt; DISQUALIFIED</span>
+                    <span class="text-dq"> &gt; DISQUALIFIED</span>
                   {/if}
                 {/if}
                 
@@ -190,7 +187,7 @@
                 </button>
               </div>
               
-              <div class="flexrow text-grey {getSideClass(action.side)}">
+              <div class="fl-rw text-grey {getSideClass(action.side)}">
                 {formatTimestamp(action)}
               </div>
             </div>
@@ -226,15 +223,28 @@
 
 <style>
 
+  /* text */
   .text-standard {
     @apply text-xs;
   }
   .text-grey {
     @apply text-xs text-slate-500;
   }
+  .text-dq {
+    @apply text-red-600 font-bold;
+  }
 
+  .text-points-red {
+    @apply bg-red-600 text-white font-bold px-1 rounded-md;
+  }
+  .text-points-green {
+    @apply bg-green-600 text-white font-bold px-1 rounded-md;
+  }
+  .text-points-blue {
+    @apply bg-blue-600 text-white font-bold px-1 rounded-md;
+  }
 
-  .flexrow {
+  .fl-rw {
     @apply flex items-center gap-1 flex-wrap;
   }
 
@@ -248,10 +258,6 @@
 
   .recap-title {
     @apply text-lg font-semibold;
-  }
-
-  .sort-buttons {
-    @apply flex gap-1;
   }
 
   .sort-btn {
@@ -281,10 +287,6 @@
 
   .expand-btn {
     @apply text-gray-500 hover:text-gray-700 p-1 rounded;
-  }
-
-  .dq-text {
-    @apply text-red-600 font-bold;
   }
 
   .action-controls {
