@@ -19,7 +19,6 @@
   manager.initializeMatch(config);
   
   let current = $derived(manager.current);
-  $inspect(current);
 
   let keyboardHandler: KeyboardHandler;
 
@@ -355,7 +354,7 @@
   .master-grid {
     @apply 
       w-full min-h-screen
-      grid grid-cols-3 gap-4
+      grid grid-cols-3 gap-2
       p-2
     ;
   }
@@ -364,7 +363,7 @@
     @apply flex flex-col w-full
     sm:p-2 p-1 
     rounded-xl
-    border-[0.6px] border-slate-500
+    border-[0.6px] border-slate-200
     shadow-[0px_2px_8px_0px_rgba(0,0,0,0.05)];
   }
 
@@ -389,7 +388,7 @@
       mb-2
       sm:p-2 p-1 
       rounded-lg
-      border-[0.6px] border-slate-300;
+      border-[0.6px] border-slate-500;
   }
 
   .side-clock-container {

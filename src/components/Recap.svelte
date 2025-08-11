@@ -15,7 +15,7 @@
     colorLeft,
     colorRight,
     onSwitch,
-    onDelete
+    onDelete,
   }: Props = $props();
 
   let orderMode = $state<'chrono' | 'match'>('chrono');
