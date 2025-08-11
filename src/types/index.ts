@@ -3,24 +3,21 @@ import type { ZonkClock } from "@/lib/ZonkClock";
 /**
  * ----------------------- General -----------------------
  */
-export type WeightUnit = 'lbs' | 'kg';
-export type SideColor = 'red' | 'green' | 'blue';
-
+export type WeightUnit =  'lbs' | 'kg';
+export type SideColor =   'red' | 'green' | 'blue';
 
 /**
  * ----------------------- Clocks -----------------------
  */
-export type ClockEvent = 'start' | 'stop' | 'reset' | 'complete';
-
+export type ClockEvent =  'start' | 'stop' | 'reset' | 'complete';
 
 /**
  * ----------------------- Wrestling -----------------------
  */
-
-export type WStyle = 'Folkstyle' | 'Freestyle' | 'Greco';
-export type WAge = 'Highschool' | 'College' | undefined;
-export type WSide = 'l' | 'r';
-export type WPos = 't' | 'n' | 'b';
+export type WStyle =      'Folkstyle' | 'Freestyle' | 'Greco';
+export type WAge =        'Highschool' | 'College' | undefined;
+export type WSide =       'l' | 'r';
+export type WPos =        't' | 'n' | 'b';
 
 export type WConfig = {
   style: WStyle;
@@ -53,7 +50,7 @@ export type WrestlingAction = {
   newPos?: WPos;
 
   dq: boolean;
-  cnt?: number; // count - might replace this with dynamic count
+  cnt?: number;       // count - might replace this with dynamic count
 }
 
 export type WAction = {
@@ -61,15 +58,15 @@ export type WAction = {
   clock?: ClockAction;
   wrestle?: WrestlingAction;
   side: WSide;
-  ts: number; // Date.now()
-  elapsed?: number; // seconds into current period
+  ts: number;         // Date.now()
+  elapsed?: number;   // seconds into current period
 }
 
 export type WPeriod = {
   title: string;
   seconds: number;
-  displayIdx: number; // used for display purposes
-  realIdx: number; // true index
+  displayIdx: number;   // used for display purposes
+  realIdx: number;      // true index
   actions: WAction[];
 }
 

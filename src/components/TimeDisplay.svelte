@@ -110,7 +110,7 @@
 </script>
 
 <div class={`${clockBaseClasses} ${className}`}>
-  <div class={`${clockFontClass} ${precisionClass}`}>
+  <div class={`mx-1 ${clockFontClass} ${precisionClass}`}>
     {#if canEdit}
       <div class="inline-flex items-center">
         <EditableTimeSegment

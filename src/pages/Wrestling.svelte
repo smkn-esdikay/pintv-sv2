@@ -3,7 +3,6 @@
   import { initStore } from "@/stores/init.svelte";
   import { WrestlingManager } from "@/lib/WrestlingManager.svelte";
   import { KeyboardHandler } from "@/lib/KeyboardHandler";
-  import type { SideColor, WPos, WSide } from "@/types";
 
   import Position from '@/components/Position.svelte';
   import Color from "@/components/Color.svelte";
@@ -15,6 +14,7 @@
   import Button from "@/components/_UI/ZonkButton.svelte";
   import Modal from "@/components/_UI/ZonkModal.svelte";
 
+
   const config = initStore.config;
   const manager = WrestlingManager.getInstance();
   manager.initializeMatch(config);
@@ -25,9 +25,9 @@
 
   $effect(() => {
     keyboardHandler = new KeyboardHandler({
-      onLeft: () => { manager.setPosition('l', 't'); },
-      onDown: () => { manager.setPosition('l', 'n'); },
-      onRight: () => { manager.setPosition('r', 't'); },
+      onLeft: () => {   manager.setPosition('l', 't'); },
+      onDown: () => {   manager.setPosition('l', 'n'); },
+      onRight: () => {  manager.setPosition('r', 't'); },
       onSpace: () => {
         const clockRunning = current.clocks.mc.isRunning;
         let isRunning = false;
@@ -182,7 +182,7 @@
 
   </div>
   <!-- CENTER -->
-  <div class="card-base">
+  <div class="">
 
     <section>
       <Button 
@@ -195,7 +195,7 @@
     </section>
 
     <section>
-      <h3>main clock</h3>
+      <h3>Main Clock</h3>
 
       <TimeDisplay 
         id='mc'
@@ -214,9 +214,8 @@
           else if (eventName === 'stop') manager.stopClock('mc');
           else if (eventName === 'reset') manager.resetClock('mc');
         }}
-        className="mt-4"
+        className="mt-1"
       />
-
     </section>
 
     <section>
@@ -227,7 +226,6 @@
         onSwitch={(actionId) => manager.switchActionSide(actionId)}
         onDelete={(actionId) => manager.deleteAction(actionId)}
       />
-
     </section>
 
   </div>
@@ -384,31 +382,30 @@
     @apply 
       w-full min-h-screen
       grid grid-cols-3 gap-2
-      p-2
-    ;
+      p-2;
   }
 
   .card-base {
     @apply flex flex-col w-full
-    sm:p-2 p-1 
-    rounded-xl
-    border-[0.6px] border-slate-200
-    shadow-[0px_2px_8px_0px_rgba(0,0,0,0.05)];
+      sm:p-2 p-1 
+      rounded-xl
+      border-[0.6px] border-slate-200
+      shadow-[0px_2px_8px_0px_rgba(0,0,0,0.05)];
   }
 
   .card-red {
     @apply card-base 
-    bg-red-600/80;
+      bg-red-600/80;
   }
 
   .card-green {
     @apply card-base 
-    bg-green-600/80;
+      bg-green-600/80;
   }
 
   .card-blue {
     @apply card-base 
-    bg-blue-600/80;
+      bg-blue-600/80;
   }
 
   section {
@@ -423,7 +420,7 @@
   .side-clock-container {
     @apply flex flex-row gap-4 items-center justify-between
       py-1 px-4
-      bg-white/20;
+      bg-white/15;
   }
   .side-clock-container > * {
     @apply w-1/3;
@@ -431,6 +428,5 @@
   .side-clock-container > span {
     @apply text-xl text-white;
   }
-
 
 </style>
