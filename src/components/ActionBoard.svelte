@@ -117,12 +117,12 @@
       ts: Date.now(),
     } as WAction;
 
-    co.info('ActionBoard: Action button clicked', {
-      side, 
-      code, 
-      actionCount,
-      action: actn
-    });
+    // co.info('ActionBoard: Action button clicked', {
+    //   side, 
+    //   code, 
+    //   actionCount,
+    //   action: actn
+    // });
 
     onClick(actn);
   };

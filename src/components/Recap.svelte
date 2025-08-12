@@ -18,8 +18,6 @@
     onDelete,
   }: Props = $props();
 
-  $inspect('periods', periods);
-
   let orderMode = $state<'chrono' | 'match'>('chrono');
   let recapContainer: HTMLDivElement;
 
@@ -151,13 +149,13 @@
                   
                   {#if action.wrestle.pt !== 0}
                     <span class={getColorClass(action.side)}>
-                      {Math.abs(action.wrestle.pt)} pts
+                      {action.wrestle.pt} pts
                     </span>
                   {/if}
                   
                   {#if action.wrestle.oppPt !== 0}
                     <span class={getColorClass(action.side, true)}>
-                      {Math.abs(action.wrestle.oppPt)} pts
+                      {action.wrestle.oppPt} pts
                     </span>
                   {/if}
                   
@@ -171,8 +169,8 @@
                 {/if} -->
                 
                 <button
+                  class="icon"
                   onclick={() => toggleExpand(action.id)}
-                  class="expand-btn"
                   title="Edit action"
                 >
                   <Settings size={12} />
@@ -275,10 +273,6 @@
 
   .action-item {
     @apply w-full;
-  }
-
-  .expand-btn {
-    @apply text-gray-500 hover:text-gray-700 p-1 rounded;
   }
 
   .action-controls {

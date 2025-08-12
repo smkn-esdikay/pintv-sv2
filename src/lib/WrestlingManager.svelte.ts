@@ -69,7 +69,6 @@ export class WrestlingManager {
     return WrestlingManager.instance;
   }
 
-  // Initialize with config - can be called multiple times for new matches
   initializeMatch(config: WConfig) {
     this.config = config;
     this.initialize();
@@ -280,6 +279,10 @@ export class WrestlingManager {
 
   // Actions
 
+  getAllActions() {
+    return this._current.periods.flatMap(p => p.actions);
+  }
+
   getActionById(actionId: string): 
     { action: WAction; periodIndex: number; actionIndex: number } | null 
   {
@@ -302,6 +305,13 @@ export class WrestlingManager {
     if (!this._current.periods[this._current.periodIdx]) {
       return;
     }
+
+    if (actn.wrestle?.action === "manual") {
+      const matchPoints = this.getPointsForMatch();
+      if (matchPoints[actn.side] + actn.wrestle.pt <0) {
+        return; // don't allow manual points to drag the points into the negative
+      }
+    }
     
     const mainClockElapsed = this._current.clocks.mc.getTotalElapsed();
     actn.elapsed = Math.floor(mainClockElapsed / 1000);
@@ -311,11 +321,9 @@ export class WrestlingManager {
       if (!!actn.wrestle.newPos) {
         this.setPosition(actn.side, actn.wrestle.newPos);
       }
-
     } else { // clock action
 
     }
-    
   }
 
   switchActionSide(actionId: string) {
@@ -335,6 +343,30 @@ export class WrestlingManager {
     this._current.periods[periodIndex].actions.splice(actionIndex, 1);
     return true; 
   }
+
+  // Scores / Points
+
+  getPointsForMatch(): { l: number; r: number } {
+    const allActions = this.getAllActions().filter(a => { return !!a.wrestle });
+    const leftPoints = allActions.reduce((acc, a) => {
+      let add = 0;
+      if (a.side === "l" && a.wrestle?.pt)
+        add += a.wrestle.pt;
+      if (a.side === "r" && a.wrestle?.oppPt)
+        add += a.wrestle.oppPt;
+      return acc + add;
+    }, 0);
+    const rightPoints = allActions.reduce((acc, a) => {
+      let add = 0;
+      if (a.side === "r" && a.wrestle?.pt)
+        add += a.wrestle.pt;
+      if (a.side === "l" && a.wrestle?.oppPt)
+        add += a.wrestle.oppPt;
+      return acc + add;
+    }, 0);
+    return { l: leftPoints, r: rightPoints };
+  }
+
 
   // Colors
   setColor(side: WSide, newColor: SideColor) {

@@ -25,6 +25,12 @@
       flex items-center justify-center;
   }
 
+
+  /* button styles */
+  button.icon {
+    @apply hover:bg-slate-100 hover:text-blue-700 rounded-lg p-1 transition-colors;
+  }
+
   /* font colors */
   .c-f-green {
     @apply text-green-600;

@@ -4,6 +4,8 @@
   import type { WAge, WConfig, WStyle } from "@/types";
   import ZonkDropdown from "@/components/_UI/ZonkDropdown.svelte";
   import ZonkButton from "@/components/_UI/ZonkButton.svelte";
+    import { cnsClocks } from '@/constants/wrestling.constants';
+    import { formatSecondsArray } from '@/lib/math';
 
   let selectedType = $state(1);
   let selectedTime = $state(1);
@@ -27,6 +29,15 @@
     { value: 2, label: "Team" },
   ];
 
+  const folkstyleCollegeTimes: number[] = [];
+  const fcIdx = cnsClocks.findIndex(c => c.style === "Folkstyle" && c.age === "College");
+  if (fcIdx > -1) {
+    folkstyleCollegeTimes.push(cnsClocks[fcIdx].timers.p1);
+    folkstyleCollegeTimes.push(cnsClocks[fcIdx].timers.p2);
+    folkstyleCollegeTimes.push(cnsClocks[fcIdx].timers.p3 as number);
+  }
+
+
   const sec = $derived((): number => {
     const idx = timeOptions.findIndex((el) => el.value === selectedTime);
     return timeOptions[idx].seconds;
@@ -48,7 +59,7 @@
       case 2:
         style = "Folkstyle";
         age = "College";
-        periodLengths = [180, 120, 120];
+        periodLengths = folkstyleCollegeTimes;
         break;
       case 3:
         style = "Greco";
@@ -102,7 +113,7 @@
           {#if !!showSelectTime}
             <ZonkDropdown bind:value={selectedTime} options={timeOptions} />
           {:else}
-            <div>2:00, 1:00, 1:00</div>
+            <div>{formatSecondsArray(folkstyleCollegeTimes)}</div>
           {/if}
         </div>
       </div>

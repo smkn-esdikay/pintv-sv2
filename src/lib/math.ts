@@ -1,7 +1,9 @@
+/**
+ * ------------------------------- CRYPT -------------------------------
+ */
 
 // generate id (timebased for actions)
 export const generateId = () => Date.now().toString(36);
-
 
 /**
  * Generate a random ID with optional prefix and length
@@ -21,3 +23,20 @@ export function createId(prefix?: string, length: number = 8): string {
 }
 
 export const randomId = (prefix?: string) => createId(prefix, 12);
+
+
+
+/**
+ * ------------------------------- TIME -------------------------------
+ */
+export function formatSeconds(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+
+export const formatSecondsArray = (secondsArray: number[]): string => {
+  return secondsArray.map(formatSeconds).join(', ');
+}
+

@@ -10,6 +10,7 @@
   import TimeDisplay from '@/components/TimeDisplay.svelte';
   import TimeControls from '@/components/TimeControls.svelte';
   import ActionBoard from "@/components/ActionBoard.svelte";
+  import ScoreDisplay from "@/components/ScoreDisplay.svelte";
   import Recap from "@/components/Recap.svelte";
 
   import Button from "@/components/_UI/ZonkButton.svelte";
@@ -24,6 +25,12 @@
   let keyboardHandler: KeyboardHandler;
   let showResetConfirm = $state(false);
   let showGoHomeConfirm = $state(false);
+
+  const matchPoints = $derived(() => {
+    // Re-compute whenever periods change (which happens when actions are added)
+    const _ = current.periods;
+    return manager.getPointsForMatch();
+  });
 
   $effect(() => {
     keyboardHandler = new KeyboardHandler({
@@ -179,7 +186,7 @@
   <!-- CENTER -->
   <div class="">
 
-    <section>
+    <section id="reset-panel">
       <div class="flex flex-row gap-2 items-center justify-center">
         <Button
           color="grey"
@@ -196,6 +203,25 @@
           <RotateCcw size={16} class="mr-1" />
           Reset Match
         </Button>
+      </div>
+    </section>
+
+    <section id="match-score">
+      <div class="w-full flex flex-row items-center justify-between">
+        <ScoreDisplay 
+          side="l"
+          score={matchPoints().l}
+          onClick={(action) => manager.processAction(action)}
+        />
+        <h3>
+          Match Score
+        </h3>
+        <ScoreDisplay 
+          side="r"
+          score={matchPoints().r}
+          onClick={(action) => manager.processAction(action)}
+        />
+
       </div>
     </section>
 
