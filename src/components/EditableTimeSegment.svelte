@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { useInputModeControl } from '@/lib/inputModeHelpers';
+  import { randomId } from '@/lib/math';
+
   interface Props {
     value: number;
     maxValue: number;
@@ -23,6 +26,9 @@
   let editValue = $state(value.toString().padStart(2, '0'));
   let spanElement: HTMLSpanElement;
 
+  const { requestMode: requestEditingMode, releaseMode: releaseEditingMode } = 
+    useInputModeControl('editing', randomId('time-edit'));
+
   $effect(() => {
     if (!isEditing) {
       editValue = value.toString().padStart(2, '0');
@@ -32,6 +38,7 @@
   function handleClick() {
     isEditing = true;
     editValue = value.toString();
+    requestEditingMode();
     onEditingChange?.(true);
     
     // Focus and select text after DOM update
@@ -114,6 +121,7 @@
       // Reset to original value if invalid
       editValue = value.toString().padStart(2, '0');
       isEditing = false;
+      releaseEditingMode();
       onEditingChange?.(false);
       return;
     }
@@ -121,6 +129,7 @@
     // Update the value
     onUpdate(numValue);
     isEditing = false;
+    releaseEditingMode();
     onEditingChange?.(false);
   }
 

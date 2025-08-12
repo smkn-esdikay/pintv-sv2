@@ -117,7 +117,7 @@
       ts: Date.now(),
     } as WAction;
 
-    console.log('ActionBoard: Action button clicked', {
+    co.info('ActionBoard: Action button clicked', {
       side, 
       code, 
       actionCount,

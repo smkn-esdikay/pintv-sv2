@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { X } from '@lucide/svelte'; 
+  import { useAutoInputMode } from '@/lib/inputModeHelpers';
 
   interface Props {
     open: boolean;
@@ -21,6 +22,9 @@
   }: Props = $props();
 
   let isVisible = $state(false);
+
+  const { enable: enableModalMode, disable: disableModalMode } = 
+    useAutoInputMode('modal', undefined, false);
 
   // Size classes
   const sizeClasses = {
@@ -68,9 +72,11 @@
   $effect(() => {
     if (open) {
       isVisible = true;
+      enableModalMode();
       document.body.style.overflow = 'hidden';
     } else {
       isVisible = false;
+      disableModalMode();
       document.body.style.overflow = '';
     }
   });

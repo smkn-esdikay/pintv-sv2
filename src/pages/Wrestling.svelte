@@ -380,8 +380,8 @@
   
   .master-grid {
     @apply 
-      w-full min-h-screen
-      grid grid-cols-3 gap-2
+      min-w-[950px] w-full h-screen
+      grid grid-cols-3 gap-1
       p-2;
   }
 
