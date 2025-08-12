@@ -1,3 +1,5 @@
+// Enhanced WrestlingManager.svelte.ts with action recomputation
+
 import type { 
   WStateMain, 
   WConfig, 
@@ -191,6 +193,163 @@ export class WrestlingManager {
     }
   }
 
+  // ===================== NEW: Action Recomputation Methods =====================
+
+  /**
+   * Recalculates counts and dependent properties for all actions
+   * This should be called after any structural changes (switch/delete)
+   */
+  private recomputeActionCounts(): void {
+    // First pass: Count actions by side and type
+    const actionCounts = new Map<string, number>(); // key: `${side}_${actionCode}`
+    
+    // Process all actions in chronological order to rebuild counts
+    for (const period of this._current.periods) {
+      for (const action of period.actions) {
+        if (!action.wrestle) continue;
+        
+        const key = `${action.side}_${action.wrestle.action}`;
+        const currentCount = actionCounts.get(key) || 0;
+        const newCount = currentCount + 1;
+        actionCounts.set(key, newCount);
+        
+        // Update the action's count
+        action.wrestle.cnt = newCount;
+        
+        // Recompute derived properties based on new count
+        this.recomputeActionProperties(action, newCount);
+      }
+    }
+    
+    co.debug("Action counts recomputed", Object.fromEntries(actionCounts));
+  }
+
+  /**
+   * Recomputes derived properties for a single action based on its count
+   */
+  private recomputeActionProperties(action: WAction, count: number): void {
+    if (!action.wrestle) return;
+    
+    const selectedAction = this.actionTitleMap.get(action.wrestle.action);
+    if (!selectedAction) return;
+
+    // Reset derived properties
+    action.wrestle.oppPt = 0;
+    action.wrestle.dq = false;
+
+    // Recompute opponent points for violation-type actions
+    if (selectedAction.oppPoints && selectedAction.oppPoints.length > 0) {
+      action.wrestle.clean = false;
+      
+      // Get the appropriate opponent points for this occurrence count
+      let oppPtValue;
+      if (count <= selectedAction.oppPoints.length) {
+        oppPtValue = selectedAction.oppPoints[count - 1];
+      } else {
+        // Use the last value for counts beyond the array length
+        oppPtValue = selectedAction.oppPoints[selectedAction.oppPoints.length - 1];
+      }
+      
+      action.wrestle.oppPt = oppPtValue;
+      
+      if (oppPtValue === "dq") {
+        action.wrestle.dq = true;
+      }
+    }
+  }
+
+  /**
+   * Validates that all action counts are correct (debug)
+   */
+  private validateActionCounts(): boolean {
+    const expectedCounts = new Map<string, number>();
+    let isValid = true;
+    
+    for (const period of this._current.periods) {
+      for (const action of period.actions) {
+        if (!action.wrestle) continue;
+        
+        const key = `${action.side}_${action.wrestle.action}`;
+        const currentCount = expectedCounts.get(key) || 0;
+        const expectedCount = currentCount + 1;
+        expectedCounts.set(key, expectedCount);
+        
+        if (action.wrestle.cnt !== expectedCount) {
+          co.error(`Action count mismatch: ${key} expected ${expectedCount}, got ${action.wrestle.cnt}`);
+          isValid = false;
+        }
+      }
+    }
+    
+    return isValid;
+  }
+
+  // ===================== Enhanced Action Management =====================
+
+  switchActionSide(actionId: string): boolean {
+    const result = this.getActionById(actionId);
+    if (!result) return false;
+
+    const { action } = result;
+    const newSide: WSide = action.side === "l" ? "r" : "l";
+    action.side = newSide;
+    
+    this.recomputeActionCounts();
+
+    co.debug(`Action ${actionId} switched to side ${newSide}`, this.validateActionCounts());
+    return true;
+  }
+
+  deleteAction(actionId: string): boolean {
+    const result = this.getActionById(actionId);
+    if (!result) return false;
+    
+    const { periodIndex, actionIndex } = result;
+    this._current.periods[periodIndex].actions.splice(actionIndex, 1);
+    
+    this.recomputeActionCounts();
+
+    co.debug(`Action ${actionId} deleted from period ${periodIndex}`, this.validateActionCounts());
+    return true; 
+  }
+
+  /**
+   * Bulk operations that are more efficient for multiple changes
+   */
+  performBulkActionChanges(changes: Array<{
+    type: 'switch' | 'delete';
+    actionId: string;
+  }>): boolean {
+    let hasChanges = false;
+    
+    // Apply all changes first
+    for (const change of changes) {
+      const result = this.getActionById(change.actionId);
+      if (!result) continue;
+      
+      if (change.type === 'switch') {
+        const { action } = result;
+        const newSide: WSide = action.side === "l" ? "r" : "l";
+        action.side = newSide;
+        hasChanges = true;
+      } else if (change.type === 'delete') {
+        const { periodIndex, actionIndex } = result;
+        this._current.periods[periodIndex].actions.splice(actionIndex, 1);
+        hasChanges = true;
+      }
+    }
+    
+    // Only recompute once at the end
+    if (hasChanges) {
+      this.recomputeActionCounts();
+      co.debug(`Bulk changes applied: ${changes.length} operations`);
+    }
+    
+    return hasChanges;
+  }
+
+  // ===================== Rest of existing methods (unchanged) =====================
+
   startClock(clockId: string) {
     const clock = this.getClockById(clockId);
     if (clock) {
@@ -375,24 +534,6 @@ export class WrestlingManager {
     } else { // clock action
 
     }
-  }
-
-  switchActionSide(actionId: string) {
-    const result = this.getActionById(actionId);
-    if (!result) return false;
-
-    const { action } = result;
-    const newSide: WSide = action.side === "l" ? "r" : "l";
-    action.side = newSide;
-  }
-
-  deleteAction(actionId: string): boolean {
-    const result = this.getActionById(actionId);
-    if (!result) return false;
-    
-    const { periodIndex, actionIndex } = result;
-    this._current.periods[periodIndex].actions.splice(actionIndex, 1);
-    return true; 
   }
 
   // Scores / Points
