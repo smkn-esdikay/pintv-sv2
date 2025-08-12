@@ -3,6 +3,7 @@
   import { initStore } from "@/stores/init.svelte";
   import { WrestlingManager } from "@/lib/WrestlingManager.svelte";
   import { KeyboardHandler } from "@/lib/KeyboardHandler";
+  import { Home, RotateCcw } from "@lucide/svelte";
 
   import Position from '@/components/Position.svelte';
   import Color from "@/components/Color.svelte";
@@ -12,7 +13,7 @@
   import Recap from "@/components/Recap.svelte";
 
   import Button from "@/components/_UI/ZonkButton.svelte";
-  import Modal from "@/components/_UI/ZonkModal.svelte";
+  import Confirm from "@/components/_UI/ConfirmModal.svelte";
 
 
   const config = initStore.config;
@@ -22,6 +23,7 @@
 
   let keyboardHandler: KeyboardHandler;
   let showResetConfirm = $state(false);
+  let showGoHomeConfirm = $state(false);
 
   $effect(() => {
     keyboardHandler = new KeyboardHandler({
@@ -170,13 +172,6 @@
           <br />
           SPACE to start/stop the main clock;
         </div>
-        <Button
-          color="grey"
-          size="md"
-          onclick={() => navigate("selector")}
-        >
-          Back
-        </Button>
       </div>
     </div>
 
@@ -185,13 +180,23 @@
   <div class="">
 
     <section>
-      <Button 
-        color="grey"
-        size="md"
-        onclick={() => showResetConfirm = true}
-      >
-        Reset Match
-      </Button>
+      <div class="flex flex-row gap-2 items-center justify-center">
+        <Button
+          color="grey"
+          size="md"
+          onclick={() => showGoHomeConfirm = true}
+        >
+          <Home size={16} />
+        </Button>
+        <Button 
+          color="grey"
+          size="md"
+          onclick={() => showResetConfirm = true}
+        >
+          <RotateCcw size={16} class="mr-1" />
+          Reset Match
+        </Button>
+      </div>
     </section>
 
     <section>
@@ -346,32 +351,20 @@
 
   </div>
 
-  <Modal 
-    bind:open={showResetConfirm} 
-    onclose={() => showResetConfirm = false}
-    size="md"
-  >
-    <div class="text-center">
-      <h2>Reset Match?</h2>
-      <div class="mt-4 flex flex-row gap-4 items-center justify-center">
-        <Button 
-          color="grey" 
-          onclick={() => showResetConfirm = false}
-        >
-          Cancel
-        </Button>
-        <Button 
-          color="red"
-          onclick={() => {
-            manager.resetMatch();
-            showResetConfirm = false;
-          }}
-        >
-          Reset
-        </Button>
-      </div>
-    </div>
-  </Modal>
+  <Confirm
+    bind:open={showResetConfirm}
+    title="Reset Match?"
+    confirmText="Reset"
+    confirmColor="red"
+    onconfirm={() => manager.resetMatch()}
+  />
+  <Confirm
+    bind:open={showGoHomeConfirm}
+    title="Return to Selection Screen?"
+    confirmText="Proceed"
+    confirmColor="green"
+    onconfirm={() => navigate("selector")}
+  />
 
 </div>
 
