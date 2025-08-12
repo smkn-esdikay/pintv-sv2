@@ -1,3 +1,4 @@
+import type { ActionPoint } from "@/constants/wrestling.constants";
 import type { ZonkClock } from "@/lib/ZonkClock";
 
 /**
@@ -45,7 +46,7 @@ export type WrestlingAction = {
   clean: boolean;
   
   pt: number;
-  oppPt: number;
+  oppPt: ActionPoint;
 
   newPos?: WPos;
 

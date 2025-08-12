@@ -10,9 +10,11 @@ import type {
   WAction
 } from "@/types";
 import { 
+  cnsActions,
   cnsColors, 
   getCnsClock, 
   getCnsPeriods, 
+  type ActionEntry, 
   type TimersEntry 
 } from "@/constants/wrestling.constants";
 import { ZonkClock } from "./ZonkClock";
@@ -57,6 +59,7 @@ export class WrestlingManager {
   private _history = $state<WHistory>({ matches: [], });
   private config: WConfig | null = null;
   private initialized = false;
+  private actionTitleMap: Map<string, ActionEntry> = new Map<string, ActionEntry>();;
 
   private constructor() {
     // Private constructor prevents direct instantiation
@@ -107,7 +110,15 @@ export class WrestlingManager {
       co.error("Wrestling Manager initialize: could not retrieve period constants");
       return;
     }
-    
+
+    // 1. ----------------- set action map -----------------
+
+    const allActions = cnsActions[this.config.style];
+    this.actionTitleMap = new Map<string, ActionEntry>();
+    [...allActions].forEach(action => {
+      this.actionTitleMap.set(action.code, action);
+    });
+
     // 2. ----------------- clock setup -----------------
     this.destroyMainClocks();
     // main clock
@@ -326,7 +337,35 @@ export class WrestlingManager {
 
     if (actn.wrestle) { // wrestling action
       const actionCount = this.countActionsBySide(actn.side, actn.wrestle.action);
-      actn.wrestle.cnt = actionCount;
+      actn.wrestle.cnt = actionCount + 1;
+      
+
+      // add info from constants - ("manual" doesn't exist in constants)
+      const selectedAction = this.actionTitleMap.get(actn.wrestle.action);
+      if (!!selectedAction) {
+
+        if (selectedAction.points) {
+          actn.wrestle.pt = selectedAction.points[0] as number;
+        }
+        if (!!selectedAction.oppPoints) {
+          actn.wrestle.clean = false;
+          if (actn.wrestle.cnt < selectedAction.oppPoints.length) {
+            actn.wrestle.oppPt = selectedAction.oppPoints[actn.wrestle.cnt - 1];
+          } else {
+            actn.wrestle.oppPt = selectedAction.oppPoints[selectedAction.oppPoints.length - 1];
+          }
+          if (actn.wrestle.oppPt === "dq") {
+            actn.wrestle.dq = true;
+          }
+        }
+
+        if (selectedAction.resultingPos) 
+          actn.wrestle.newPos = selectedAction.resultingPos;
+
+        actn.wrestle.actionTitle = selectedAction.title;
+      }
+
+      // co.info("process action", actn);
       
       this._current.periods[this._current.periodIdx].actions.push(actn);
       
@@ -364,7 +403,7 @@ export class WrestlingManager {
       let add = 0;
       if (a.side === "l" && a.wrestle?.pt)
         add += a.wrestle.pt;
-      if (a.side === "r" && a.wrestle?.oppPt)
+      if (a.side === "r" && a.wrestle?.oppPt && a.wrestle.oppPt !== "dq")
         add += a.wrestle.oppPt;
       return acc + add;
     }, 0);
@@ -372,7 +411,7 @@ export class WrestlingManager {
       let add = 0;
       if (a.side === "r" && a.wrestle?.pt)
         add += a.wrestle.pt;
-      if (a.side === "l" && a.wrestle?.oppPt)
+      if (a.side === "l" && a.wrestle?.oppPt && a.wrestle.oppPt !== "dq")
         add += a.wrestle.oppPt;
       return acc + add;
     }, 0);

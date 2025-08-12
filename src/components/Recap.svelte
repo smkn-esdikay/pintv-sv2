@@ -145,17 +145,21 @@
                 <span>{formatTime(action)}</span>
                 
                 {#if action.wrestle}
-                  <span> - {action.wrestle.actionTitle}</span>
+                  <span> - {action.wrestle.actionTitle} #{action.wrestle.cnt}</span>
                   
-                  {#if action.wrestle.pt !== 0}
+                  {#if !!action.wrestle.pt && action.wrestle.pt !== 0}
                     <span class={getColorClass(action.side)}>
                       {action.wrestle.pt} pts
                     </span>
                   {/if}
                   
-                  {#if action.wrestle.oppPt !== 0}
+                  {#if !!action.wrestle.oppPt && action.wrestle.oppPt !== 0}
                     <span class={getColorClass(action.side, true)}>
-                      {action.wrestle.oppPt} pts
+                      {#if action.wrestle.oppPt === "dq"}
+                        DQ
+                      {:else}
+                        {action.wrestle.oppPt} pts
+                      {/if}
                     </span>
                   {/if}
                   

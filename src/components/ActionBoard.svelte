@@ -25,7 +25,6 @@
   }: Props = $props();
 
   type CalculatedActionEntry = ActionEntry & {
-    actionCount?: number;
     currentOppPoints?: ActionPoint;
   };
 
@@ -49,16 +48,13 @@
   });
 
   const goodActions: ActionEntry[] = $derived(
-    cnsActions[style].filter(a => {
-      return !a.oppPoints && (!a.show || a.show === pos);
-    })
+    cnsActions[style].filter(a => !a.oppPoints && (!a.show || a.show === pos))
   );
   
   const badActions: CalculatedActionEntry[] = $derived(
     cnsActions[style]
-      .filter(a => {
-        return !!a.oppPoints;
-      }).map(a => {
+      .filter(a => !!a.oppPoints)
+      .map(a => {
         const actionCount = actionCountMap().get(a.code) || 0;
         
         let currentOppPoints: ActionPoint;
@@ -74,45 +70,23 @@
                 
         return {
           ...a,
-          actionCount,
           currentOppPoints,
         };
       })
   );
 
-  const actionTitleMap = $derived(() => {
-    const map = new Map<string, CalculatedActionEntry>();
-    [...badActions, ...goodActions].forEach(action => {
-      map.set(action.code, action);
-    });
-    return map;
-  });
-
   const handleActionClick = (code: string) => {
-
-    const selectedAction = actionTitleMap().get(code);
-    if (!selectedAction) {
-      co.error('ActionBoard handleActionClick: selected action not found', code);
-      return;
-    }
-
-    const actionTitle: string = selectedAction.title;
-    const pt: ActionPoint = selectedAction.points?.[0] || 0;
-    const oppPt: ActionPoint = selectedAction.currentOppPoints || 0;
-    const actionCount: number = selectedAction.actionCount || 0;
-    const newPos: WPos | undefined = selectedAction.resultingPos ?? undefined;
 
     const actn = {
       id: generateId(),
       side,
       wrestle: {
         action: code,
-        actionTitle,
+        actionTitle: '',
         clean: true,
-        newPos,
-        pt: typeof pt === 'number' ? pt : 0,
-        oppPt: typeof oppPt === 'number' ? oppPt : 0,
-        dq: pt === 'dq' || oppPt === 'dq',
+        pt: 0,
+        oppPt: 0,
+        dq: false,
       },
       ts: Date.now(),
     } as WAction;
@@ -120,8 +94,6 @@
     // co.info('ActionBoard: Action button clicked', {
     //   side, 
     //   code, 
-    //   actionCount,
-    //   action: actn
     // });
 
     onClick(actn);
@@ -138,7 +110,7 @@
       >
         {action.title}
         {#if action.points && action.points.length > 0}
-          <span class="text-xs">({action.points[0]})</span>
+          <span class="text-xs">{action.points[0]}</span>
         {/if}
       </button>
     {/each}
@@ -152,9 +124,9 @@
         {action.title}
         {#if action.currentOppPoints}
           {#if action.currentOppPoints !== "dq"}
-            <span class="text-xs">(-{action.currentOppPoints})</span>
+            <span class="text-xs">-{action.currentOppPoints}</span>
           {:else}
-            <span class="text-xs">({action.currentOppPoints})</span>
+            <span class="text-xs">{action.currentOppPoints}</span>
           {/if}
         {/if}
       </button>
