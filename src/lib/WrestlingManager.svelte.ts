@@ -301,6 +301,14 @@ export class WrestlingManager {
     return null;
   }
   
+  private countActionsBySide(side: WSide, actionCode: string): number {
+    return this.getAllActions()
+      .filter(action => 
+        action.side === side && 
+        action.wrestle?.action === actionCode
+      ).length;
+  }
+
   processAction(actn: WAction) {
     if (!this._current.periods[this._current.periodIdx]) {
       return;
@@ -308,16 +316,20 @@ export class WrestlingManager {
 
     if (actn.wrestle?.action === "manual") {
       const matchPoints = this.getPointsForMatch();
-      if (matchPoints[actn.side] + actn.wrestle.pt <0) {
+      if (matchPoints[actn.side] + actn.wrestle.pt < 0) {
         return; // don't allow manual points to drag the points into the negative
       }
     }
-    
+
     const mainClockElapsed = this._current.clocks.mc.getTotalElapsed();
     actn.elapsed = Math.floor(mainClockElapsed / 1000);
 
     if (actn.wrestle) { // wrestling action
+      const actionCount = this.countActionsBySide(actn.side, actn.wrestle.action);
+      actn.wrestle.cnt = actionCount;
+      
       this._current.periods[this._current.periodIdx].actions.push(actn);
+      
       if (!!actn.wrestle.newPos) {
         this.setPosition(actn.side, actn.wrestle.newPos);
       }
