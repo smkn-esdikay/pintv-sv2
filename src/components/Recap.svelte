@@ -44,16 +44,59 @@
       return "justify-end";
   }
 
+  function isElementInView(element: HTMLElement, container: HTMLElement): boolean {
+    const elementRect = element.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    
+    return (
+      elementRect.bottom <= containerRect.bottom &&
+      elementRect.top >= containerRect.top
+    );
+  }
+
+  function scrollToElement(element: HTMLElement) {
+    if (!recapContainer) return;
+    
+    const containerRect = recapContainer.getBoundingClientRect();
+    const elementRect = element.getBoundingClientRect();
+    
+    
+    const scrollTop = recapContainer.scrollTop;
+    const elementBottom = elementRect.bottom - containerRect.top + scrollTop;
+    const containerHeight = containerRect.height;
+    
+    
+    const targetScroll = elementBottom - containerHeight + 20; // 20px padding
+    
+    recapContainer.scrollTo({
+      top: Math.max(0, targetScroll),
+      behavior: 'smooth'
+    });
+  }
+
   function toggleExpand(actionId: string) {
     const newExpanded = new Set(expandedActions);
+    const wasExpanded = newExpanded.has(actionId);
     
-    if (newExpanded.has(actionId)) {
+    if (wasExpanded) {
       newExpanded.delete(actionId);
     } else {
       newExpanded.add(actionId);
     }
     
     expandedActions = newExpanded;
+
+    if (!wasExpanded) {
+      // Use setTimeout to wait for DOM update
+      setTimeout(() => {
+        const actionElement = recapContainer?.querySelector(`[data-action-id="${actionId}"]`) as HTMLElement;
+        const expandedContent = actionElement?.querySelector('.action-controls') as HTMLElement;
+        
+        if (actionElement && expandedContent && !isElementInView(expandedContent, recapContainer)) {
+          scrollToElement(actionElement);
+        }
+      }, 10);
+    }
   }
 
   function deleteAction(actionId: string) {
@@ -90,7 +133,7 @@
     }
   }
 
-  // auto scroll
+  // auto scroll for new actions
   let previousActionCount = 0;
   $effect(() => {
     const currentCount = periods.reduce((sum, period) => sum + period.actions.length, 0);
@@ -140,7 +183,7 @@
           {#each period.actions as action (action.id)}
             {@const isExpanded = expandedActions.has(action.id)}
             
-            <div class="action-item">
+            <div class="action-item" data-action-id={action.id}>
               <div class="flexrow text-standard {getSideClass(action.side)}">
                 <span>{formatTime(action)}</span>
                 
@@ -184,30 +227,30 @@
               <div class="flexrow text-grey {getSideClass(action.side)}">
                 {formatTimestamp(action)}
               </div>
-            </div>
 
-            {#if isExpanded}
-              <div class="action-controls">
-                <button
-                  onclick={() => switchAction(action.id)}
-                  class="control-btn switch"
-                >
-                  Switch
-                </button>
-                <button
-                  onclick={() => deleteAction(action.id)}
-                  class="control-btn delete"
-                >
-                  Delete
-                </button>
-                <button
-                  onclick={() => toggleExpand(action.id)}
-                  class="control-btn cancel"
-                >
-                  Cancel
-                </button>
-              </div>
-            {/if}
+              {#if isExpanded}
+                <div class="action-controls">
+                  <button
+                    onclick={() => switchAction(action.id)}
+                    class="control-btn switch"
+                  >
+                    Switch
+                  </button>
+                  <button
+                    onclick={() => deleteAction(action.id)}
+                    class="control-btn delete"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    onclick={() => toggleExpand(action.id)}
+                    class="control-btn cancel"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              {/if}
+            </div>
           {/each}
         {/if}
       {/each}
