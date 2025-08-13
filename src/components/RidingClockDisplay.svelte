@@ -1,15 +1,17 @@
 <script lang="ts">
-  import { RotateCcw, ArrowLeftRight } from '@lucide/svelte';
-  import EditableTimeSegment from './EditableTimeSegment.svelte';
   import type { RidingClock } from '@/lib/RidingClock';
+  import type { SideColor, WPos } from '@/types';
   import { formatRidingTime, msToRidingComponents, ridingComponentsToMs } from '@/lib/RidingClock';
+  import EditableTimeSegment from './EditableTimeSegment.svelte';
   import ZonkButton from './_UI/ZonkButton.svelte';
+  import { RotateCcw, ArrowLeftRight, ChevronsLeft, ChevronsRight } from '@lucide/svelte';
 
   interface Props {
     id: string;
     clock: RidingClock;
-    leftColor: 'red' | 'green' | 'blue';
-    rightColor: 'red' | 'green' | 'blue';
+    leftPos: WPos;
+    leftColor: SideColor;
+    rightColor: SideColor;
     className?: string;
     size?: 'xl' | 'lg' | 'md' | 'sm';
     allowEditing?: boolean;
@@ -22,10 +24,11 @@
   let {
     id,
     clock,
+    leftPos,
     leftColor,
     rightColor,
     className = '',
-    size = 'lg',
+    size = 'md',
     allowEditing = true,
     onTimeEdit,
     onEditingChange,
@@ -50,7 +53,6 @@
   // Convert time components
   const { minutes, seconds, centiseconds, isNegative } = $derived(msToRidingComponents(netTime));
 
-  const clockBaseClasses = 'font-mono text-center transition-colors duration-300';
   const clockFontClass = $derived(
     size === "sm" ? 'text-lg' :
     size === "md" ? 'text-xl' :
@@ -62,17 +64,27 @@
   
   const maxMinutes = 99; 
   const maxSeconds = 59; 
-  const maxCentiseconds = 99;
+  // const maxCentiseconds = 99;
+
+  const leftBgClass = $derived(
+    leftColor === 'red' ? 'bg-red-600 text-white' :
+    leftColor === 'green' ? 'bg-green-600 text-white' :
+    'bg-blue-600 text-white'
+  );
+  const rightBgClass = $derived(
+    rightColor === 'red' ? 'bg-red-600 text-white' :
+    rightColor === 'green' ? 'bg-green-600 text-white' :
+    'bg-blue-600 text-white'
+  );
+
+  const leftChevronClass = $derived(leftPos === "t" ? leftBgClass : 'bg-white text-slate-300');
+  const rightChevronClass = $derived(leftPos === "b" ? rightBgClass : 'bg-white text-slate-300');
   
   function getColorClasses(): string {
     if (netTime > 0) { // Right has advantage
-      return rightColor === 'red' ? 'bg-red-600/80 text-white' :
-             rightColor === 'green' ? 'bg-green-600/80 text-white' :
-             'bg-blue-600/80 text-white';
+      return rightBgClass;
     } else if (netTime < 0) { // Left has advantage  
-      return leftColor === 'red' ? 'bg-red-600/80 text-white' :
-             leftColor === 'green' ? 'bg-green-600/80 text-white' :
-             'bg-blue-600/80 text-white';
+      return leftBgClass;
     } else {
       return 'bg-black text-white';
     }
@@ -108,42 +120,36 @@
   }
 </script>
 
-<div class={`${clockBaseClasses} ${className}`}>
-  <div class={`mx-1 ${clockFontClass} ${getColorClasses()} px-3 py-2 rounded-lg min-w-[120px]`}>
-    {#if canEdit}
-      <div class="inline-flex items-center">
-        <EditableTimeSegment
-          value={minutes}
-          maxValue={maxMinutes}
-          onUpdate={handleMinutesUpdate}
-          onEditingChange={handleEditingChange}
-          className={`inline-block ${clockFontClass}`}
-          placeholder="minutes"
-        />
-        <span class="mx-1">:</span>
-        <EditableTimeSegment
-          value={seconds}
-          maxValue={maxSeconds}
-          onUpdate={handleSecondsUpdate}
-          onEditingChange={handleEditingChange}
-          className={`inline-block ${clockFontClass}`}
-          placeholder="seconds"
-        />
-        <span class="mx-1">.</span>
-        <EditableTimeSegment
-          value={centiseconds}
-          maxValue={maxCentiseconds}
-          onUpdate={handleCentisecondsUpdate}
-          onEditingChange={handleEditingChange}
-          className={`inline-block ${clockFontClass}`}
-          placeholder="centiseconds"
-        />
-      </div>
-    {:else}
-      {formatRidingTime(netTime)}
-    {/if}
+<div class={`transition-colors duration-300 ${className}`}>
+  <div class="flex flex-row gap-1 items-center justify-center ">
+    <ChevronsLeft class={`${leftChevronClass}`} size={16} />
+    <div class={`font-mono text-center ${clockFontClass} ${getColorClasses()} mx-1 px-1 py-1 rounded-lg min-w-[120px]`}>
+      {#if canEdit}
+        <div class="inline-flex items-center">
+          <EditableTimeSegment
+            value={minutes}
+            maxValue={maxMinutes}
+            onUpdate={handleMinutesUpdate}
+            onEditingChange={handleEditingChange}
+            className={`inline-block ${clockFontClass}`}
+            placeholder="minutes"
+          />
+          <span class="mx-1">:</span>
+          <EditableTimeSegment
+            value={seconds}
+            maxValue={maxSeconds}
+            onUpdate={handleSecondsUpdate}
+            onEditingChange={handleEditingChange}
+            className={`inline-block ${clockFontClass}`}
+            placeholder="seconds"
+          />
+        </div>
+      {:else}
+        {formatRidingTime(netTime)}
+      {/if}
+    </div>
+    <ChevronsRight class={`${rightChevronClass}`} size={16} />
   </div>
-  
   <div class="flex items-center justify-center gap-2 mt-2">
     <ZonkButton
       size="sm"

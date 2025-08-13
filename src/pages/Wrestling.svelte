@@ -253,29 +253,17 @@
     {#if current.clocks.ride}
     <section>
       <h3>Riding Time</h3>
-      
       <RidingClockDisplay 
         id='ride'
         clock={current.clocks.ride}
+        leftPos={current.l.pos}
         leftColor={current.l.color}
         rightColor={current.r.color}
-        size="lg"
         allowEditing={true}
         onTimeEdit={(newTimeMs) => manager.setRidingTime(newTimeMs)}
         onReset={() => manager.resetRidingClock()}
         onSwapAdvantage={() => manager.swapRidingAdvantage()}
       />
-      
-      <!-- Optional: Show which side has advantage -->
-      <!-- <div class="text-xs text-gray-600 mt-1">
-        {#if manager.getRidingAdvantageTime('l') > 0}
-          Left advantage: {manager.getRidingAdvantageTime('l')}s
-        {:else if manager.getRidingAdvantageTime('r') > 0}
-          Right advantage: {manager.getRidingAdvantageTime('r')}s
-        {:else}
-          No advantage
-        {/if}
-      </div> -->
     </section>
     {/if}    
 

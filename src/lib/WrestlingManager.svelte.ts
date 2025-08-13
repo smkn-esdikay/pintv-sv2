@@ -75,12 +75,6 @@ export class WrestlingManager {
     return WrestlingManager.instance;
   }
 
-  initializeMatch(config: WConfig) {
-    this.config = config;
-    this.initialize();
-    this.initialized = true;
-  }
-
   get current(): WStateMain {
     if (!this.initialized) {
       co.warn("WrestlingManager: Accessing state before initialization");
@@ -94,6 +88,16 @@ export class WrestlingManager {
 
   get isInitialized(): boolean {
     return this.initialized;
+  }
+
+  /**
+   * ------------------------- INITIALIZE -------------------------
+   */
+
+  initializeMatch(config: WConfig) {
+    this.config = config;
+    this.initialize();
+    this.initialized = true;
   }
 
   private initialize() { 
@@ -194,8 +198,7 @@ export class WrestlingManager {
     }
   }
 
-  // ===================== NEW: Action Recomputation Methods =====================
-
+  
   /**
    * Recalculates counts and dependent properties for all actions
    * This should be called after any structural changes (switch/delete)
@@ -225,9 +228,8 @@ export class WrestlingManager {
     co.debug("Action counts recomputed", Object.fromEntries(actionCounts));
   }
 
-  /**
-   * Recomputes derived properties for a single action based on its count
-   */
+  
+  // recomputes derived properties for a single action based on its count
   private recomputeActionProperties(action: WAction, count: number): void {
     if (!action.wrestle) return;
     
@@ -259,9 +261,8 @@ export class WrestlingManager {
     }
   }
 
-  /**
-   * Validates that all action counts are correct (debug)
-   */
+  
+  // validates that all action counts are correct (debug)
   private validateActionCounts(): boolean {
     const expectedCounts = new Map<string, number>();
     let isValid = true;
@@ -284,8 +285,6 @@ export class WrestlingManager {
     
     return isValid;
   }
-
-  // ===================== Enhanced Action Management =====================
 
   switchActionSide(actionId: string): boolean {
     const result = this.getActionById(actionId);
@@ -625,7 +624,9 @@ export class WrestlingManager {
     }
   }
 
-  // Scores / Points
+  /**
+   * ------------------------ SCORE ------------------------
+   */
 
   getPointsForMatch(): { l: number; r: number } {
     const allActions = this.getAllActions().filter(a => { return !!a.wrestle });
@@ -649,17 +650,6 @@ export class WrestlingManager {
   }
 
 
-  // Colors
-  setColor(side: WSide, newColor: SideColor) {
-    const oppSide: WSide = side === 'r' ? 'l' : 'r';
-    const previousColor = this._current[side].color;
-    this._current[side].color = newColor;
-
-    if (this._current[oppSide].color === newColor) {
-      this._current[oppSide].color = previousColor;
-    }
-  }
-
   /**
    * ------------------------ POSITION ------------------------
    */
@@ -681,19 +671,23 @@ export class WrestlingManager {
           this.stopRidingClock();
         } else {
           const topSide = position === 't' ? side : oppSide;
-          const currentSide = this._current.clocks.ride.getAdvantage();
           
-          if (currentSide === null) { // ride time at zero
+          let isRidingRunning = false;
+          this._current.clocks.ride.isRunning.subscribe(val => isRidingRunning = val)();
+          
+          if (!isRidingRunning) {
             this.startRidingClock(topSide);
-          } else if (currentSide !== topSide) {
-            this.switchRidingClock(topSide);
+          } else {
+            const currentOnTop = this._current.clocks.ride.getCurrentSide();
+            if (currentOnTop !== topSide) {
+              this.switchRidingClock(topSide);
+            }
+            // If same side is still on top, no action needed
           }
-          // else : same side is still on top
         }
       }
     }
   }
-
 
   showPositionChoice(side: WSide, show: boolean = true) {
     this._current[side].showChoosePos = show;
@@ -712,6 +706,18 @@ export class WrestlingManager {
   }
 
   // Utility methods
+
+  // Colors
+  setColor(side: WSide, newColor: SideColor) {
+    const oppSide: WSide = side === 'r' ? 'l' : 'r';
+    const previousColor = this._current[side].color;
+    this._current[side].color = newColor;
+
+    if (this._current[oppSide].color === newColor) {
+      this._current[oppSide].color = previousColor;
+    }
+  }
+
   getCurrentPeriod(): number {
     // Logic to determine current period based on clock states
     return 1; // Placeholder
@@ -721,6 +727,12 @@ export class WrestlingManager {
     // Logic to determine if match is over
     return false; // Placeholder
   }
+
+
+
+  /**
+   * --------------------- RESET, CLEANUP ---------------------
+   */
 
   private destroyMainClocks() {
     this._current.clocks.mc?.destroy();
