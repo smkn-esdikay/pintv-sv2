@@ -9,6 +9,7 @@
   import Color from "@/components/Color.svelte";
   import TimeDisplay from '@/components/TimeDisplay.svelte';
   import TimeControls from '@/components/TimeControls.svelte';
+  import RidingClockDisplay from "@/components/RidingClockDisplay.svelte";
   import ActionBoard from "@/components/ActionBoard.svelte";
   import ScoreDisplay from "@/components/ScoreDisplay.svelte";
   import Recap from "@/components/Recap.svelte";
@@ -174,10 +175,10 @@
 
     <div class="h-full flex flex-col items-center justify-end">
       <div class="flex flex-col items-center justify-center">
-        <div class="text-center text-white/60 mb-2">
+        <div class="text-center text-white mb-2">
           Press &larr; &darr; &rarr; to change position.
           <br />
-          SPACE to start/stop the main clock;
+          SPACE to start/stop the main clock
         </div>
       </div>
     </div>
@@ -248,6 +249,35 @@
         className="mt-1"
       />
     </section>
+
+    {#if current.clocks.ride}
+    <section>
+      <h3>Riding Time</h3>
+      
+      <RidingClockDisplay 
+        id='ride'
+        clock={current.clocks.ride}
+        leftColor={current.l.color}
+        rightColor={current.r.color}
+        size="lg"
+        allowEditing={true}
+        onTimeEdit={(newTimeMs) => manager.setRidingTime(newTimeMs)}
+        onReset={() => manager.resetRidingClock()}
+        onSwapAdvantage={() => manager.swapRidingAdvantage()}
+      />
+      
+      <!-- Optional: Show which side has advantage -->
+      <!-- <div class="text-xs text-gray-600 mt-1">
+        {#if manager.getRidingAdvantageTime('l') > 0}
+          Left advantage: {manager.getRidingAdvantageTime('l')}s
+        {:else if manager.getRidingAdvantageTime('r') > 0}
+          Right advantage: {manager.getRidingAdvantageTime('r')}s
+        {:else}
+          No advantage
+        {/if}
+      </div> -->
+    </section>
+    {/if}    
 
     <section>
       <Recap 

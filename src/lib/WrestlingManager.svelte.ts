@@ -21,6 +21,7 @@ import {
 } from "@/constants/wrestling.constants";
 import { ZonkClock } from "./ZonkClock";
 import { co } from "./console";
+import { RidingClock } from "./RidingClock";
 
 const getSideState = (color: SideColor): WStateSide => {
   return {
@@ -128,7 +129,7 @@ export class WrestlingManager {
     this._current.clocks.mc = new ZonkClock(firstPeriodMs);
     // ride and shot
     if (!!timeConstants.rt)
-      this._current.clocks.ride = new ZonkClock(0);
+      this._current.clocks.ride = new RidingClock();
     if (!!timeConstants.sc) {
       const scMs = timeConstants.sc * 1000;
       this._current.clocks.shotclock = new ZonkClock(scMs);
@@ -348,14 +349,34 @@ export class WrestlingManager {
     return hasChanges;
   }
 
-  // ===================== Rest of existing methods (unchanged) =====================
+  /**
+   * ------------------------- CLOCK -------------------------
+   */
 
   startClock(clockId: string) {
     const clock = this.getClockById(clockId);
     if (clock) {
       this.stopActiveClock();
       
-      clock.start();
+      if (clockId === 'mc') {
+        (clock as ZonkClock).start();
+        
+        if (this._current.clocks.ride) {
+          const leftPos = this._current.l.pos;
+          if (leftPos === 't') {
+            this.startRidingClock('l');
+          } else if (leftPos === 'b') {
+            this.startRidingClock('r');
+          }
+          // else : neutral. do not start
+        }
+      } else if (clockId === 'ride') {
+        // do nothing
+        return;
+      } else { // Other clocks
+        (clock as ZonkClock).start();
+      }
+      
       this._current.clockInfo.activeId = clockId;
       this._current.clockInfo.lastActivatedId = clockId;
       this._current.clockInfo.lastActivatedAction = 'start';
@@ -365,7 +386,18 @@ export class WrestlingManager {
   stopClock(clockId: string) {
     const clock = this.getClockById(clockId);
     if (clock) {
-      clock.stop();
+      if (clockId === 'mc') {
+        (clock as ZonkClock).stop();
+        
+        if (this._current.clocks.ride) {
+          this.stopRidingClock();
+        }
+      } else if (clockId === 'ride') {
+        // do nothing
+      } else { // Other clocks
+        (clock as ZonkClock).stop();
+      }
+      
       if (this._current.clockInfo.activeId === clockId) {
         this._current.clockInfo.activeId = '';
       }
@@ -393,7 +425,7 @@ export class WrestlingManager {
     }
   }
 
-  private getClockById(clockId: string): ZonkClock | undefined {
+  private getClockById(clockId: string): ZonkClock | RidingClock | undefined {
     if (clockId === 'mc') return this._current.clocks.mc;
     if (clockId === 'rest') return this._current.clocks.rest;
     if (clockId === 'shotclock') return this._current.clocks.shotclock;
@@ -411,34 +443,34 @@ export class WrestlingManager {
     return undefined;
   }
 
-  private setClockById(clockId: string, newClock: ZonkClock): boolean {
-    if (clockId === 'mc') {
+  private setClockById(clockId: string, newClock: ZonkClock | RidingClock): boolean {
+    if (clockId === 'mc' && newClock instanceof ZonkClock) {
       this._current.clocks.mc = newClock;
       return true;
     }
-    if (clockId === 'rest') {
+    if (clockId === 'rest' && newClock instanceof ZonkClock) {
       this._current.clocks.rest = newClock;
       return true;
     }
-    if (clockId === 'shotclock') {
+    if (clockId === 'shotclock' && newClock instanceof ZonkClock) {
       this._current.clocks.shotclock = newClock;
       return true;
     }
-    if (clockId === 'ride') {
+    if (clockId === 'ride' && newClock instanceof RidingClock) {
       this._current.clocks.ride = newClock;
       return true;
     }
     
     // Handle side clocks (format: "left_blood", "right_injury", etc.)
     const [side, clockType] = clockId.split('_');
-    if (side === 'left' || side === 'l') {
+    if ((side === 'left' || side === 'l') && newClock instanceof ZonkClock) {
       if (clockType in this._current.l.clocks) {
         this._current.l.clocks[clockType as keyof typeof this._current.l.clocks] = newClock;
         return true;
       }
     }
     if (side === 'right' || side === 'r') {
-      if (clockType in this._current.r.clocks) {
+      if ((clockType in this._current.r.clocks) && newClock instanceof ZonkClock) {
         this._current.r.clocks[clockType as keyof typeof this._current.r.clocks] = newClock;
         return true;
       }
@@ -447,7 +479,64 @@ export class WrestlingManager {
     return false; // Clock ID not found
   }
 
-  // Actions
+
+  private isMainClockRunning(): boolean {
+    let isRunning = false;
+    this._current.clocks.mc.isRunning.subscribe(val => isRunning = val)();
+    return isRunning;
+  }
+
+  /**
+   * ------------------------- RIDE TIME -------------------------
+   */
+
+  public startRidingClock(side: WSide): void {
+    if (this._current.clocks.ride) {
+      this._current.clocks.ride.startForSide(side);
+    }
+  }
+
+  public stopRidingClock(): void {
+    if (this._current.clocks.ride) {
+      this._current.clocks.ride.stop();
+    }
+  }
+
+  public switchRidingClock(side: WSide): void {
+    if (this._current.clocks.ride) {
+      this._current.clocks.ride.switchToSide(side);
+    }
+  }
+
+  public resetRidingClock(): void {
+    if (this._current.clocks.ride) {
+      this._current.clocks.ride.reset();
+    }
+  }
+
+  public swapRidingAdvantage(): void {
+    if (this._current.clocks.ride) {
+      this._current.clocks.ride.swapAdvantage();
+    }
+  }
+
+  public setRidingTime(netTimeMs: number): void {
+    if (this._current.clocks.ride) {
+      this._current.clocks.ride.setNetTime(netTimeMs);
+    }
+  }
+
+  public getRidingAdvantageTime(side: WSide): number {
+    if (this._current.clocks.ride) {
+      return this._current.clocks.ride.getAdvantageTime(side);
+    }
+    return 0;
+  }
+
+
+  /**
+   * ------------------------- ACTIONS -------------------------
+   */
 
   getAllActions() {
     return this._current.periods.flatMap(p => p.actions);
@@ -571,15 +660,40 @@ export class WrestlingManager {
     }
   }
 
-  // Position management
+  /**
+   * ------------------------ POSITION ------------------------
+   */
+
   setPosition(side: WSide, position: WPos) {
     const oppSide: WSide = side === 'r' ? 'l' : 'r';
     let mirrorPos: WPos = 'n';
     if (position !== 'n')
       mirrorPos = position === 't' ? 'b' : 't';
+      
     this._current[side].pos = position;
     this._current[oppSide].pos = mirrorPos;
+    
+    if (this._current.clocks.ride) {
+      const mainClockIsRunning = this.isMainClockRunning();
+      
+      if (mainClockIsRunning) {
+        if (position === 'n') {
+          this.stopRidingClock();
+        } else {
+          const topSide = position === 't' ? side : oppSide;
+          const currentSide = this._current.clocks.ride.getAdvantage();
+          
+          if (currentSide === null) { // ride time at zero
+            this.startRidingClock(topSide);
+          } else if (currentSide !== topSide) {
+            this.switchRidingClock(topSide);
+          }
+          // else : same side is still on top
+        }
+      }
+    }
   }
+
 
   showPositionChoice(side: WSide, show: boolean = true) {
     this._current[side].showChoosePos = show;

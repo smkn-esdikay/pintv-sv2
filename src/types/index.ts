@@ -1,5 +1,6 @@
 import type { ActionPoint } from "@/constants/wrestling.constants";
 import type { ZonkClock } from "@/lib/ZonkClock";
+import type { RidingClock } from "@/lib/RidingClock";
 
 /**
  * ----------------------- General -----------------------
@@ -114,7 +115,7 @@ export type WStateMain = {
     mc: ZonkClock;
     rest?: ZonkClock;
     shotclock?: ZonkClock;
-    ride?: ZonkClock;
+    ride?: RidingClock;
   };
   l: WStateSide;
   r: WStateSide;

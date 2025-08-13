@@ -1,6 +1,12 @@
 <script lang="ts">
-  import type { WPeriod, WAction, WStyle, SideColor, WSide } from '@/types';
-  import { Clock, Settings } from '@lucide/svelte';
+  import type { WPeriod, WAction, SideColor, WSide } from '@/types';
+  import { 
+    ClockArrowDown, 
+    ListOrdered, 
+    ChevronDown,
+    SquareChevronDown,
+  } from '@lucide/svelte';
+  import Button from './_UI/ZonkButton.svelte';
 
   interface Props {
     periods: WPeriod[];
@@ -150,17 +156,17 @@
     <div class="flexrow">
       <button
         onclick={() => orderMode = 'chrono'}
-        class={`sort-btn ${orderMode === 'chrono' ? 'active' : ''}`}
+        class={`icon-btn ${orderMode === 'chrono' ? 'active' : ''}`}
         title="Sort chronologically by input time"
       >
-        <Clock size={16} />
+        <ClockArrowDown size={16} />
       </button>
       <button
         onclick={() => orderMode = 'match'}
-        class={`sort-btn ${orderMode === 'match' ? 'active' : ''}`}
+        class={`icon-btn ${orderMode === 'match' ? 'active' : ''}`}
         title="Sort by match periods"
       >
-        <Settings size={16} />
+        <ListOrdered size={16} />
       </button>
     </div>
   </div>
@@ -216,11 +222,15 @@
                 {/if} -->
                 
                 <button
-                  class="icon"
+                  class={`icon-btn ${isExpanded ? 'active' : ''} `}
                   onclick={() => toggleExpand(action.id)}
                   title="Edit action"
                 >
-                  <Settings size={12} />
+                  {#if isExpanded}
+                    <SquareChevronDown size={12} />
+                  {:else}
+                    <ChevronDown size={12} />
+                  {/if}
                 </button>
               </div>
               
@@ -229,25 +239,28 @@
               </div>
 
               {#if isExpanded}
-                <div class="action-controls">
-                  <button
+                <div class="action-options-wrapper">
+                  <Button
                     onclick={() => switchAction(action.id)}
-                    class="control-btn switch"
+                    size="sm"
+                    color="blue"
                   >
                     Switch
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onclick={() => deleteAction(action.id)}
-                    class="control-btn delete"
+                    size="sm"
+                    color="blue"
                   >
                     Delete
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onclick={() => toggleExpand(action.id)}
-                    class="control-btn cancel"
+                    size="sm"
+                    color="grey"
                   >
                     Cancel
-                  </button>
+                  </Button>
                 </div>
               {/if}
             </div>
@@ -297,11 +310,11 @@
     @apply text-lg font-semibold;
   }
 
-  .sort-btn {
+  .icon-btn {
     @apply px-2 py-1 border rounded bg-gray-100 hover:bg-gray-200 transition-colors;
   }
 
-  .sort-btn.active {
+  .icon-btn.active {
     @apply bg-yellow-300;
   }
 
@@ -322,23 +335,12 @@
     @apply w-full;
   }
 
-  .action-controls {
-    @apply text-center mt-2 space-x-2;
+  .action-options-wrapper {
+    @apply 
+      flexrow justify-center 
+      p-1
+      mb-4
+      bg-slate-100 rounded-md;
   }
 
-  .control-btn {
-    @apply px-3 py-1 rounded text-sm font-medium transition-colors;
-  }
-
-  .control-btn.switch {
-    @apply bg-blue-500 text-white hover:bg-blue-600;
-  }
-
-  .control-btn.delete {
-    @apply bg-red-500 text-white hover:bg-red-600;
-  }
-
-  .control-btn.cancel {
-    @apply bg-gray-500 text-white hover:bg-gray-600;
-  }
 </style>
