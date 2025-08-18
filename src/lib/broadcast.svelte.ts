@@ -1,4 +1,3 @@
-// src/lib/broadcast.svelte.ts
 import { co } from './console';
 
 class SimpleBroadcast {

@@ -1,5 +1,3 @@
-// Enhanced WrestlingManager.svelte.ts with action recomputation
-
 import type { 
   WStateMain, 
   WConfig, 
@@ -21,7 +19,12 @@ import {
 } from "@/constants/wrestling.constants";
 import { ZonkClock } from "./ZonkClock";
 import { co } from "./console";
-import { RidingClock } from "./RidingClock";
+import { 
+  broadcastWrestlingState, 
+  broadcastClockStart, 
+  broadcastClockStop, 
+  broadcastClockReset 
+} from "./broadcast.svelte";
 
 const getSideState = (color: SideColor): WStateSide => {
   return {
@@ -75,6 +78,15 @@ export class WrestlingManager {
     return WrestlingManager.instance;
   }
 
+  initializeMatch(config: WConfig) {
+    this.config = config;
+    this.initialize();
+    this.initialized = true;
+    
+    // Broadcast initial state
+    this.broadcastCurrentState();
+  }
+
   get current(): WStateMain {
     if (!this.initialized) {
       co.warn("WrestlingManager: Accessing state before initialization");
@@ -88,16 +100,6 @@ export class WrestlingManager {
 
   get isInitialized(): boolean {
     return this.initialized;
-  }
-
-  /**
-   * ------------------------- INITIALIZE -------------------------
-   */
-
-  initializeMatch(config: WConfig) {
-    this.config = config;
-    this.initialize();
-    this.initialized = true;
   }
 
   private initialize() { 
@@ -131,9 +133,14 @@ export class WrestlingManager {
     // main clock
     const firstPeriodMs = (this.config.periodLengths[0]) * 1000;
     this._current.clocks.mc = new ZonkClock(firstPeriodMs);
-    // ride and shot
-    if (!!timeConstants.rt)
-      this._current.clocks.ride = new RidingClock();
+    
+    // ride clock (only for folkstyle college)
+    if (!!timeConstants.rt) {
+      // For now, skip the riding clock until we implement it properly
+      // this._current.clocks.ride = new RidingClock(); // TODO: implement RidingClock
+    }
+    
+    // shot clock
     if (!!timeConstants.sc) {
       const scMs = timeConstants.sc * 1000;
       this._current.clocks.shotclock = new ZonkClock(scMs);
@@ -198,209 +205,32 @@ export class WrestlingManager {
     }
   }
 
-  
-  /**
-   * Recalculates counts and dependent properties for all actions
-   * This should be called after any structural changes (switch/delete)
-   */
-  private recomputeActionCounts(): void {
-    // First pass: Count actions by side and type
-    const actionCounts = new Map<string, number>(); // key: `${side}_${actionCode}`
-    
-    // Process all actions in chronological order to rebuild counts
-    for (const period of this._current.periods) {
-      for (const action of period.actions) {
-        if (!action.wrestle) continue;
-        
-        const key = `${action.side}_${action.wrestle.action}`;
-        const currentCount = actionCounts.get(key) || 0;
-        const newCount = currentCount + 1;
-        actionCounts.set(key, newCount);
-        
-        // Update the action's count
-        action.wrestle.cnt = newCount;
-        
-        // Recompute derived properties based on new count
-        this.recomputeActionProperties(action, newCount);
-      }
-    }
-    
-    co.debug("Action counts recomputed", Object.fromEntries(actionCounts));
-  }
-
-  
-  // recomputes derived properties for a single action based on its count
-  private recomputeActionProperties(action: WAction, count: number): void {
-    if (!action.wrestle) return;
-    
-    const selectedAction = this.actionTitleMap.get(action.wrestle.action);
-    if (!selectedAction) return;
-
-    // Reset derived properties
-    action.wrestle.oppPt = 0;
-    action.wrestle.dq = false;
-
-    // Recompute opponent points for violation-type actions
-    if (selectedAction.oppPoints && selectedAction.oppPoints.length > 0) {
-      action.wrestle.clean = false;
-      
-      // Get the appropriate opponent points for this occurrence count
-      let oppPtValue;
-      if (count <= selectedAction.oppPoints.length) {
-        oppPtValue = selectedAction.oppPoints[count - 1];
-      } else {
-        // Use the last value for counts beyond the array length
-        oppPtValue = selectedAction.oppPoints[selectedAction.oppPoints.length - 1];
-      }
-      
-      action.wrestle.oppPt = oppPtValue;
-      
-      if (oppPtValue === "dq") {
-        action.wrestle.dq = true;
-      }
-    }
-  }
-
-  
-  // validates that all action counts are correct (debug)
-  private validateActionCounts(): boolean {
-    const expectedCounts = new Map<string, number>();
-    let isValid = true;
-    
-    for (const period of this._current.periods) {
-      for (const action of period.actions) {
-        if (!action.wrestle) continue;
-        
-        const key = `${action.side}_${action.wrestle.action}`;
-        const currentCount = expectedCounts.get(key) || 0;
-        const expectedCount = currentCount + 1;
-        expectedCounts.set(key, expectedCount);
-        
-        if (action.wrestle.cnt !== expectedCount) {
-          co.error(`Action count mismatch: ${key} expected ${expectedCount}, got ${action.wrestle.cnt}`);
-          isValid = false;
-        }
-      }
-    }
-    
-    return isValid;
-  }
-
-  switchActionSide(actionId: string): boolean {
-    const result = this.getActionById(actionId);
-    if (!result) return false;
-
-    const { action } = result;
-    const newSide: WSide = action.side === "l" ? "r" : "l";
-    action.side = newSide;
-    
-    this.recomputeActionCounts();
-
-    co.debug(`Action ${actionId} switched to side ${newSide}`, this.validateActionCounts());
-    return true;
-  }
-
-  deleteAction(actionId: string): boolean {
-    const result = this.getActionById(actionId);
-    if (!result) return false;
-    
-    const { periodIndex, actionIndex } = result;
-    this._current.periods[periodIndex].actions.splice(actionIndex, 1);
-    
-    this.recomputeActionCounts();
-
-    co.debug(`Action ${actionId} deleted from period ${periodIndex}`, this.validateActionCounts());
-    return true; 
-  }
-
-  /**
-   * Bulk operations that are more efficient for multiple changes
-   */
-  performBulkActionChanges(changes: Array<{
-    type: 'switch' | 'delete';
-    actionId: string;
-  }>): boolean {
-    let hasChanges = false;
-    
-    // Apply all changes first
-    for (const change of changes) {
-      const result = this.getActionById(change.actionId);
-      if (!result) continue;
-      
-      if (change.type === 'switch') {
-        const { action } = result;
-        const newSide: WSide = action.side === "l" ? "r" : "l";
-        action.side = newSide;
-        hasChanges = true;
-      } else if (change.type === 'delete') {
-        const { periodIndex, actionIndex } = result;
-        this._current.periods[periodIndex].actions.splice(actionIndex, 1);
-        hasChanges = true;
-      }
-    }
-    
-    // Only recompute once at the end
-    if (hasChanges) {
-      this.recomputeActionCounts();
-      co.debug(`Bulk changes applied: ${changes.length} operations`);
-    }
-    
-    return hasChanges;
-  }
-
-  /**
-   * ------------------------- CLOCK -------------------------
-   */
-
   startClock(clockId: string) {
     const clock = this.getClockById(clockId);
     if (clock) {
       this.stopActiveClock();
       
-      if (clockId === 'mc') {
-        (clock as ZonkClock).start();
-        
-        if (this._current.clocks.ride) {
-          const leftPos = this._current.l.pos;
-          if (leftPos === 't') {
-            this.startRidingClock('l');
-          } else if (leftPos === 'b') {
-            this.startRidingClock('r');
-          }
-          // else : neutral. do not start
-        }
-      } else if (clockId === 'ride') {
-        // do nothing
-        return;
-      } else { // Other clocks
-        (clock as ZonkClock).start();
-      }
-      
+      clock.start();
       this._current.clockInfo.activeId = clockId;
       this._current.clockInfo.lastActivatedId = clockId;
       this._current.clockInfo.lastActivatedAction = 'start';
+      
+      // Broadcast clock start
+      broadcastClockStart(clockId, clock.getRemainingTime());
     }
   }
 
   stopClock(clockId: string) {
     const clock = this.getClockById(clockId);
     if (clock) {
-      if (clockId === 'mc') {
-        (clock as ZonkClock).stop();
-        
-        if (this._current.clocks.ride) {
-          this.stopRidingClock();
-        }
-      } else if (clockId === 'ride') {
-        // do nothing
-      } else { // Other clocks
-        (clock as ZonkClock).stop();
-      }
-      
+      clock.stop();
       if (this._current.clockInfo.activeId === clockId) {
         this._current.clockInfo.activeId = '';
       }
       this._current.clockInfo.lastActivatedAction = 'stop';
+      
+      // Broadcast clock stop
+      broadcastClockStop(clockId);
     }
   }
 
@@ -409,6 +239,9 @@ export class WrestlingManager {
     if (clock) {
       clock.reset();
       this._current.clockInfo.lastActivatedAction = 'reset';
+      
+      // Broadcast clock reset
+      broadcastClockReset(clockId, clock.getRemainingTime());
     }
   }
 
@@ -424,11 +257,12 @@ export class WrestlingManager {
     }
   }
 
-  private getClockById(clockId: string): ZonkClock | RidingClock | undefined {
+  private getClockById(clockId: string): ZonkClock | undefined {
     if (clockId === 'mc') return this._current.clocks.mc;
     if (clockId === 'rest') return this._current.clocks.rest;
     if (clockId === 'shotclock') return this._current.clocks.shotclock;
-    if (clockId === 'ride') return this._current.clocks.ride;
+    // Skip ride clock for now since it has different interface
+    // if (clockId === 'ride') return this._current.clocks.ride;
     
     // Handle side clocks (format: "left_blood", "right_injury", etc.)
     const [side, clockType] = clockId.split('_');
@@ -442,34 +276,35 @@ export class WrestlingManager {
     return undefined;
   }
 
-  private setClockById(clockId: string, newClock: ZonkClock | RidingClock): boolean {
-    if (clockId === 'mc' && newClock instanceof ZonkClock) {
+  private setClockById(clockId: string, newClock: ZonkClock): boolean {
+    if (clockId === 'mc') {
       this._current.clocks.mc = newClock;
       return true;
     }
-    if (clockId === 'rest' && newClock instanceof ZonkClock) {
+    if (clockId === 'rest') {
       this._current.clocks.rest = newClock;
       return true;
     }
-    if (clockId === 'shotclock' && newClock instanceof ZonkClock) {
+    if (clockId === 'shotclock') {
       this._current.clocks.shotclock = newClock;
       return true;
     }
-    if (clockId === 'ride' && newClock instanceof RidingClock) {
-      this._current.clocks.ride = newClock;
-      return true;
-    }
+    // Skip ride clock for now since it has different interface
+    // if (clockId === 'ride') {
+    //   this._current.clocks.ride = newClock;
+    //   return true;
+    // }
     
     // Handle side clocks (format: "left_blood", "right_injury", etc.)
     const [side, clockType] = clockId.split('_');
-    if ((side === 'left' || side === 'l') && newClock instanceof ZonkClock) {
+    if (side === 'left' || side === 'l') {
       if (clockType in this._current.l.clocks) {
         this._current.l.clocks[clockType as keyof typeof this._current.l.clocks] = newClock;
         return true;
       }
     }
     if (side === 'right' || side === 'r') {
-      if ((clockType in this._current.r.clocks) && newClock instanceof ZonkClock) {
+      if (clockType in this._current.r.clocks) {
         this._current.r.clocks[clockType as keyof typeof this._current.r.clocks] = newClock;
         return true;
       }
@@ -478,64 +313,7 @@ export class WrestlingManager {
     return false; // Clock ID not found
   }
 
-
-  private isMainClockRunning(): boolean {
-    let isRunning = false;
-    this._current.clocks.mc.isRunning.subscribe(val => isRunning = val)();
-    return isRunning;
-  }
-
-  /**
-   * ------------------------- RIDE TIME -------------------------
-   */
-
-  public startRidingClock(side: WSide): void {
-    if (this._current.clocks.ride) {
-      this._current.clocks.ride.startForSide(side);
-    }
-  }
-
-  public stopRidingClock(): void {
-    if (this._current.clocks.ride) {
-      this._current.clocks.ride.stop();
-    }
-  }
-
-  public switchRidingClock(side: WSide): void {
-    if (this._current.clocks.ride) {
-      this._current.clocks.ride.switchToSide(side);
-    }
-  }
-
-  public resetRidingClock(): void {
-    if (this._current.clocks.ride) {
-      this._current.clocks.ride.reset();
-    }
-  }
-
-  public swapRidingAdvantage(): void {
-    if (this._current.clocks.ride) {
-      this._current.clocks.ride.swapAdvantage();
-    }
-  }
-
-  public setRidingTime(netTimeMs: number): void {
-    if (this._current.clocks.ride) {
-      this._current.clocks.ride.setNetTime(netTimeMs);
-    }
-  }
-
-  public getRidingAdvantageTime(side: WSide): number {
-    if (this._current.clocks.ride) {
-      return this._current.clocks.ride.getAdvantageTime(side);
-    }
-    return 0;
-  }
-
-
-  /**
-   * ------------------------- ACTIONS -------------------------
-   */
+  // Actions
 
   getAllActions() {
     return this._current.periods.flatMap(p => p.actions);
@@ -619,14 +397,39 @@ export class WrestlingManager {
       if (!!actn.wrestle.newPos) {
         this.setPosition(actn.side, actn.wrestle.newPos);
       }
+      
+      // Broadcast state update after action
+      this.broadcastCurrentState();
     } else { // clock action
 
     }
   }
 
-  /**
-   * ------------------------ SCORE ------------------------
-   */
+  switchActionSide(actionId: string) {
+    const result = this.getActionById(actionId);
+    if (!result) return false;
+
+    const { action } = result;
+    const newSide: WSide = action.side === "l" ? "r" : "l";
+    action.side = newSide;
+    
+    // Broadcast state update after switch
+    this.broadcastCurrentState();
+  }
+
+  deleteAction(actionId: string): boolean {
+    const result = this.getActionById(actionId);
+    if (!result) return false;
+    
+    const { periodIndex, actionIndex } = result;
+    this._current.periods[periodIndex].actions.splice(actionIndex, 1);
+    
+    // Broadcast state update after deletion
+    this.broadcastCurrentState();
+    return true; 
+  }
+
+  // Scores / Points
 
   getPointsForMatch(): { l: number; r: number } {
     const allActions = this.getAllActions().filter(a => { return !!a.wrestle });
@@ -649,44 +452,31 @@ export class WrestlingManager {
     return { l: leftPoints, r: rightPoints };
   }
 
+  // Colors
+  setColor(side: WSide, newColor: SideColor) {
+    const oppSide: WSide = side === 'r' ? 'l' : 'r';
+    const previousColor = this._current[side].color;
+    this._current[side].color = newColor;
 
-  /**
-   * ------------------------ POSITION ------------------------
-   */
+    if (this._current[oppSide].color === newColor) {
+      this._current[oppSide].color = previousColor;
+    }
+    
+    // Broadcast state update after color change
+    this.broadcastCurrentState();
+  }
 
+  // Position management
   setPosition(side: WSide, position: WPos) {
     const oppSide: WSide = side === 'r' ? 'l' : 'r';
     let mirrorPos: WPos = 'n';
     if (position !== 'n')
       mirrorPos = position === 't' ? 'b' : 't';
-      
     this._current[side].pos = position;
     this._current[oppSide].pos = mirrorPos;
     
-    if (this._current.clocks.ride) {
-      const mainClockIsRunning = this.isMainClockRunning();
-      
-      if (mainClockIsRunning) {
-        if (position === 'n') {
-          this.stopRidingClock();
-        } else {
-          const topSide = position === 't' ? side : oppSide;
-          
-          let isRidingRunning = false;
-          this._current.clocks.ride.isRunning.subscribe(val => isRidingRunning = val)();
-          
-          if (!isRidingRunning) {
-            this.startRidingClock(topSide);
-          } else {
-            const currentOnTop = this._current.clocks.ride.getCurrentSide();
-            if (currentOnTop !== topSide) {
-              this.switchRidingClock(topSide);
-            }
-            // If same side is still on top, no action needed
-          }
-        }
-      }
-    }
+    // Broadcast state update after position change
+    this.broadcastCurrentState();
   }
 
   showPositionChoice(side: WSide, show: boolean = true) {
@@ -706,18 +496,6 @@ export class WrestlingManager {
   }
 
   // Utility methods
-
-  // Colors
-  setColor(side: WSide, newColor: SideColor) {
-    const oppSide: WSide = side === 'r' ? 'l' : 'r';
-    const previousColor = this._current[side].color;
-    this._current[side].color = newColor;
-
-    if (this._current[oppSide].color === newColor) {
-      this._current[oppSide].color = previousColor;
-    }
-  }
-
   getCurrentPeriod(): number {
     // Logic to determine current period based on clock states
     return 1; // Placeholder
@@ -728,17 +506,12 @@ export class WrestlingManager {
     return false; // Placeholder
   }
 
-
-
-  /**
-   * --------------------- RESET, CLEANUP ---------------------
-   */
-
   private destroyMainClocks() {
     this._current.clocks.mc?.destroy();
     this._current.clocks.rest?.destroy();
     this._current.clocks.shotclock?.destroy();
-    this._current.clocks.ride?.destroy();
+    // Skip ride clock for now since it has different interface
+    // this._current.clocks.ride?.destroy();
   }
 
   private destroySideClocks() {
@@ -753,6 +526,41 @@ export class WrestlingManager {
     this.destroySideClocks();
     this.initialized = false;
     this.initializeMatch(this.config as WConfig);
+    // broadcastCurrentState() is called in initializeMatch
+  }
+
+  // Helper method to broadcast current state
+  private broadcastCurrentState() {
+    if (!this.initialized) return;
+    
+    const points = this.getPointsForMatch();
+    const state = {
+      config: this._current.config,
+      periodIdx: this._current.periodIdx,
+      periods: this._current.periods,
+      matchPoints: points,
+      clocks: {
+        mc: {
+          timeLeft: this._current.clocks.mc.getRemainingTime(),
+          isRunning: this._current.clockInfo.activeId === 'mc',
+          max: this._current.clocks.mc.getRemainingTime()
+        }
+      },
+      l: {
+        color: this._current.l.color,
+        pos: this._current.l.pos,
+        teamName: this._current.l.teamName,
+        athleteName: this._current.l.athleteName
+      },
+      r: {
+        color: this._current.r.color,
+        pos: this._current.r.pos,
+        teamName: this._current.r.teamName,
+        athleteName: this._current.r.athleteName
+      }
+    };
+    
+    broadcastWrestlingState(state);
   }
 
   static destroy() {
