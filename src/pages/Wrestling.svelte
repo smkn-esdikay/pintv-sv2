@@ -3,7 +3,8 @@
   import { initStore } from "@/stores/init.svelte";
   import { WrestlingManager } from "@/lib/WrestlingManager.svelte";
   import { KeyboardHandler } from "@/lib/KeyboardHandler";
-  import { Home, RotateCcw } from "@lucide/svelte";
+  import { openScoreboard } from '@/lib/broadcast.svelte';
+  import { Home, RotateCcw, Monitor } from "@lucide/svelte";
 
   import Position from '@/components/Position.svelte';
   import Color from "@/components/Color.svelte";
@@ -392,6 +393,20 @@
       </div>
       {/if}
     </div>
+      <div class="h-full flex flex-col items-center justify-end">
+        <div class="flex flex-col items-center justify-center">
+          <div class="text-center mb-2">
+            <Button
+              color="blue"
+              size="lg"
+              onclick={() => openScoreboard()}
+            >
+              <Monitor size={16} class="mr-1" />
+              Open Scoreboard
+            </Button>
+          </div>
+        </div>
+      </div>
 
   </div>
 

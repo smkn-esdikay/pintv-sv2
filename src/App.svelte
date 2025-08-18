@@ -3,6 +3,7 @@
   import Home from './pages/Home.svelte';
   import Selector from './pages/Selector.svelte';
   import Wrestling from './pages/Wrestling.svelte';
+  import ScoreboardDisplay from './pages/ScoreboardDisplay.svelte';
   import NotFound from './pages/NotFound.svelte';
   
   let currentRoute: string = $derived(getCurrentRoute());
@@ -16,6 +17,8 @@
       <Selector />
     {:else if currentRoute === 'wrestling'}
       <Wrestling />
+    {:else if currentRoute === 'scoreboard-display'}
+      <ScoreboardDisplay />
     {:else}
       <NotFound />
     {/if}
