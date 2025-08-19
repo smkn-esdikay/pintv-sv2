@@ -15,6 +15,14 @@
   let clockTitle = $state('Period 1');
   let clockInterval: ReturnType<typeof setInterval> | null = null;
 
+  // Riding time specific state
+  let rideNetTime = $state(0);
+  let rideIsRunning = $state(false);
+  let rideLastUpdate = $state(0);
+  let rideCurrentSide = $state<'l' | 'r' | null>(null);
+  let rideDisplayTime = $state(0);
+  let rideUpdateInterval: ReturnType<typeof setInterval> | null = null;
+
   // Get reactive data from receiver
   $effect(() => {
     stateData = receiver.stateData;
@@ -22,6 +30,53 @@
 
   $effect(() => {
     clockData = receiver.clockData;
+  });
+
+  // Update riding time data when state changes
+  $effect(() => {
+    if (stateData?.clocks?.ride) {
+      const rideData = stateData.clocks.ride;
+      rideNetTime = rideData.netTime || 0;
+      rideIsRunning = rideData.isRunning || false;
+      rideCurrentSide = rideData.currentSide || null;
+      rideLastUpdate = Date.now();
+      
+      // Update display time immediately
+      rideDisplayTime = rideNetTime;
+    }
+  });
+
+  // Handle real-time riding time updates when running
+  $effect(() => {
+    if (rideIsRunning && rideCurrentSide) {
+      // Start real-time updates for riding time
+      rideUpdateInterval = setInterval(() => {
+        if (rideIsRunning && rideCurrentSide) {
+          const elapsed = Date.now() - rideLastUpdate;
+          
+          // Calculate time change based on which side is on top
+          // Positive netTime = right advantage, negative = left advantage
+          const timeChange = rideCurrentSide === 'r' ? elapsed : -elapsed;
+          rideDisplayTime = rideNetTime + timeChange;
+        }
+      }, 50); // Update every 50ms for smooth display
+    } else {
+      // Stop updates when not running
+      if (rideUpdateInterval) {
+        clearInterval(rideUpdateInterval);
+        rideUpdateInterval = null;
+      }
+      // Show the exact static value when not running
+      rideDisplayTime = rideNetTime;
+    }
+
+    // Cleanup function
+    return () => {
+      if (rideUpdateInterval) {
+        clearInterval(rideUpdateInterval);
+        rideUpdateInterval = null;
+      }
+    };
   });
 
   onMount(() => {
@@ -32,6 +87,9 @@
     receiver.cleanup();
     if (clockInterval) {
       clearInterval(clockInterval);
+    }
+    if (rideUpdateInterval) {
+      clearInterval(rideUpdateInterval);
     }
   });
 
@@ -146,27 +204,27 @@
     return stateData?.matchPoints?.[side] || 0;
   }
 
-
+  // Updated riding time functions to use the real-time display time
   const getRideColor = (): string => {
-    if (stateData?.clocks?.ride?.netTime > 0)
-      return stateData?.l?.color;
-    else if (stateData?.clocks?.ride?.netTime < 0)
-      return stateData?.r?.color;
+    if (rideDisplayTime > 0)
+      return stateData?.r?.color || '';
+    else if (rideDisplayTime < 0)
+      return stateData?.l?.color || '';
     return '';
   };
   
   const getRideClockClass = (): string => {
     const rideColor = getRideColor();
-    if (!rideColor)
-      return '';
+    if (!rideColor) return '';
     return `sb-ride-clock-${rideColor}`;
   }
+
   const getRideLabelClass = (): string => {
     const rideColor = getRideColor();
-    if (!rideColor)
-      return '';
+    if (!rideColor) return '';
     return `sb-ride-label-${rideColor}`;
   }
+
   const formatRideTime = (netTime: number): string => {
     const pad = (num: number): string => {
       return num.toString().padStart(2, '0');
@@ -179,17 +237,21 @@
     return `${pad(minutes)}:${pad(seconds)}`;
   };
 
-
+  // Check if riding time should be shown
+  const showRideTime = $derived(() => {
+    return stateData?.config?.style === "Folkstyle" && 
+           stateData?.config?.age === "College" &&
+           stateData?.clocks?.ride &&
+           rideDisplayTime !== 0;
+  });
 </script>
 
 <svelte:head>
   <title>Wrestling Scoreboard</title>
 </svelte:head>
 
-
 <div class="sb-wrapper">
   <div class="sb-row h-[25%]" id="row-a">
-
     <div class='sb-cell-neutral sb-border w-1/2 l'>
       <div class='pl-4'>
         <div class='sb-text-larger font-bold'>
@@ -210,7 +272,6 @@
         </div>       
       </div>
     </div>
-
   </div>
 
   <div class="sb-row h-[50%]" id="row-b">
@@ -222,9 +283,8 @@
     <div class="w-1/2 sb-border sb-cell-clock c">
       <div class='flex flex-col items-center justify-center'>
         {#if clockData?.clockId === "mc"}
-        
         <div class='w-full text-left sb-text-large flex flex-row'>
-          <!-- {getPeriodOutput()} -->
+          <!-- Period markers could go here -->
         </div>
         {/if}
         <div class={`sb-text-max`}>
@@ -248,7 +308,7 @@
     <div class="w-1/4 sb-cell-neutral sb-border sb-cell-split">
       <div class='sb-cell-split-main'>
         <div class='sb-text-xxl'> 
-          weight
+          97
         </div>
       </div>
       <div class='sb-cell-split-bottom'>
@@ -256,23 +316,19 @@
       </div>
     </div>
 
-    
-    {#if stateData?.clocks?.ride }
+    {#if showRideTime()}
       <div class={`w-1/2 sb-border sb-cell-neutral sb-cell-split ${getRideClockClass()}`}>
-
         <div class='sb-cell-split-main'>
           <div class='sb-text-xxl'> 
-            {formatRideTime(stateData.clocks.ride.netTime)}
+            {formatRideTime(rideDisplayTime)}
           </div>
         </div>
-        <div class={`sb-cell-split-bottom  ${getRideLabelClass()}`}>
+        <div class={`sb-cell-split-bottom ${getRideLabelClass()}`}>
           <div class='sb-cell-split-bottom-text'>
             Riding Time
           </div>
         </div>
-
       </div>
-
     {:else}
       <div class={`w-1/2 sb-border sb-cell-neutral c`}>
         <div class='flex-col flex text-lg'>
@@ -292,15 +348,10 @@
         <div class='sb-cell-split-bottom-text'>Bout</div>
       </div>
     </div>
-
   </div>
-
 </div>
 
-
 <style>
-
-
   .sb-wrapper {
     @apply 
       w-full h-screen 
@@ -344,7 +395,7 @@
   }
 
   .sb-wrapper .sb-border {
-    @apply border-white border-[0.5px] p-[2px];
+    @apply sb-cell-base border-white border-[0.5px] p-[2px];
   }
 
   .sb-wrapper .sb-cell-split {
@@ -357,18 +408,15 @@
 
   .sb-wrapper .sb-cell-split-bottom {
     @apply h-1/5 bg-white flex items-center justify-center;
-
   }
   .sb-wrapper .sb-cell-split-bottom-text {
     @apply text-indigo-950 text-xl font-bold;
   }
-  /* transform: rotate(90deg); */
 
   /* period markers */
   .sb-wrapper .sb-period-marker {
     @apply text-amber-400;
   }
-
 
   /* ride colors */
   .sb-wrapper .sb-ride-clock-red {
@@ -411,8 +459,5 @@
     @apply text-[clamp(6rem,14vw,25rem)];
       line-height: 1;
       font-feature-settings: "kern" 1;
-    
   }
-
-
 </style>
