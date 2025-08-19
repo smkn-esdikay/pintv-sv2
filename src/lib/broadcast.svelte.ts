@@ -23,11 +23,49 @@ class SimpleBroadcast {
   send(channelName: string, data: any) {
     try {
       const channel = this.getOrCreateChannel(channelName);
-      channel.postMessage(data);
-      co.debug(`Sent to ${channelName}:`, data);
+      
+      const serializedData = JSON.parse(JSON.stringify(data, (key, value) => {
+
+        if (value && typeof value === 'object' && value.constructor?.name === 'ZonkClock') {
+          return {
+            timeLeft: value.getRemainingTime(), 
+            elapsed: value.getTotalElapsed(),
+            isRunning: this.getStoreValue(value.isRunning),
+            isComplete: this.getStoreValue(value.isComplete)
+          };
+        }
+        
+        if (value && typeof value === 'object' && value.constructor?.name === 'RidingClock') {
+          return {
+            netTime: value.getNetTime(),
+            isRunning: this.getStoreValue(value.isRunning),
+            currentSide: value.getCurrentSide(),
+            advantage: value.getAdvantage(),
+            leftAdvantageTime: value.getAdvantageTime('l'),
+            rightAdvantageTime: value.getAdvantageTime('r')
+          };
+        }
+        
+        // Handle Svelte stores
+        if (value && typeof value === 'object' && value.subscribe) {
+          return this.getStoreValue(value);
+        }
+        
+        return value;
+      }));
+      
+      channel.postMessage(serializedData);
+      co.debug(`Sent to ${channelName}:`, serializedData);
     } catch (error) {
       co.error(`Failed to send to ${channelName}:`, error);
     }
+  }
+
+  private getStoreValue(store: any): any {
+    let value: any;
+    const unsubscribe = store.subscribe((val: any) => value = val);
+    unsubscribe();
+    return value;
   }
 
   listen(channelName: string, callback: (data: any) => void): () => void {

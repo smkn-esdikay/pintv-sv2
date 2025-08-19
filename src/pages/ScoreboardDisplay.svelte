@@ -62,13 +62,42 @@
     }
   });
 
+
   // Update static clock display from scoreboard data
+  // $effect(() => {
+  //   if (stateData && !isClockRunning) {
+  //     const timeLeft = stateData.clocks?.mc?.timeLeft || 0;
+  //     updateClockDisplay(timeLeft);
+      
+  //     // Update clock title based on period
+  //     clockTitle = `Period ${(stateData.periodIdx || 0) + 1}`;
+  //   }
+  // });
+
+
+
+  let lastClockEvent = $state<string | null>(null);
+
   $effect(() => {
-    if (stateData && !isClockRunning) {
+    if (clockData) {
+      lastClockEvent = clockData.type;
+      // Clear the flag after 2 seconds to allow normal state updates
+      setTimeout(() => {
+        if (lastClockEvent === clockData.type) {
+          lastClockEvent = null;
+        }
+      }, 2000);
+    }
+  });
+
+  $effect(() => {
+    // Only update from state data if:
+    // 1. Clock is not running 
+    // 2. No recent clock events (to preserve stopped time)
+    // 3. We have state data
+    if (stateData && !isClockRunning && !lastClockEvent) {
       const timeLeft = stateData.clocks?.mc?.timeLeft || 0;
       updateClockDisplay(timeLeft);
-      
-      // Update clock title based on period
       clockTitle = `Period ${(stateData.periodIdx || 0) + 1}`;
     }
   });

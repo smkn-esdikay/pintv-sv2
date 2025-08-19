@@ -23,7 +23,8 @@ import {
   broadcastWrestlingState, 
   broadcastClockStart, 
   broadcastClockStop, 
-  broadcastClockReset 
+  broadcastClockReset,
+  broadcast,
 } from "./broadcast.svelte";
 
 const getSideState = (color: SideColor): WStateSide => {
@@ -65,7 +66,8 @@ export class WrestlingManager {
   private _history = $state<WHistory>({ matches: [], });
   private config: WConfig | null = null;
   private initialized = false;
-  private actionTitleMap: Map<string, ActionEntry> = new Map<string, ActionEntry>();;
+  private actionTitleMap: Map<string, ActionEntry> = new Map<string, ActionEntry>();
+  private broadcastUnsubscribes: (() => void)[] = [];
 
   private constructor() {
     // Private constructor prevents direct instantiation
@@ -78,6 +80,43 @@ export class WrestlingManager {
     return WrestlingManager.instance;
   }
 
+  // broadcast
+
+  private setupBroadcastHandlers() {
+    const unsubControl = broadcast.listen('control', (message) => {
+      if (message === 'request_data') {
+        co.debug('Scoreboard requesting data, sending current state');
+        this.broadcastCurrentState();
+      }
+    });
+    this.broadcastUnsubscribes.push(unsubControl);
+  }
+
+  private broadcastCurrentState() {
+    if (!this.initialized) return;
+    
+    const points = this.getPointsForMatch();
+    const state = {
+      config: this._current.config,
+      periodIdx: this._current.periodIdx,
+      periods: this._current.periods,
+      matchPoints: points,
+      clocks: {
+        mc: this._current.clocks.mc // This will be automatically serialized
+      },
+      l: this._current.l,
+      r: this._current.r,
+      clockInfo: this._current.clockInfo
+    };
+    
+    broadcastWrestlingState(state);
+  }
+
+  private cleanupBroadcast() {
+    this.broadcastUnsubscribes.forEach(unsub => unsub());
+    this.broadcastUnsubscribes = [];
+  }
+
   initializeMatch(config: WConfig) {
     this.config = config;
     this.initialize();
@@ -85,6 +124,7 @@ export class WrestlingManager {
     
     // Broadcast initial state
     this.broadcastCurrentState();
+    this.setupBroadcastHandlers();
   }
 
   get current(): WStateMain {
@@ -529,44 +569,11 @@ export class WrestlingManager {
     // broadcastCurrentState() is called in initializeMatch
   }
 
-  // Helper method to broadcast current state
-  private broadcastCurrentState() {
-    if (!this.initialized) return;
-    
-    const points = this.getPointsForMatch();
-    const state = {
-      config: this._current.config,
-      periodIdx: this._current.periodIdx,
-      periods: this._current.periods,
-      matchPoints: points,
-      clocks: {
-        mc: {
-          timeLeft: this._current.clocks.mc.getRemainingTime(),
-          isRunning: this._current.clockInfo.activeId === 'mc',
-          max: this._current.clocks.mc.getRemainingTime()
-        }
-      },
-      l: {
-        color: this._current.l.color,
-        pos: this._current.l.pos,
-        teamName: this._current.l.teamName,
-        athleteName: this._current.l.athleteName
-      },
-      r: {
-        color: this._current.r.color,
-        pos: this._current.r.pos,
-        teamName: this._current.r.teamName,
-        athleteName: this._current.r.athleteName
-      }
-    };
-    
-    broadcastWrestlingState(state);
-  }
-
   static destroy() {
     if (WrestlingManager.instance) {
       WrestlingManager.instance.destroyMainClocks();
       WrestlingManager.instance.destroySideClocks();
+      WrestlingManager.instance.cleanupBroadcast();
       WrestlingManager.instance = null;
     }
   }
