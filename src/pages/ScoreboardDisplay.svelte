@@ -2,25 +2,72 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { createScoreboardReceiver } from '@/lib/broadcast.svelte';
-  import { formatSeconds } from '@/lib/math';
+  import type { WConfig, WSide, SideColor, WPeriod, WStateSide } from '@/types';
 
-  // Initialize receiver
+
+  interface SerializedClockData {
+    timeLeft: number;
+    elapsed: number;
+    isRunning: boolean;
+    isComplete: boolean;
+  }
+
+  interface SerializedRideData {
+    netTime: number;
+    isRunning: boolean;
+    currentSide: WSide | null;
+    advantage: WSide | null;
+    leftAdvantageTime: number;
+    rightAdvantageTime: number;
+  }
+
+  interface SerializedClocks {
+    mc: SerializedClockData;
+    ride?: SerializedRideData;
+    rest?: SerializedClockData;
+    shotclock?: SerializedClockData;
+  }
+
+  interface ScoreboardStateData {
+    config: WConfig;
+    periodIdx: number;
+    periods: WPeriod[];
+    matchPoints: { l: number; r: number };
+    clocks: SerializedClocks;
+    l: WStateSide;
+    r: WStateSide;
+    clockInfo: {
+      activeId: string;
+      lastActivatedId: string;
+      lastActivatedAction: string;
+    };
+  }
+
+  interface ClockEvent {
+    type: 'start' | 'stop' | 'reset';
+    clockId: string;
+    timeLeft?: number;
+    timestamp: number;
+    title?: string;
+  }
+
+
   const receiver = createScoreboardReceiver();
   
-  // Reactive state
-  let stateData = $state<any>(null);
-  let clockData = $state<any>(null);
-  let clockDisplay = $state('0:00');
-  let isClockRunning = $state(false);
-  let clockTitle = $state('Period 1');
+  // state
+  let stateData = $state<ScoreboardStateData | null>(null);
+  let clockData = $state<ClockEvent | null>(null);
+  let clockDisplay = $state<string>('0:00');
+  let isClockRunning = $state<boolean>(false);
+  let clockTitle = $state<string>('Period 1');
   let clockInterval: ReturnType<typeof setInterval> | null = null;
 
-  // Riding time specific state
-  let rideNetTime = $state(0);
-  let rideIsRunning = $state(false);
-  let rideLastUpdate = $state(0);
-  let rideCurrentSide = $state<'l' | 'r' | null>(null);
-  let rideDisplayTime = $state(0);
+  // riding time
+  let rideNetTime = $state<number>(0);
+  let rideIsRunning = $state<boolean>(false);
+  let rideLastUpdate = $state<number>(0);
+  let rideCurrentSide = $state<WSide | null>(null);
+  let rideDisplayTime = $state<number>(0);
   let rideUpdateInterval: ReturnType<typeof setInterval> | null = null;
 
   // Get reactive data from receiver
@@ -99,7 +146,7 @@
       switch (clockData.type) {
         case 'start':
           isClockRunning = true;
-          startClockDisplay(clockData.timeLeft, clockData.timestamp);
+          startClockDisplay(clockData.timeLeft || 0, clockData.timestamp);
           break;
         case 'stop':
           isClockRunning = false;
@@ -114,7 +161,7 @@
             clearInterval(clockInterval);
             clockInterval = null;
           }
-          updateClockDisplay(clockData.timeLeft);
+          updateClockDisplay(clockData.timeLeft || 0);
           break;
       }
     }
@@ -124,10 +171,11 @@
 
   $effect(() => {
     if (clockData) {
-      lastClockEvent = clockData.type;
+      const eventType = clockData.type;
+      lastClockEvent = eventType;
       // Clear the flag after 2 seconds to allow normal state updates
       setTimeout(() => {
-        if (lastClockEvent === clockData.type) {
+        if (lastClockEvent === eventType) {
           lastClockEvent = null;
         }
       }, 2000);
@@ -146,14 +194,14 @@
     }
   });
 
-  function updateClockDisplay(timeMs: number) {
+  function updateClockDisplay(timeMs: number): void {
     const totalSeconds = Math.floor(timeMs / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
     clockDisplay = `${minutes}:${seconds.toString().padStart(2, '0')}`;
   }
 
-  function startClockDisplay(initialTimeMs: number, startTimestamp: number) {
+  function startClockDisplay(initialTimeMs: number, startTimestamp: number): void {
     if (clockInterval) {
       clearInterval(clockInterval);
     }
@@ -181,7 +229,7 @@
     }, 100);
   }
 
-  function getColorClass(color: string): string {
+  function getColorClass(color: SideColor): string {
     switch (color) {
       case 'red': return 'bg-red-600 text-white';
       case 'green': return 'bg-green-600 text-white';
@@ -190,7 +238,7 @@
     }
   }
 
-  function getTeamName(side: 'l' | 'r'): string {
+  function getTeamName(side: WSide): string {
     if (!stateData) return side.toUpperCase();
     
     const sideData = stateData[side];
@@ -200,12 +248,12 @@
     return sideData?.color?.toUpperCase() || side.toUpperCase();
   }
 
-  function getMatchPoints(side: 'l' | 'r'): number {
+  function getMatchPoints(side: WSide): number {
     return stateData?.matchPoints?.[side] || 0;
   }
 
   // Updated riding time functions to use the real-time display time
-  const getRideColor = (): string => {
+  const getRideColor = (): SideColor | '' => {
     if (rideDisplayTime > 0)
       return stateData?.r?.color || '';
     else if (rideDisplayTime < 0)
@@ -238,10 +286,10 @@
   };
 
   // Check if riding time should be shown
-  const showRideTime = $derived(() => {
+  const showRideTime = $derived((): boolean => {
     return stateData?.config?.style === "Folkstyle" && 
            stateData?.config?.age === "College" &&
-           stateData?.clocks?.ride &&
+           stateData?.clocks?.ride !== undefined &&
            rideDisplayTime !== 0;
   });
 </script>
@@ -275,7 +323,7 @@
   </div>
 
   <div class="sb-row h-[50%]" id="row-b">
-    <div class="w-1/4 sb-border c {getColorClass(stateData?.l?.color || 'gray')}">
+    <div class="w-1/4 sb-border c {getColorClass(stateData?.l?.color || 'red')}">
       <div class='sb-text-max'>
         {getMatchPoints('l')}
       </div>
@@ -292,12 +340,12 @@
         </div>
         {#if clockData?.clockId !== "mc"}
           <div>
-            {clockData?.title}
+            {clockData?.title || ''}
           </div>
         {/if}
       </div>
     </div>
-    <div class="w-1/4 sb-border c {getColorClass(stateData?.r?.color || 'gray')}">
+    <div class="w-1/4 sb-border c {getColorClass(stateData?.r?.color || 'green')}">
       <div class='sb-text-max'>
         {getMatchPoints('r')}
       </div>
