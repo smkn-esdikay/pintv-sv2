@@ -46,7 +46,6 @@ class SimpleBroadcast {
           };
         }
         
-        // Handle Svelte stores
         if (value && typeof value === 'object' && value.subscribe) {
           return this.getStoreValue(value);
         }

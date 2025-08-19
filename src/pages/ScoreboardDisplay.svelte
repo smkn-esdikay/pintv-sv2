@@ -62,20 +62,6 @@
     }
   });
 
-
-  // Update static clock display from scoreboard data
-  // $effect(() => {
-  //   if (stateData && !isClockRunning) {
-  //     const timeLeft = stateData.clocks?.mc?.timeLeft || 0;
-  //     updateClockDisplay(timeLeft);
-      
-  //     // Update clock title based on period
-  //     clockTitle = `Period ${(stateData.periodIdx || 0) + 1}`;
-  //   }
-  // });
-
-
-
   let lastClockEvent = $state<string | null>(null);
 
   $effect(() => {
@@ -159,193 +145,274 @@
   function getMatchPoints(side: 'l' | 'r'): number {
     return stateData?.matchPoints?.[side] || 0;
   }
+
+
+  const getRideColor = (): string => {
+    if (stateData?.clocks?.ride?.netTime > 0)
+      return stateData?.l?.color;
+    else if (stateData?.clocks?.ride?.netTime < 0)
+      return stateData?.r?.color;
+    return '';
+  };
+  
+  const getRideClockClass = (): string => {
+    const rideColor = getRideColor();
+    if (!rideColor)
+      return '';
+    return `sb-ride-clock-${rideColor}`;
+  }
+  const getRideLabelClass = (): string => {
+    const rideColor = getRideColor();
+    if (!rideColor)
+      return '';
+    return `sb-ride-label-${rideColor}`;
+  }
+  const formatRideTime = (netTime: number): string => {
+    const pad = (num: number): string => {
+      return num.toString().padStart(2, '0');
+    };
+
+    const absTime = Math.abs(netTime);
+    const minutes = Math.floor(absTime / 60000);
+    const seconds = Math.floor((absTime % 60000) / 1000);
+    
+    return `${pad(minutes)}:${pad(seconds)}`;
+  };
+
+
 </script>
 
 <svelte:head>
   <title>Wrestling Scoreboard</title>
 </svelte:head>
 
-<div class="scoreboard-container">
-  {#if !stateData}
-    <div class="loading">
-      <div class="text-4xl text-white">Loading Scoreboard...</div>
-      <div class="text-xl text-gray-300 mt-4">Waiting for match data...</div>
-    </div>
-  {:else}
-    <!-- Team Names Row -->
-    <div class="team-row">
-      <div class="team-info left">
-        <div class="athlete-name">{getTeamName('l')}</div>
-        <div class="team-details">
-          {stateData.l?.teamName || ''}
+
+<div class="sb-wrapper">
+  <div class="sb-row h-[25%]" id="row-a">
+
+    <div class='sb-cell-neutral sb-border w-1/2 l'>
+      <div class='pl-4'>
+        <div class='sb-text-larger font-bold'>
+          Athlete 1  
         </div>
+        <div class='sb-text-large'>
+          {getTeamName('l')}
+        </div>       
       </div>
-      <div class="team-info right">
-        <div class="athlete-name">{getTeamName('r')}</div>
-        <div class="team-details">
-          {stateData.r?.teamName || ''}
+    </div>
+    <div class='sb-cell-neutral sb-border w-1/2 l'>
+      <div class='pl-4'>
+        <div class='sb-text-larger font-bold'>
+          Athlete 2
         </div>
+        <div class='sb-text-large'>
+          {getTeamName('r')}
+        </div>       
       </div>
     </div>
 
-    <!-- Scores and Clock Row -->
-    <div class="main-row">
-      <div class="score-section {getColorClass(stateData.l?.color || 'gray')}">
-        <div class="score">{getMatchPoints('l')}</div>
+  </div>
+
+  <div class="sb-row h-[50%]" id="row-b">
+    <div class="w-1/4 sb-border c {getColorClass(stateData?.l?.color || 'gray')}">
+      <div class='sb-text-max'>
+        {getMatchPoints('l')}
       </div>
-      
-      <div class="clock-section">
-        <div class="period-indicator">
-          {clockTitle}
+    </div>
+    <div class="w-1/2 sb-border sb-cell-clock c">
+      <div class='flex flex-col items-center justify-center'>
+        {#if clockData?.clockId === "mc"}
+        
+        <div class='w-full text-left sb-text-large flex flex-row'>
+          <!-- {getPeriodOutput()} -->
         </div>
-        <div class="clock {isClockRunning ? 'running' : ''}">
+        {/if}
+        <div class={`sb-text-max`}>
           {clockDisplay}
         </div>
-        {#if stateData.clocks?.mc?.isRunning === false && clockData?.clockId !== 'mc'}
-          <div class="clock-subtitle">
-            {clockData?.clockId || ''}
+        {#if clockData?.clockId !== "mc"}
+          <div>
+            {clockData?.title}
           </div>
         {/if}
       </div>
-      
-      <div class="score-section {getColorClass(stateData.r?.color || 'gray')}">
-        <div class="score">{getMatchPoints('r')}</div>
+    </div>
+    <div class="w-1/4 sb-border c {getColorClass(stateData?.r?.color || 'gray')}">
+      <div class='sb-text-max'>
+        {getMatchPoints('r')}
+      </div>
+    </div>
+  </div>
+
+  <div class="sb-row h-[25%]" id="row-c">
+    <div class="w-1/4 sb-cell-neutral sb-border sb-cell-split">
+      <div class='sb-cell-split-main'>
+        <div class='sb-text-xxl'> 
+          weight
+        </div>
+      </div>
+      <div class='sb-cell-split-bottom'>
+        <div class='sb-cell-split-bottom-text'>Weight Class</div>
       </div>
     </div>
 
-    <!-- Info Row -->
-    <div class="info-row">
-      <div class="info-box weight">
-        <div class="info-value">
-          {stateData.config?.style || 'Wrestling'}
+    
+    {#if stateData?.clocks?.ride }
+      <div class={`w-1/2 sb-border sb-cell-neutral sb-cell-split ${getRideClockClass()}`}>
+
+        <div class='sb-cell-split-main'>
+          <div class='sb-text-xxl'> 
+            {formatRideTime(stateData.clocks.ride.netTime)}
+          </div>
         </div>
-        <div class="info-label">Style</div>
-      </div>
-      
-      <div class="info-box period">
-        <div class="info-value">
-          {formatSeconds(stateData.config?.periodLengths?.[stateData.periodIdx] || 120)}
+        <div class={`sb-cell-split-bottom  ${getRideLabelClass()}`}>
+          <div class='sb-cell-split-bottom-text'>
+            Riding Time
+          </div>
         </div>
-        <div class="info-label">Period Length</div>
+
       </div>
-      
-      <div class="info-box bout">
-        <div class="info-value">1</div>
-        <div class="info-label">Bout</div>
+
+    {:else}
+      <div class={`w-1/2 sb-border sb-cell-neutral c`}>
+        <div class='flex-col flex text-lg'>
+          <div>Next Bout # - Name1, Name2</div>
+          <div>Next Bout # - Name1, Name2</div>
+        </div>
+      </div>
+    {/if}
+
+    <div class="w-1/4 sb-border sb-cell-yellow sb-cell-split">
+      <div class='sb-cell-split-main'>
+        <div class='sb-text-xxl'> 
+          123
+        </div>
+      </div>
+      <div class='sb-cell-split-bottom'>
+        <div class='sb-cell-split-bottom-text'>Bout</div>
       </div>
     </div>
-  {/if}
+
+  </div>
+
 </div>
 
+
 <style>
-  .scoreboard-container {
-    @apply w-full h-screen bg-black text-white flex flex-col;
-    font-family: 'Arial', sans-serif;
+
+
+  .sb-wrapper {
+    @apply 
+      w-full h-screen 
+      flex flex-col gap-[6px]
+      bg-[#122128] text-white relative overflow-hidden;
   }
 
-  .loading {
-    @apply flex flex-col items-center justify-center h-full;
+  .sb-wrapper .sb-row {
+    @apply flex flex-row items-center gap-[6px];
   }
 
-  /* Team Names Row */
-  .team-row {
-    @apply flex h-1/4 border-b-2 border-white;
+  .sb-wrapper .c {
+    @apply flex items-center justify-center;
+  }
+  .sb-wrapper .l {
+    @apply flex items-center justify-start;
   }
 
-  .team-info {
-    @apply flex-1 flex flex-col justify-center px-8 bg-gray-800;
+  .sb-cell-base {
+    @apply h-full p-2;
   }
 
-  .team-info.left {
-    @apply border-r border-white;
+  .sb-wrapper .sb-cell-neutral {
+    @apply sb-cell-base text-white;
   }
 
-  .athlete-name {
-    @apply text-3xl font-bold mb-2;
+  .sb-wrapper .sb-cell-yellow {
+    @apply sb-cell-base bg-amber-300 text-blue-950;
+  }
+  .sb-wrapper .sb-cell-red {
+    @apply sb-cell-base bg-red-600 text-white;
+  }
+  .sb-wrapper .sb-cell-green {
+    @apply sb-cell-base bg-green-600 text-white;
+  }
+  .sb-wrapper .sb-cell-blue {
+    @apply sb-cell-base bg-blue-500 text-white;
+  }
+  .sb-wrapper .sb-cell-clock {
+    @apply sb-cell-base text-amber-300;
   }
 
-  .team-details {
-    @apply text-xl text-gray-300;
+  .sb-wrapper .sb-border {
+    @apply border-white border-[0.5px] p-[2px];
   }
 
-  /* Main Scores and Clock Row */
-  .main-row {
-    @apply flex h-1/2 border-b-2 border-white;
+  .sb-wrapper .sb-cell-split {
+    @apply flex flex-col gap-0 h-full;
   }
 
-  .score-section {
-    @apply flex-1 flex items-center justify-center text-8xl font-bold border-r border-white;
+  .sb-wrapper .sb-cell-split-main {
+    @apply h-4/5 flex items-center justify-center;
   }
 
-  .score-section:last-child {
-    @apply border-r-0;
+  .sb-wrapper .sb-cell-split-bottom {
+    @apply h-1/5 bg-white flex items-center justify-center;
+
+  }
+  .sb-wrapper .sb-cell-split-bottom-text {
+    @apply text-indigo-950 text-xl font-bold;
+  }
+  /* transform: rotate(90deg); */
+
+  /* period markers */
+  .sb-wrapper .sb-period-marker {
+    @apply text-amber-400;
   }
 
-  .clock-section {
-    @apply flex-1 flex flex-col items-center justify-center bg-black border-r border-white;
+
+  /* ride colors */
+  .sb-wrapper .sb-ride-clock-red {
+    @apply text-red-600 bg-white;
+  }
+  .sb-wrapper .sb-ride-clock-green {
+    @apply text-green-600 bg-white;
+  }
+  .sb-wrapper .sb-ride-clock-blue {
+    @apply text-blue-600 bg-white;
   }
 
-  .period-indicator {
-    @apply text-2xl font-semibold mb-4 text-gray-300;
+  .sb-wrapper .sb-ride-label-red {
+    @apply text-white bg-red-600/80;
+  }
+  .sb-wrapper .sb-ride-label-green {
+    @apply text-white bg-green-600/80;
+  }
+  .sb-wrapper .sb-ride-label-blue {
+    @apply text-white bg-blue-600/80;
   }
 
-  .clock {
-    @apply text-8xl font-mono font-bold transition-colors duration-300;
+  /* text */
+  .sb-wrapper .sb-text-large {
+    @apply text-[clamp(2rem,4vw,9rem)];
+      line-height: 1;
+      font-feature-settings: "kern" 1;
   }
-
-  .clock.running {
-    @apply text-yellow-400;
+  .sb-wrapper .sb-text-larger {
+    @apply text-[clamp(3rem,6vw,10rem)];
+      line-height: 1;
+      font-feature-settings: "kern" 1;
   }
-
-  .clock-subtitle {
-    @apply text-xl text-gray-400 mt-2;
+  .sb-wrapper .sb-text-xxl {
+    @apply text-[clamp(4rem,10vw,18rem)];
+      line-height: 1;
+      font-feature-settings: "kern" 1;
   }
-
-  /* Info Row */
-  .info-row {
-    @apply flex h-1/4;
-  }
-
-  .info-box {
-    @apply flex-1 flex flex-col items-center justify-center bg-gray-700 border-r border-white;
-  }
-
-  .info-box:last-child {
-    @apply border-r-0;
-  }
-
-  .info-box.weight {
-    @apply bg-blue-800;
-  }
-
-  .info-box.bout {
-    @apply bg-yellow-600;
-  }
-
-  .info-value {
-    @apply text-4xl font-bold mb-2;
-  }
-
-  .info-label {
-    @apply text-lg text-gray-300 uppercase tracking-wide;
-  }
-
-  /* Responsive adjustments */
-  @media (max-width: 1024px) {
-    .score {
-      @apply text-6xl;
-    }
+  .sb-wrapper .sb-text-max {
+    @apply text-[clamp(6rem,14vw,25rem)];
+      line-height: 1;
+      font-feature-settings: "kern" 1;
     
-    .clock {
-      @apply text-6xl;
-    }
-    
-    .athlete-name {
-      @apply text-2xl;
-    }
-    
-    .info-value {
-      @apply text-3xl;
-    }
   }
+
+
 </style>
