@@ -1,4 +1,3 @@
-<!-- src/pages/ScoreboardDisplay.svelte -->
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
 
@@ -39,11 +38,10 @@
         ride: publicData.clockStates.ride ? RidingClock.fromState(publicData.clockStates.ride) : undefined,
       },
       
-      // Transform sides
       l: transformSide(publicData.l),
       r: transformSide(publicData.r),
       
-      periods: [], // You'll need to include periods in the broadcast if needed
+      periods: [], 
       periodIdx: publicData.periodIdx,
       defer: publicData.defer,
       matchPoints: publicData.matchPoints,
@@ -62,7 +60,6 @@
     };
   }
 
-  // Set up the listener
   onMount(() => {
     const unsubscribe = broadcast.listen('state', (data: WStateMainPublicDisplay) => {
       // Transform WStateMainPublicDisplay back to WStateMain
@@ -78,7 +75,58 @@
     });
   });
 
-  function getColorClass(color: SideColor): string {
+
+  const activeClockInfo = $derived((() => {
+    if (!wrestlingState) return null;
+    
+    const activeId = wrestlingState.clockInfo.activeId || 'mc';
+    let clock: ZonkClock | undefined;
+    let title: string;
+    let color: SideColor | '' = '';
+
+    switch (activeId) {
+      case 'mc':
+        clock = wrestlingState.clocks.mc;
+        title = ``;
+        break;
+        
+      case 'rest':
+        clock = wrestlingState.clocks.rest;
+        title = 'Rest';
+        break;
+        
+      case 'shotclock':
+        clock = wrestlingState.clocks.shotclock;
+        title = 'Shot Clock';
+        break;
+        
+      default:
+
+        const [side, clockType] = activeId.split('_');
+        if ((side === 'l' || side === 'r') && clockType) {
+          clock = wrestlingState[side].clocks[clockType as keyof typeof wrestlingState.l.clocks];
+          const colorLabel = getSideColorName(side);
+          const clockLabel = clockType.charAt(0).toUpperCase() + clockType.slice(1);
+          title = `${colorLabel} ${clockLabel}`;
+          color = wrestlingState[side].color;
+        } else {
+          clock = wrestlingState.clocks.mc;
+          title = ``;
+        }
+        break;
+    }
+
+    return {
+      clock,
+      color: color as SideColor || '',
+      title,
+      activeId,
+      isMainClock: activeId === 'mc'
+    };
+  })());
+
+  // misc output helpers
+  function getColorClass(color: SideColor | ''): string {
     switch (color) {
       case 'red': return 'bg-red-600 text-white';
       case 'green': return 'bg-green-600 text-white';
@@ -87,14 +135,19 @@
     }
   }
 
+  function getSideColorName(side: WSide): string {
+    if (!wrestlingState) return side.toUpperCase();
+    return wrestlingState[side].color?.toUpperCase() || side.toUpperCase();
+  }
+
   function getTeamName(side: WSide): string {
     if (!wrestlingState) return side.toUpperCase();
     
     const sideData = wrestlingState[side];
+    if (sideData?.teamNameAbbr) return sideData.teamNameAbbr;
     if (sideData?.teamName) return sideData.teamName;
-    if (sideData?.athleteName) return sideData.athleteName;
     
-    return sideData?.color?.toUpperCase() || side.toUpperCase();
+    return getSideColorName(side);
   }
 
   function getMatchPoints(side: WSide): number {
@@ -154,20 +207,20 @@
         </div>
         {/if}
         <div>
-          {#if wrestlingState?.clocks.mc}
+          {#if activeClockInfo?.clock}
           <TimeDisplay 
             id='mc'
             size="max"
-            clock={wrestlingState?.clocks.mc}
+            clock={activeClockInfo?.clock as ZonkClock}
             allowEditing={false}
             showElapsed={false}
             className="text-white"
           />
           {/if}
         </div>
-        {#if wrestlingState?.clockInfo?.activeId !== "mc"}
-          <div>
-            {wrestlingState?.clockInfo?.activeId || ''}
+        {#if activeClockInfo?.activeId !== "mc"}
+          <div class="sb-text-large p-2 rounded-md {getColorClass(activeClockInfo?.color || '')}">
+            {activeClockInfo?.title || ''}
           </div>
         {/if}
       </div>
