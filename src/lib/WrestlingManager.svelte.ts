@@ -54,7 +54,28 @@ const placeholderState: WStateMain = {
   defer: '',
 };
 
+
+/**
+ * Table of Contents
+ * 1. members and constructor
+ * 2. Broadcast methods
+ * 3. Initialize
+ * 4. Clock Management
+ * 5. Action management
+ * 6. Action Switch/Delete/Recompute
+ * 7. Advance periods or matches
+ * 8. Scoring
+ * 9. Position and Color
+ * 10. Riding Clock
+ * 11. Team/Athlete
+ * 90. Utility Methods
+ * 99. Cleanup
+ */
 export class WrestlingManager {
+
+
+  // ++++++++++++++++++++++++ 1. members and constructor ++++++++++++++++++++++++
+
   private static instance: WrestlingManager | null = null;
   
   private _current = $state<WStateMain>({...placeholderState});
@@ -65,7 +86,7 @@ export class WrestlingManager {
   private broadcastUnsubscribes: (() => void)[] = [];
 
   private constructor() {
-    // Private constructor prevents direct instantiation
+    // prevent direct instantiation
   }
 
   static getInstance(): WrestlingManager {
@@ -75,7 +96,23 @@ export class WrestlingManager {
     return WrestlingManager.instance;
   }
 
-  // Broadcast methods
+  // getters
+  get current(): WStateMain {
+    if (!this.initialized) {
+      co.warn("WrestlingManager: Accessing state before initialization");
+    }
+    return this._current;
+  }
+
+  get history(): WHistory {
+    return this._history;
+  }
+
+  get isInitialized(): boolean {
+    return this.initialized;
+  }
+
+  // ++++++++++++++++++++++++ 2. Broadcast methods ++++++++++++++++++++++++
 
   private setupBroadcastHandlers() {
     const unsubControl = broadcast.listen('control', (message) => {
@@ -89,8 +126,6 @@ export class WrestlingManager {
 
   private broadcastCurrentState() {
     if (!this.initialized) return;
-    
-    // const points = this.getPointsForMatch();
 
     const pl = {
       ...this._current,
@@ -105,7 +140,7 @@ export class WrestlingManager {
     this.broadcastUnsubscribes = [];
   }
 
-  // Public API
+  // ++++++++++++++++++++++++ 3. Initialize ++++++++++++++++++++++++
 
   initializeMatch(config: WConfig) {
     this.config = config;
@@ -115,21 +150,6 @@ export class WrestlingManager {
     // Broadcast initial state
     this.broadcastCurrentState();
     this.setupBroadcastHandlers();
-  }
-
-  get current(): WStateMain {
-    if (!this.initialized) {
-      co.warn("WrestlingManager: Accessing state before initialization");
-    }
-    return this._current;
-  }
-
-  get history(): WHistory {
-    return this._history;
-  }
-
-  get isInitialized(): boolean {
-    return this.initialized;
   }
 
   private initialize() { 
@@ -247,7 +267,7 @@ export class WrestlingManager {
     }
   }
 
-  // Clock management
+  // ++++++++++++++++++++++++ 4. Clock management ++++++++++++++++++++++++
 
   startClock(clockId: string) {
     const clock = this.getClockById(clockId);
@@ -407,7 +427,7 @@ export class WrestlingManager {
     return false;
   }
 
-  // Action management
+  // ++++++++++++++++++++++++ 5. Action management ++++++++++++++++++++++++
 
   getAllActions(): WAction[] {
     return this._current.periods.flatMap(p => p.actions);
@@ -512,8 +532,8 @@ export class WrestlingManager {
     }
   }
 
+  // ++++++++++++++++++++++++ 6. Action Switch/Delete/Recompute ++++++++++++++++++++++++
 
-  
   private recomputeActionCounts(): void {
     // First pass: Count actions by side and type
     const actionCounts = new Map<string, number>(); // key: `${side}_${actionCode}`
@@ -539,8 +559,7 @@ export class WrestlingManager {
     co.debug("Action counts recomputed", Object.fromEntries(actionCounts));
   }
 
-  
-  // recomputes derived properties for a single action based on its count
+  // recompute for single action
   private recomputeActionProperties(action: WAction, count: number): void {
     if (!action.wrestle) return;
     
@@ -572,7 +591,6 @@ export class WrestlingManager {
     }
   }
 
-
   switchActionSide(actionId: string): boolean {
     const result = this.getActionById(actionId);
     if (!result) return false;
@@ -602,7 +620,20 @@ export class WrestlingManager {
     return true; 
   }
 
-  // Scoring
+
+  // ++++++++++++++++++++++++ 7. Advance periods or matches ++++++++++++++++++++++++
+
+  getCurrentPeriod(): number {
+    return this._current.periodIdx + 1;
+  }
+
+  isMatchComplete(): boolean {
+    // Basic logic - can be expanded
+    const points = this.getPointsForMatch();
+    return points.l >= 15 || points.r >= 15; // Tech fall example
+  }
+
+  // ++++++++++++++++++++++++ 8. Scoring ++++++++++++++++++++++++
 
   getPointsForMatch(): { l: number; r: number } {
     const allActions = this.getAllActions().filter(a => a.wrestle);
@@ -632,7 +663,7 @@ export class WrestlingManager {
     return { l: leftPoints, r: rightPoints };
   }
 
-  // Position and color management
+  // ++++++++++++++++++++++++ 9. Position and Color ++++++++++++++++++++++++
 
   setColor(side: WSide, newColor: SideColor) {
     const oppSide: WSide = side === 'r' ? 'l' : 'r';
@@ -658,25 +689,7 @@ export class WrestlingManager {
     this._current[side].pos = position;
     this._current[oppSide].pos = mirrorPos;
     
-    // Update riding clock if it exists and main clock is running
     this.startRidingClockMaybe();
-    // if (this._current.clocks.ride) {
-    //   const leftPos = this._current.l.pos;
-    //   const isMainClockRunning = this.peekStoreValue(this._current.clocks.mc.isRunning);
-      
-    //   if (isMainClockRunning) {
-    //     if (leftPos === 't') {
-    //       this._current.clocks.ride.switchToSide('l');
-    //       co.debug("WrestlingManager: Riding clock switched to left");
-    //     } else if (leftPos === 'b') {
-    //       this._current.clocks.ride.switchToSide('r');
-    //       co.debug("WrestlingManager: Riding clock switched to right");
-    //     } else {
-    //       this._current.clocks.ride.stop();
-    //       co.debug("WrestlingManager: Riding clock stopped (neutral)");
-    //     }
-    //   }
-    // }
     
     co.info("WrestlingManager: Position changed", { 
       side, 
@@ -691,22 +704,7 @@ export class WrestlingManager {
     this._current[side].showChoosePos = show;
   }
 
-  // Team/athlete management
-
-  setTeamName(side: WSide, name: string, abbr?: string) {
-    this._current[side].teamName = name;
-    if (abbr) {
-      this._current[side].teamNameAbbr = abbr;
-    }
-    this.broadcastCurrentState();
-  }
-
-  setAthleteName(side: WSide, name: string) {
-    this._current[side].athleteName = name;
-    this.broadcastCurrentState();
-  }
-
-  // Riding clock specific methods
+  // ++++++++++++++++++++++++ 10. Riding clock ++++++++++++++++++++++++
 
   startRidingClockMaybe() {
     if (this._current.clocks.ride) {
@@ -753,17 +751,22 @@ export class WrestlingManager {
     }
   }
 
-  // Utility methods
+  // ++++++++++++++++++++++++ 11. Team/athlete ++++++++++++++++++++++++
 
-  getCurrentPeriod(): number {
-    return this._current.periodIdx + 1;
+  setTeamName(side: WSide, name: string, abbr?: string) {
+    this._current[side].teamName = name;
+    if (abbr) {
+      this._current[side].teamNameAbbr = abbr;
+    }
+    this.broadcastCurrentState();
   }
 
-  isMatchComplete(): boolean {
-    // Basic logic - can be expanded
-    const points = this.getPointsForMatch();
-    return points.l >= 15 || points.r >= 15; // Tech fall example
+  setAthleteName(side: WSide, name: string) {
+    this._current[side].athleteName = name;
+    this.broadcastCurrentState();
   }
+
+  // ++++++++++++++++++++++++ 90. Utility methods ++++++++++++++++++++++++
 
   private peekStoreValue(store: any): any {
     let value: any;
@@ -772,7 +775,7 @@ export class WrestlingManager {
     return value;
   }
 
-  // Cleanup methods
+  // ++++++++++++++++++++++++ 99. Cleanup ++++++++++++++++++++++++
 
   private destroyMainClocks() {
     this._current.clocks.mc?.destroy();

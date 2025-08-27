@@ -39,36 +39,6 @@ class SimpleBroadcast {
   ) {
     try {
       const channel = this.getOrCreateChannel(channelName);
-      
-      // const serializedData = JSON.parse(JSON.stringify(data, (key, value) => {
-
-      //   if (value && typeof value === 'object' && value.constructor?.name === 'ZonkClock') {
-      //     return {
-      //       timeLeft: value.getRemainingTime(), 
-      //       elapsed: value.getTotalElapsed(),
-      //       isRunning: this.peekStoreValue(value.isRunning),
-      //       isComplete: this.peekStoreValue(value.isComplete)
-      //     };
-      //   }
-        
-      //   if (value && typeof value === 'object' && value.constructor?.name === 'RidingClock') {
-      //     return {
-      //       netTime: value.getNetTime(),
-      //       isRunning: this.peekStoreValue(value.isRunning),
-      //       currentSide: value.getCurrentSide(),
-      //       advantage: value.getAdvantage(),
-      //       leftAdvantageTime: value.getAdvantageTime('l'),
-      //       rightAdvantageTime: value.getAdvantageTime('r')
-      //     };
-      //   }
-        
-      //   if (value && typeof value === 'object' && value.subscribe) {
-      //     return this.peekStoreValue(value);
-      //   }
-        
-      //   return value;
-      // }));
-
 
       const pl: WStateMainPublicDisplay = JSON.parse(JSON.stringify({
         config: data.config,
@@ -192,54 +162,9 @@ class SimpleBroadcast {
 // Export the singleton instance directly
 export const broadcast = SimpleBroadcast.getInstance();
 
-
 export function openScoreboard() {
   return broadcast.openWindow('#scoreboard-display', 'scoreboard');
 }
-
-/**
- * Broadcast receiver for scoreboard window - only needed in ScoreboardDisplay.svelte
-//  */
-// export function createScoreboardReceiver() {
-//   let stateData = $state<any>(null);
-//   let clockData = $state<any>(null);
-//   let unsubscribes: (() => void)[] = [];
-
-//   // This will be called from onMount in the component
-//   const initialize = () => {
-//     // Listen for state updates
-//     const unsubState = broadcast.listen('scoreboard', (message) => {
-//       if (message.type === 'state') {
-//         stateData = message.data;
-//         co.debug('Received state:', message.data);
-//       }
-//     });
-
-//     // Listen for clock events
-//     const unsubClock = broadcast.listen('clock', (message) => {
-//       clockData = message;
-//       co.debug('Received clock event:', message);
-//     });
-
-//     unsubscribes.push(unsubState, unsubClock);
-
-//     // Request initial data
-//     setTimeout(() => {
-//       broadcast.sendGeneric('control', 'request_data');
-//     }, 100);
-//   };
-
-//   const cleanup = () => {
-//     unsubscribes.forEach(unsub => unsub());
-//   };
-
-//   return {
-//     initialize,
-//     cleanup,
-//     get stateData() { return stateData; },
-//     get clockData() { return clockData; }
-//   };
-// }
 
 // Cleanup on page unload
 if (typeof window !== 'undefined') {
