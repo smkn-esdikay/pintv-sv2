@@ -393,20 +393,20 @@
       </div>
       {/if}
     </div>
-      <div class="h-full flex flex-col items-center justify-end">
-        <div class="flex flex-col items-center justify-center">
-          <div class="text-center mb-2">
-            <Button
-              color="blue"
-              size="lg"
-              onclick={() => openScoreboard()}
-            >
-              <Monitor size={16} class="mr-1" />
-              Open Scoreboard
-            </Button>
-          </div>
+    <div class="h-full flex flex-col items-center justify-end">
+      <div class="flex flex-col items-center justify-center">
+        <div class="text-center mb-2">
+          <Button
+            color="blue"
+            size="lg"
+            onclick={() => openScoreboard()}
+          >
+            <Monitor size={16} class="mr-1" />
+            Open Scoreboard
+          </Button>
         </div>
       </div>
+    </div>
 
   </div>
 
