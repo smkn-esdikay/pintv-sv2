@@ -21,6 +21,11 @@ export type WAge =        'Highschool' | 'College' | undefined;
 export type WSide =       'l' | 'r';
 export type WPos =        't' | 'n' | 'b';
 
+export type WMatchWeight = {
+  weight: number;
+  unit: WeightUnit;
+}
+
 export type WConfig = {
   style: WStyle;
   age: WAge;
@@ -132,6 +137,7 @@ export type WStateMain = {
   periods: WPeriod[];
   periodIdx: number;
   defer: string;
+  weight?: WMatchWeight;
 }
 
 export type WStateMainPublicDisplay = Omit<WStateMain, 'clocks' | 'l' | 'r' | 'periods'> & {

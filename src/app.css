@@ -20,6 +20,13 @@
     @apply text-[1.4rem];
   }
 
+
+  .max-clamp {
+    font-size: clamp(2rem, 14vw, 32rem);
+    line-height: 1;
+    font-feature-settings: "kern" 1;
+  }
+
   .page {
     @apply w-full min-h-[99.5vh] 
       flex items-center justify-center;

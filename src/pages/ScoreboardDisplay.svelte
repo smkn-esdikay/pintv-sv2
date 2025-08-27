@@ -16,7 +16,7 @@
     WStateMainPublicDisplay, 
     WStateSidePublicDisplay 
   } from '@/types';
-    import { co } from '@/lib/console';
+  import { Circle } from "@lucide/svelte";
 
   type WStateAdapted = WStateMain & {
     matchPoints: {
@@ -115,7 +115,7 @@
 </svelte:head>
 
 <div class="sb-wrapper">
-  <div class="sb-row h-[25%]" id="row-a">
+  <div class="sb-row h-[27%]" id="row-a">
     <div class='sb-cell-neutral sb-border w-1/2 l'>
       <div class='pl-4'>
         <div class='sb-text-larger font-bold'>
@@ -138,9 +138,9 @@
     </div>
   </div>
 
-  <div class="sb-row h-[50%]" id="row-b">
+  <div class="sb-row h-[46%]" id="row-b">
     <div class="w-1/4 sb-border c {getColorClass(wrestlingState?.l?.color || 'red')}">
-      <div class='sb-text-max'>
+      <div class='max-clamp font-mono'>
         {getMatchPoints('l')}
       </div>
     </div>
@@ -148,14 +148,16 @@
       <div class='flex flex-col items-center justify-center'>
         {#if wrestlingState?.clockInfo?.activeId === "mc"}
         <div class='w-full text-left sb-text-large flex flex-row'>
-          <!-- Period markers could go here -->
+          {#each Array(wrestlingState.periodIdx + 1) as _, index}
+            <Circle size={44} class="sb-period-marker" />
+          {/each}
         </div>
         {/if}
         <div>
           {#if wrestlingState?.clocks.mc}
           <TimeDisplay 
             id='mc'
-            size="xl"
+            size="max"
             clock={wrestlingState?.clocks.mc}
             allowEditing={false}
             showElapsed={false}
@@ -171,13 +173,13 @@
       </div>
     </div>
     <div class="w-1/4 sb-border c {getColorClass(wrestlingState?.r?.color || 'green')}">
-      <div class='sb-text-max'>
+      <div class='max-clamp font-mono'>
         {getMatchPoints('r')}
       </div>
     </div>
   </div>
 
-  <div class="sb-row h-[25%]" id="row-c">
+  <div class="sb-row h-[27%]" id="row-c">
     <div class="w-1/4 sb-cell-neutral sb-border sb-cell-split">
       <div class='sb-cell-split-main'>
         <div class='sb-text-xxl'> 
@@ -294,11 +296,6 @@
     @apply text-indigo-950 text-xl font-bold;
   }
 
-  /* period markers */
-  .sb-wrapper .sb-period-marker {
-    @apply text-amber-400;
-  }
-
   /* ride colors */
   .sb-wrapper .sb-ride-clock-red {
     @apply text-red-600 bg-white;
@@ -336,9 +333,10 @@
       line-height: 1;
       font-feature-settings: "kern" 1;
   }
-  .sb-wrapper .sb-text-max {
-    @apply text-[clamp(6rem,14vw,25rem)];
-      line-height: 1;
-      font-feature-settings: "kern" 1;
+
+  :global(.sb-period-marker) {
+    @apply fill-yellow-300 text-yellow-300 mr-1;
+    width: clamp(1.2rem, 4vw, 6rem);
+    height: clamp(1.2rem, 4vw, 6rem);
   }
 </style>
