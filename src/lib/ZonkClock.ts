@@ -1,5 +1,14 @@
 import { writable, type Writable } from 'svelte/store';
 
+export interface ZonkClockState {
+  max: number;
+  started: number | null;
+  stopped: number | null;
+  timestampUponComplete: number | null;
+  durStop: number;
+  durRun: number;
+}
+
 export class ZonkClock {
 
   private max: number = 0;
@@ -71,6 +80,49 @@ export class ZonkClock {
     this.remaining.set(this.max);
     this.isRunning.set(false);
     this.isComplete.set(false);
+  }
+
+  public getState(): ZonkClockState {
+    return {
+      max: this.max,
+      started: this.started,
+      stopped: this.stopped,
+      timestampUponComplete: this.timestampUponComplete,
+      durStop: this.durStop,
+      durRun: this.durRun
+    };
+  }
+
+  public restoreState(state: ZonkClockState): void {
+    this.stopUpdateLoop();
+    
+    this.max = state.max;
+    this.started = state.started;
+    this.stopped = state.stopped;
+    this.timestampUponComplete = state.timestampUponComplete;
+    this.durStop = state.durStop;
+    this.durRun = state.durRun;
+    
+    this.updateStores();
+    
+    const shouldBeRunning = this.started !== null && 
+      this.stopped === null && 
+      this.timestampUponComplete === null;
+    
+    const shouldBeComplete = this.timestampUponComplete !== null;
+    
+    this.isRunning.set(shouldBeRunning);
+    this.isComplete.set(shouldBeComplete);
+    
+    if (shouldBeRunning) {
+      this.startUpdateLoop();
+    }
+  }
+
+  public static fromState(state: ZonkClockState): ZonkClock {
+    const clock = new ZonkClock(state.max);
+    clock.restoreState(state);
+    return clock;
   }
 
   private startUpdateLoop() {

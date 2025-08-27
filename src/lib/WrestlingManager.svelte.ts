@@ -20,13 +20,7 @@ import {
 import { ZonkClock } from "./ZonkClock";
 import { RidingClock } from "./RidingClock";
 import { co } from "./console";
-import { 
-  broadcastWrestlingState, 
-  broadcastClockStart, 
-  broadcastClockStop, 
-  broadcastClockReset,
-  broadcast,
-} from "./broadcast.svelte";
+import { broadcast, } from "./broadcast.svelte";
 
 const getSideState = (color: SideColor): WStateSide => {
   return {
@@ -96,24 +90,9 @@ export class WrestlingManager {
   private broadcastCurrentState() {
     if (!this.initialized) return;
     
-    const points = this.getPointsForMatch();
-    const state = {
-      config: this._current.config,
-      periodIdx: this._current.periodIdx,
-      periods: this._current.periods,
-      matchPoints: points,
-      clocks: {
-        mc: this._current.clocks.mc,
-        ride: this._current.clocks.ride,
-        rest: this._current.clocks.rest,
-        shotclock: this._current.clocks.shotclock
-      },
-      l: this._current.l,
-      r: this._current.r,
-      clockInfo: this._current.clockInfo
-    };
+    // const points = this.getPointsForMatch();
     
-    broadcastWrestlingState(state);
+    broadcast.sendState('state', this._current);
   }
 
   private cleanupBroadcast() {
@@ -303,7 +282,7 @@ export class WrestlingManager {
       
       // Broadcast clock start
       const timeLeft = clock instanceof RidingClock ? 0 : clock.getRemainingTime();
-      broadcastClockStart(clockId, timeLeft);
+      // broadcastClockStart(clockId, timeLeft);
       this.broadcastCurrentState();
     }
   }
@@ -324,7 +303,7 @@ export class WrestlingManager {
       }
       
       // Broadcast clock stop
-      broadcastClockStop(clockId);
+      // broadcastClockStop(clockId);
       this.broadcastCurrentState();
     }
   }
@@ -337,7 +316,7 @@ export class WrestlingManager {
       
       // Broadcast clock reset
       const timeLeft = clock instanceof RidingClock ? 0 : clock.getRemainingTime();
-      broadcastClockReset(clockId, timeLeft);
+      // broadcastClockReset(clockId, timeLeft);
       this.broadcastCurrentState();
     }
   }

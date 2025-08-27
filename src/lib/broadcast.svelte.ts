@@ -1,4 +1,7 @@
+import type { WStateMain, WStateMainPublicDisplay } from '@/types';
 import { co } from './console';
+
+const broadcastChannelPrefix = 'pintv_vsb';
 
 class SimpleBroadcast {
   private static instance: SimpleBroadcast | null = null;
@@ -13,57 +16,111 @@ class SimpleBroadcast {
 
   private getOrCreateChannel(name: string): BroadcastChannel {
     if (!this.channels.has(name)) {
-      const channel = new BroadcastChannel(`pintv_${name}`);
+      const channel = new BroadcastChannel(`${broadcastChannelPrefix}_${name}`);
       this.channels.set(name, channel);
-      co.debug(`Created channel: pintv_${name}`);
+      co.debug(`Created channel: ${broadcastChannelPrefix}_${name}`);
     }
     return this.channels.get(name)!;
   }
 
-  send(channelName: string, data: any) {
+  sendGeneric(channelName: string, message: string) {
     try {
       const channel = this.getOrCreateChannel(channelName);
-      
-      const serializedData = JSON.parse(JSON.stringify(data, (key, value) => {
-
-        if (value && typeof value === 'object' && value.constructor?.name === 'ZonkClock') {
-          return {
-            timeLeft: value.getRemainingTime(), 
-            elapsed: value.getTotalElapsed(),
-            isRunning: this.getStoreValue(value.isRunning),
-            isComplete: this.getStoreValue(value.isComplete)
-          };
-        }
-        
-        if (value && typeof value === 'object' && value.constructor?.name === 'RidingClock') {
-          return {
-            netTime: value.getNetTime(),
-            isRunning: this.getStoreValue(value.isRunning),
-            currentSide: value.getCurrentSide(),
-            advantage: value.getAdvantage(),
-            leftAdvantageTime: value.getAdvantageTime('l'),
-            rightAdvantageTime: value.getAdvantageTime('r')
-          };
-        }
-        
-        if (value && typeof value === 'object' && value.subscribe) {
-          return this.getStoreValue(value);
-        }
-        
-        return value;
-      }));
-      
-      channel.postMessage(serializedData);
-      co.debug(`Sent to ${channelName}:`, serializedData);
+      channel.postMessage(message);
+      co.debug(`(sendGeneric) Sent to ${channelName}:`, message);
     } catch (error) {
-      co.error(`Failed to send to ${channelName}:`, error);
+      co.error(`(sendGeneric) Failed to send to ${channelName}:`, error);
     }
   }
 
-  private getStoreValue(store: any): any {
+  sendState(channelName: string, data: WStateMain) {
+    try {
+      const channel = this.getOrCreateChannel(channelName);
+      
+      // const serializedData = JSON.parse(JSON.stringify(data, (key, value) => {
+
+      //   if (value && typeof value === 'object' && value.constructor?.name === 'ZonkClock') {
+      //     return {
+      //       timeLeft: value.getRemainingTime(), 
+      //       elapsed: value.getTotalElapsed(),
+      //       isRunning: this.peekStoreValue(value.isRunning),
+      //       isComplete: this.peekStoreValue(value.isComplete)
+      //     };
+      //   }
+        
+      //   if (value && typeof value === 'object' && value.constructor?.name === 'RidingClock') {
+      //     return {
+      //       netTime: value.getNetTime(),
+      //       isRunning: this.peekStoreValue(value.isRunning),
+      //       currentSide: value.getCurrentSide(),
+      //       advantage: value.getAdvantage(),
+      //       leftAdvantageTime: value.getAdvantageTime('l'),
+      //       rightAdvantageTime: value.getAdvantageTime('r')
+      //     };
+      //   }
+        
+      //   if (value && typeof value === 'object' && value.subscribe) {
+      //     return this.peekStoreValue(value);
+      //   }
+        
+      //   return value;
+      // }));
+
+      const pl: WStateMainPublicDisplay = {
+        config: data.config,
+        clockInfo: data.clockInfo,
+        clockStates: {
+          mc: data.clocks.mc.getState(),
+          rest: data.clocks.rest ? data.clocks.rest.getState() : undefined,
+          shotclock: data.clocks.shotclock ? data.clocks.shotclock.getState() : undefined,
+          ride: data.clocks.ride ? data.clocks.ride.getState() : undefined,
+        },
+        l: {
+          color: data.l.color,
+          showChoosePos: data.l.showChoosePos,
+          pos: data.l.pos,
+          teamName: data.l.teamName,
+          teamNameAbbr: data.l.teamNameAbbr,
+          athleteName: data.l.athleteName,
+          winbyIdx: data.l.winbyIdx,
+          clockStates: {
+            blood: data.l.clocks.blood ? data.l.clocks.blood.getState() : undefined,
+            injury: data.l.clocks.injury ? data.l.clocks.injury.getState() : undefined,
+            recovery: data.l.clocks.recovery ? data.l.clocks.recovery.getState() : undefined,
+            headneck: data.l.clocks.headneck ? data.l.clocks.headneck.getState() : undefined,
+          },
+        },
+        r: {
+          color: data.r.color,
+          showChoosePos: data.r.showChoosePos,
+          pos: data.r.pos,
+          teamName: data.r.teamName,
+          teamNameAbbr: data.r.teamNameAbbr,
+          athleteName: data.r.athleteName,
+          winbyIdx: data.r.winbyIdx,
+          clockStates: {
+            blood: data.r.clocks.blood ? data.r.clocks.blood.getState() : undefined,
+            injury: data.r.clocks.injury ? data.r.clocks.injury.getState() : undefined,
+            recovery: data.r.clocks.recovery ? data.r.clocks.recovery.getState() : undefined,
+            headneck: data.r.clocks.headneck ? data.r.clocks.headneck.getState() : undefined,
+          },
+        },
+        periodIdx: data.periodIdx,
+        defer: data.defer,
+      }
+      
+      channel.postMessage(pl);
+      co.debug(`(sendState) Sent to ${channelName}:`, pl);
+    } catch (error) {
+      co.error(`(sendState) Failed to send to ${channelName}:`, error);
+    }
+  }
+
+  // get a value without staying subscribed
+  private peekStoreValue(store: any): any {
     let value: any;
     const unsubscribe = store.subscribe((val: any) => value = val);
-    unsubscribe();
+    unsubscribe(); // extract the value and unsubscribe immediately.
     return value;
   }
 
@@ -130,40 +187,6 @@ class SimpleBroadcast {
 // Export the singleton instance directly
 export const broadcast = SimpleBroadcast.getInstance();
 
-// Helper functions for specific broadcast types
-export function broadcastWrestlingState(state: any) {
-  broadcast.send('scoreboard', {
-    type: 'state',
-    data: state,
-    timestamp: Date.now()
-  });
-}
-
-export function broadcastClockStart(clockId: string, timeLeft: number) {
-  broadcast.send('clock', {
-    type: 'start',
-    clockId,
-    timeLeft,
-    timestamp: Date.now()
-  });
-}
-
-export function broadcastClockStop(clockId: string) {
-  broadcast.send('clock', {
-    type: 'stop',
-    clockId,
-    timestamp: Date.now()
-  });
-}
-
-export function broadcastClockReset(clockId: string, timeLeft: number) {
-  broadcast.send('clock', {
-    type: 'reset',
-    clockId,
-    timeLeft,
-    timestamp: Date.now()
-  });
-}
 
 export function openScoreboard() {
   return broadcast.openWindow('#scoreboard-display', 'scoreboard');
@@ -197,7 +220,7 @@ export function createScoreboardReceiver() {
 
     // Request initial data
     setTimeout(() => {
-      broadcast.send('control', 'request_data');
+      broadcast.sendGeneric('control', 'request_data');
     }, 100);
   };
 

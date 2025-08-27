@@ -128,6 +128,43 @@ export class RidingClock {
     this.updateStores();
   }
 
+  public getState(): RidingClockState {
+    if (this.state.isRunning) {
+      this.updateNetTime();
+    }
+    
+    return {
+      netTime: this.state.netTime,
+      isRunning: this.state.isRunning,
+      lastTickTime: this.state.lastTickTime,
+      lastActiveSide: this.state.lastActiveSide
+    };
+  }
+
+  public restoreState(state: RidingClockState): void {
+    this.stopUpdateLoop();
+    
+    this.state = {
+      netTime: state.netTime,
+      isRunning: state.isRunning,
+      lastTickTime: state.lastTickTime,
+      lastActiveSide: state.lastActiveSide
+    };
+    
+    this.updateStores();
+    
+    if (state.isRunning && state.lastActiveSide) {
+      this.state.lastTickTime = Date.now();
+      this.startUpdateLoop();
+    }
+  }
+
+  public static fromState(state: RidingClockState): RidingClock {
+    const clock = new RidingClock();
+    clock.restoreState(state);
+    return clock;
+  }
+
   /**
    * Get current net time (non-reactive)
    */
@@ -141,11 +178,8 @@ export class RidingClock {
   /**
    * Get current state (non-reactive)
    */
-  public getState(): RidingClockState {
-    if (this.state.isRunning) {
-      this.updateNetTime();
-    }
-    return { ...this.state };
+  public getCurrentState(): RidingClockState {
+    return this.getState(); // Alias for consistency
   }
 
   public getAdvantage(): WSide | null {

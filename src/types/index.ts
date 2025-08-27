@@ -1,6 +1,6 @@
 import type { ActionPoint } from "@/constants/wrestling.constants";
-import type { ZonkClock } from "@/lib/ZonkClock";
-import type { RidingClock } from "@/lib/RidingClock";
+import type { ZonkClock, ZonkClockState } from "@/lib/ZonkClock";
+import type { RidingClock, RidingClockState } from "@/lib/RidingClock";
 
 /**
  * ----------------------- General -----------------------
@@ -84,6 +84,11 @@ export type WMatch = {
   winPeriod?: number;
 }
 
+export type WHistory = {
+  matches: WMatch[];
+}
+
+
 export type WStateSide = {
   color: SideColor;
   showChoosePos: boolean;
@@ -97,11 +102,16 @@ export type WStateSide = {
     injury?: ZonkClock;
     recovery?: ZonkClock;
     headneck?: ZonkClock;
-  }
+  };
 }
 
-export type WHistory = {
-  matches: WMatch[];
+export type WStateSidePublicDisplay = Omit<WStateSide, 'clocks'> & {
+  clockStates: {
+    blood?: ZonkClockState;
+    injury?: ZonkClockState;
+    recovery?: ZonkClockState;
+    headneck?: ZonkClockState;
+  };
 }
 
 export type WStateMain = {
@@ -122,5 +132,16 @@ export type WStateMain = {
   periods: WPeriod[];
   periodIdx: number;
   defer: string;
+}
+
+export type WStateMainPublicDisplay = Omit<WStateMain, 'clocks' | 'l' | 'r' | 'periods'> & {
+  clockStates: {
+    mc: ZonkClockState;
+    rest?: ZonkClockState;
+    shotclock?: ZonkClockState;
+    ride?: RidingClockState;
+  },
+  l: WStateSidePublicDisplay;
+  r: WStateSidePublicDisplay;
 }
 
