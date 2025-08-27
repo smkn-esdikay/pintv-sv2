@@ -7,6 +7,7 @@ export interface ZonkClockState {
   timestampUponComplete: number | null;
   durStop: number;
   durRun: number;
+  isRunning: boolean;
 }
 
 export class ZonkClock {
@@ -83,13 +84,17 @@ export class ZonkClock {
   }
 
   public getState(): ZonkClockState {
+
+    const isRunning = this.peekStoreValue(this.isRunning);
+
     return {
       max: this.max,
       started: this.started,
       stopped: this.stopped,
       timestampUponComplete: this.timestampUponComplete,
       durStop: this.durStop,
-      durRun: this.durRun
+      durRun: this.durRun,
+      isRunning,
     };
   }
 
@@ -105,16 +110,16 @@ export class ZonkClock {
     
     this.updateStores();
     
-    const shouldBeRunning = this.started !== null && 
-      this.stopped === null && 
-      this.timestampUponComplete === null;
+    // const shouldBeRunning = this.started !== null && 
+    //   this.stopped === null && 
+    //   this.timestampUponComplete === null;
     
     const shouldBeComplete = this.timestampUponComplete !== null;
     
-    this.isRunning.set(shouldBeRunning);
+    this.isRunning.set(state.isRunning);
     this.isComplete.set(shouldBeComplete);
     
-    if (shouldBeRunning) {
+    if (state.isRunning) {
       this.startUpdateLoop();
     }
   }
@@ -180,6 +185,14 @@ export class ZonkClock {
   public getRemainingTime(): number {
     return Math.max(0, this.max - this.getTotalElapsed());
   }
+
+  private peekStoreValue(store: any): any {
+    let value: any;
+    const unsubscribe = store.subscribe((val: any) => value = val);
+    unsubscribe(); // extract the value and unsubscribe immediately.
+    return value;
+  }
+
 
   public destroy() {
     this.stopUpdateLoop();

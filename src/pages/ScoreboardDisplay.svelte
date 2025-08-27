@@ -16,6 +16,7 @@
     WStateMainPublicDisplay, 
     WStateSidePublicDisplay 
   } from '@/types';
+    import { co } from '@/lib/console';
 
   type WStateAdapted = WStateMain & {
     matchPoints: {
@@ -24,7 +25,6 @@
     }
   }
 
-
   let wrestlingState = $state<WStateAdapted | null>(null);
 
   function transformToMainState(publicData: WStateMainPublicDisplay): WStateAdapted {
@@ -32,7 +32,6 @@
       config: publicData.config,
       clockInfo: publicData.clockInfo,
       
-      // Recreate clocks from states
       clocks: {
         mc: ZonkClock.fromState(publicData.clockStates.mc),
         rest: publicData.clockStates.rest ? ZonkClock.fromState(publicData.clockStates.rest) : undefined,
@@ -156,10 +155,11 @@
           {#if wrestlingState?.clocks.mc}
           <TimeDisplay 
             id='mc'
-            size="lg"
+            size="xl"
             clock={wrestlingState?.clocks.mc}
             allowEditing={false}
             showElapsed={false}
+            className="text-white"
           />
           {/if}
         </div>
@@ -195,6 +195,7 @@
           <div class=''> 
             <RidingClockDisplay 
               id='ride'
+              size="xl"
               clock={wrestlingState.clocks.ride}
               leftPos={wrestlingState.l.pos}
               leftColor={wrestlingState.l.color}

@@ -659,23 +659,24 @@ export class WrestlingManager {
     this._current[oppSide].pos = mirrorPos;
     
     // Update riding clock if it exists and main clock is running
-    if (this._current.clocks.ride) {
-      const leftPos = this._current.l.pos;
-      const isMainClockRunning = this.getStoreValue(this._current.clocks.mc.isRunning);
+    this.startRidingClockMaybe();
+    // if (this._current.clocks.ride) {
+    //   const leftPos = this._current.l.pos;
+    //   const isMainClockRunning = this.peekStoreValue(this._current.clocks.mc.isRunning);
       
-      if (isMainClockRunning) {
-        if (leftPos === 't') {
-          this._current.clocks.ride.switchToSide('l');
-          co.debug("WrestlingManager: Riding clock switched to left");
-        } else if (leftPos === 'b') {
-          this._current.clocks.ride.switchToSide('r');
-          co.debug("WrestlingManager: Riding clock switched to right");
-        } else {
-          this._current.clocks.ride.stop();
-          co.debug("WrestlingManager: Riding clock stopped (neutral)");
-        }
-      }
-    }
+    //   if (isMainClockRunning) {
+    //     if (leftPos === 't') {
+    //       this._current.clocks.ride.switchToSide('l');
+    //       co.debug("WrestlingManager: Riding clock switched to left");
+    //     } else if (leftPos === 'b') {
+    //       this._current.clocks.ride.switchToSide('r');
+    //       co.debug("WrestlingManager: Riding clock switched to right");
+    //     } else {
+    //       this._current.clocks.ride.stop();
+    //       co.debug("WrestlingManager: Riding clock stopped (neutral)");
+    //     }
+    //   }
+    // }
     
     co.info("WrestlingManager: Position changed", { 
       side, 
@@ -707,6 +708,26 @@ export class WrestlingManager {
 
   // Riding clock specific methods
 
+  startRidingClockMaybe() {
+    if (this._current.clocks.ride) {
+      const leftPos = this._current.l.pos;
+      const isMainClockRunning = this.peekStoreValue(this._current.clocks.mc.isRunning);
+      
+      if (isMainClockRunning) {
+        if (leftPos === 't') {
+          this._current.clocks.ride.switchToSide('l');
+          co.debug("WrestlingManager: Riding clock switched to left");
+        } else if (leftPos === 'b') {
+          this._current.clocks.ride.switchToSide('r');
+          co.debug("WrestlingManager: Riding clock switched to right");
+        } else {
+          this._current.clocks.ride.stop();
+          co.debug("WrestlingManager: Riding clock stopped (neutral)");
+        }
+      }
+    }
+  }
+
   setRidingTime(netTimeMs: number) {
     if (this._current.clocks.ride) {
       this._current.clocks.ride.setNetTime(netTimeMs);
@@ -718,6 +739,7 @@ export class WrestlingManager {
   resetRidingClock() {
     if (this._current.clocks.ride) {
       this._current.clocks.ride.reset();
+      this.startRidingClockMaybe();
       co.info("WrestlingManager: Riding clock reset");
       this.broadcastCurrentState();
     }
@@ -743,7 +765,7 @@ export class WrestlingManager {
     return points.l >= 15 || points.r >= 15; // Tech fall example
   }
 
-  private getStoreValue(store: any): any {
+  private peekStoreValue(store: any): any {
     let value: any;
     const unsubscribe = store.subscribe((val: any) => value = val);
     unsubscribe();

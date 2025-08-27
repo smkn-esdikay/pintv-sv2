@@ -103,9 +103,9 @@
     handleTimeUpdate(minutes, newSeconds, 0); // Reset centiseconds when updating seconds
   }
 
-  function handleCentisecondsUpdate(newCentiseconds: number) {
-    handleTimeUpdate(minutes, seconds, newCentiseconds);
-  }
+  // function handleCentisecondsUpdate(newCentiseconds: number) {
+  //   handleTimeUpdate(minutes, seconds, newCentiseconds);
+  // }
 
   function handleEditingChange(isEditing: boolean) {
     onEditingChange?.(isEditing);
