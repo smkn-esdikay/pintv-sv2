@@ -210,7 +210,7 @@
           {#if activeClockInfo?.clock}
           <TimeDisplay 
             id='mc'
-            size="max"
+            size="clamp"
             clock={activeClockInfo?.clock as ZonkClock}
             allowEditing={false}
             showElapsed={false}
@@ -250,7 +250,7 @@
           <div class=''> 
             <RidingClockDisplay 
               id='ride'
-              size="xl"
+              size="clamp"
               clock={wrestlingState.clocks.ride}
               leftPos={wrestlingState.l.pos}
               leftColor={wrestlingState.l.color}

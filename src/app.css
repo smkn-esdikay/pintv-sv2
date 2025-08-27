@@ -26,6 +26,11 @@
     line-height: 1;
     font-feature-settings: "kern" 1;
   }
+  .xl-clamp {
+    font-size: clamp(2rem, 8vw, 18rem);
+    line-height: 1;
+    font-feature-settings: "kern" 1;
+  }
 
   .page {
     @apply w-full min-h-[99.5vh] 

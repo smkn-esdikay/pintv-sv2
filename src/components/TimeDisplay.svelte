@@ -6,7 +6,7 @@
     id: string;
     clock: ZonkClock;
     className?: string;
-    size?: 'max' | 'xl' | 'lg' | 'md' | 'sm';
+    size?: 'clamp' | 'xl' | 'lg' | 'md' | 'sm';
     showElapsed?: boolean;
     allowEditing?: boolean;
     onTimeEdit?: (newTimeMs: number) => void;
@@ -78,7 +78,7 @@
     size === "md" ? 'text-xl' :
     size === "lg" ? 'text-4xl' :
     size === "xl" ? 'text-6xl' :
-    size === "max" ? 'max-clamp' :
+    size === "clamp" ? 'max-clamp' :
     'text-lg' // small
   );
   
@@ -150,5 +150,5 @@
 </div>
 
 <style>
-  
+
 </style>

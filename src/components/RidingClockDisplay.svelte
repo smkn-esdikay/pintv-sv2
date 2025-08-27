@@ -13,7 +13,7 @@
     leftColor: SideColor;
     rightColor: SideColor;
     className?: string;
-    size?: 'xl' | 'lg' | 'md' | 'sm';
+    size?: 'clamp' | 'xl' | 'lg' | 'md' | 'sm';
     allowEditing?: boolean;
     onTimeEdit?: (newTimeMs: number) => void;
     onEditingChange?: (isEditing: boolean) => void;
@@ -57,6 +57,7 @@
     size === "sm" ? 'text-lg' :
     size === "md" ? 'text-xl' :
     size === "lg" ? 'text-3xl' :
+    size === "clamp" ? 'xl-clamp' :
     'text-5xl' // xl
   );
   
@@ -77,8 +78,9 @@
     'bg-blue-600 text-white'
   );
 
-  const leftChevronClass = $derived(leftPos === "t" ? leftBgClass : 'text-slate-300');
-  const rightChevronClass = $derived(leftPos === "b" ? rightBgClass : 'text-slate-300');
+  const leftChevronColorClass = $derived(leftPos === "t" ? leftBgClass : 'text-slate-300');
+  const rightChevronColorClass = $derived(leftPos === "b" ? rightBgClass : 'text-slate-300');
+  const chevronSizeClass = $derived(size === "clamp" ? "chevron-clamp" : '');
   
   function getColorClasses(): string {
     if (netTime > 0) { // Right has advantage
@@ -122,7 +124,7 @@
 
 <div class={`transition-colors duration-300 ${className}`}>
   <div class="flex flex-row gap-1 items-center justify-center ">
-    <ChevronsLeft class={`${leftChevronClass}`} size={16} />
+    <ChevronsLeft class={`${leftChevronColorClass} ${chevronSizeClass}`} size={16} />
     <div class={`font-mono text-center ${clockFontClass} ${getColorClasses()} mx-1 px-1 py-1 rounded-lg min-w-[120px]`}>
       {#if canEdit}
         <div class="inline-flex items-center">
@@ -148,7 +150,7 @@
         {formatRidingTime(netTime)}
       {/if}
     </div>
-    <ChevronsRight class={`${rightChevronClass}`} size={16} />
+    <ChevronsRight class={`${rightChevronColorClass} ${chevronSizeClass}`} size={16} />
   </div>
   {#if allowEditing}
   <div class="flex items-center justify-center gap-2 mt-2">
@@ -170,3 +172,10 @@
   </div>
   {/if}
 </div>
+
+<style>
+  :global(.chevron-clamp) { 
+    width: clamp(1.2rem, 4vw, 6rem);
+    height: clamp(1.2rem, 4vw, 6rem);
+  }
+</style>
