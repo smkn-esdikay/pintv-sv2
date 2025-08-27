@@ -91,7 +91,7 @@
     <div class="polar-col">
       <div
         id="dropdowns"
-        class="flex flex-col gap-6 justify-start items-center"
+        class="flex flex-col gap-4 justify-start items-center"
       >
         <h2>Wrestling Options</h2>
 
@@ -121,7 +121,7 @@
         <ZonkButton
           disabled={!canSubmit}
           color="green"
-          size="md"
+          size="lg"
           onclick={initAndStart}
         >
           Start
@@ -129,7 +129,7 @@
         <ZonkButton
           disabled={!canSubmit}
           color="grey"
-          size="md"
+          size="lg"
           onclick={() => navigate("home")}
         >
           Back
@@ -142,12 +142,15 @@
 <style>
 
   .control-container {
-    @apply w-[60vw] h-[40vh] 
+    @apply w-[60vw] h-[40vh]
+      overflow-y-auto
+      overflow-scroll
+      overflow-x-hidden
       p-4
       border-2 border-slate-300;
   }
 
   .polar-col {
-    @apply flex flex-col justify-between h-full;
+    @apply flex flex-col justify-between h-full gap-6;
   }
 </style>
