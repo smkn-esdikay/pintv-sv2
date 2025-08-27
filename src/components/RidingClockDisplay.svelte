@@ -77,8 +77,8 @@
     'bg-blue-600 text-white'
   );
 
-  const leftChevronClass = $derived(leftPos === "t" ? leftBgClass : 'bg-white text-slate-300');
-  const rightChevronClass = $derived(leftPos === "b" ? rightBgClass : 'bg-white text-slate-300');
+  const leftChevronClass = $derived(leftPos === "t" ? leftBgClass : 'text-slate-300');
+  const rightChevronClass = $derived(leftPos === "b" ? rightBgClass : 'text-slate-300');
   
   function getColorClasses(): string {
     if (netTime > 0) { // Right has advantage
@@ -150,6 +150,7 @@
     </div>
     <ChevronsRight class={`${rightChevronClass}`} size={16} />
   </div>
+  {#if allowEditing}
   <div class="flex items-center justify-center gap-2 mt-2">
     <ZonkButton
       size="sm"
@@ -167,4 +168,5 @@
       <RotateCcw size={16} />
     </ZonkButton>
   </div>
+  {/if}
 </div>
