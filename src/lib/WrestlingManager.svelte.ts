@@ -91,8 +91,13 @@ export class WrestlingManager {
     if (!this.initialized) return;
     
     // const points = this.getPointsForMatch();
+
+    const pl = {
+      ...this._current,
+      matchPoints: this.getPointsForMatch(),
+    };
     
-    broadcast.sendState('state', this._current);
+    broadcast.sendState('state', pl);
   }
 
   private cleanupBroadcast() {

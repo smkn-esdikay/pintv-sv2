@@ -143,5 +143,9 @@ export type WStateMainPublicDisplay = Omit<WStateMain, 'clocks' | 'l' | 'r' | 'p
   },
   l: WStateSidePublicDisplay;
   r: WStateSidePublicDisplay;
+  matchPoints: { // added when broadcasting
+    l: number,
+    r: number,
+  }
 }
 

@@ -33,7 +33,10 @@ class SimpleBroadcast {
     }
   }
 
-  sendState(channelName: string, data: WStateMain) {
+  sendState(
+    channelName: string, 
+    data: WStateMain & { matchPoints: { l: number; r: number } }
+  ) {
     try {
       const channel = this.getOrCreateChannel(channelName);
       
@@ -66,7 +69,8 @@ class SimpleBroadcast {
       //   return value;
       // }));
 
-      const pl: WStateMainPublicDisplay = {
+
+      const pl: WStateMainPublicDisplay = JSON.parse(JSON.stringify({
         config: data.config,
         clockInfo: data.clockInfo,
         clockStates: {
@@ -84,7 +88,7 @@ class SimpleBroadcast {
           athleteName: data.l.athleteName,
           winbyIdx: data.l.winbyIdx,
           clockStates: {
-            blood: data.l.clocks.blood ? data.l.clocks.blood.getState() : undefined,
+            blood: data.l.clocks.blood ? {...data.l.clocks.blood.getState()} : undefined,
             injury: data.l.clocks.injury ? data.l.clocks.injury.getState() : undefined,
             recovery: data.l.clocks.recovery ? data.l.clocks.recovery.getState() : undefined,
             headneck: data.l.clocks.headneck ? data.l.clocks.headneck.getState() : undefined,
@@ -107,7 +111,8 @@ class SimpleBroadcast {
         },
         periodIdx: data.periodIdx,
         defer: data.defer,
-      }
+        matchPoints: data.matchPoints,
+      }));
       
       channel.postMessage(pl);
       co.debug(`(sendState) Sent to ${channelName}:`, pl);
@@ -194,47 +199,47 @@ export function openScoreboard() {
 
 /**
  * Broadcast receiver for scoreboard window - only needed in ScoreboardDisplay.svelte
- */
-export function createScoreboardReceiver() {
-  let stateData = $state<any>(null);
-  let clockData = $state<any>(null);
-  let unsubscribes: (() => void)[] = [];
+//  */
+// export function createScoreboardReceiver() {
+//   let stateData = $state<any>(null);
+//   let clockData = $state<any>(null);
+//   let unsubscribes: (() => void)[] = [];
 
-  // This will be called from onMount in the component
-  const initialize = () => {
-    // Listen for state updates
-    const unsubState = broadcast.listen('scoreboard', (message) => {
-      if (message.type === 'state') {
-        stateData = message.data;
-        co.debug('Received state:', message.data);
-      }
-    });
+//   // This will be called from onMount in the component
+//   const initialize = () => {
+//     // Listen for state updates
+//     const unsubState = broadcast.listen('scoreboard', (message) => {
+//       if (message.type === 'state') {
+//         stateData = message.data;
+//         co.debug('Received state:', message.data);
+//       }
+//     });
 
-    // Listen for clock events
-    const unsubClock = broadcast.listen('clock', (message) => {
-      clockData = message;
-      co.debug('Received clock event:', message);
-    });
+//     // Listen for clock events
+//     const unsubClock = broadcast.listen('clock', (message) => {
+//       clockData = message;
+//       co.debug('Received clock event:', message);
+//     });
 
-    unsubscribes.push(unsubState, unsubClock);
+//     unsubscribes.push(unsubState, unsubClock);
 
-    // Request initial data
-    setTimeout(() => {
-      broadcast.sendGeneric('control', 'request_data');
-    }, 100);
-  };
+//     // Request initial data
+//     setTimeout(() => {
+//       broadcast.sendGeneric('control', 'request_data');
+//     }, 100);
+//   };
 
-  const cleanup = () => {
-    unsubscribes.forEach(unsub => unsub());
-  };
+//   const cleanup = () => {
+//     unsubscribes.forEach(unsub => unsub());
+//   };
 
-  return {
-    initialize,
-    cleanup,
-    get stateData() { return stateData; },
-    get clockData() { return clockData; }
-  };
-}
+//   return {
+//     initialize,
+//     cleanup,
+//     get stateData() { return stateData; },
+//     get clockData() { return clockData; }
+//   };
+// }
 
 // Cleanup on page unload
 if (typeof window !== 'undefined') {

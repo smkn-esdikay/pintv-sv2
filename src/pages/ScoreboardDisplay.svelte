@@ -1,233 +1,309 @@
 <!-- src/pages/ScoreboardDisplay.svelte -->
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { createScoreboardReceiver } from '@/lib/broadcast.svelte';
-  import type { WConfig, WSide, SideColor, WPeriod, WStateSide } from '@/types';
+  // import { createScoreboardReceiver } from '@/lib/broadcast.svelte';
+  import type { 
+    WConfig, 
+    WSide, 
+    SideColor,
+    WPeriod, 
+    WStateSide,
+    WStateMain, 
+    WStateMainPublicDisplay, 
+    WStateSidePublicDisplay 
+  } from '@/types';
 
+  import { broadcast } from '@/lib/broadcast.svelte';
+  import { ZonkClock } from '@/lib/ZonkClock';
+  import { RidingClock } from '@/lib/RidingClock';
 
-  interface SerializedClockData {
-    timeLeft: number;
-    elapsed: number;
-    isRunning: boolean;
-    isComplete: boolean;
+  type WStateAdapted = WStateMain & {
+    matchPoints: {
+      l: number; 
+      r: number; 
+    }
   }
 
-  interface SerializedRideData {
-    netTime: number;
-    isRunning: boolean;
-    currentSide: WSide | null;
-    advantage: WSide | null;
-    leftAdvantageTime: number;
-    rightAdvantageTime: number;
-  }
-
-  interface SerializedClocks {
-    mc: SerializedClockData;
-    ride?: SerializedRideData;
-    rest?: SerializedClockData;
-    shotclock?: SerializedClockData;
-  }
-
-  interface ScoreboardStateData {
-    config: WConfig;
-    periodIdx: number;
-    periods: WPeriod[];
-    matchPoints: { l: number; r: number };
-    clocks: SerializedClocks;
-    l: WStateSide;
-    r: WStateSide;
-    clockInfo: {
-      activeId: string;
-      lastActivatedId: string;
-      lastActivatedAction: string;
-    };
-  }
-
-  interface ClockEvent {
-    type: 'start' | 'stop' | 'reset';
-    clockId: string;
-    timeLeft?: number;
-    timestamp: number;
-    title?: string;
-  }
+  // Create a reactive variable to hold the transformed state
+  let wrestlingState = $state<WStateAdapted | null>(null);
 
 
-  const receiver = createScoreboardReceiver();
-  
-  // state
-  let stateData = $state<ScoreboardStateData | null>(null);
-  let clockData = $state<ClockEvent | null>(null);
-  let clockDisplay = $state<string>('0:00');
-  let isClockRunning = $state<boolean>(false);
-  let clockTitle = $state<string>('Period 1');
-  let clockInterval: ReturnType<typeof setInterval> | null = null;
-
-  // riding time
-  let rideNetTime = $state<number>(0);
-  let rideIsRunning = $state<boolean>(false);
-  let rideLastUpdate = $state<number>(0);
-  let rideCurrentSide = $state<WSide | null>(null);
-  let rideDisplayTime = $state<number>(0);
-  let rideUpdateInterval: ReturnType<typeof setInterval> | null = null;
-
-  // Get reactive data from receiver
-  $effect(() => {
-    stateData = receiver.stateData;
-  });
-
-  $effect(() => {
-    clockData = receiver.clockData;
-  });
-
-  // Update riding time data when state changes
-  $effect(() => {
-    if (stateData?.clocks?.ride) {
-      const rideData = stateData.clocks.ride;
-      rideNetTime = rideData.netTime || 0;
-      rideIsRunning = rideData.isRunning || false;
-      rideCurrentSide = rideData.currentSide || null;
-      rideLastUpdate = Date.now();
+  function transformToMainState(publicData: WStateMainPublicDisplay): WStateAdapted {
+    return {
+      config: publicData.config,
+      clockInfo: publicData.clockInfo,
       
-      // Update display time immediately
-      rideDisplayTime = rideNetTime;
-    }
-  });
+      // Recreate clocks from states
+      clocks: {
+        mc: ZonkClock.fromState(publicData.clockStates.mc),
+        rest: publicData.clockStates.rest ? ZonkClock.fromState(publicData.clockStates.rest) : undefined,
+        shotclock: publicData.clockStates.shotclock ? ZonkClock.fromState(publicData.clockStates.shotclock) : undefined,
+        ride: publicData.clockStates.ride ? RidingClock.fromState(publicData.clockStates.ride) : undefined,
+      },
+      
+      // Transform sides
+      l: transformSide(publicData.l),
+      r: transformSide(publicData.r),
+      
+      periods: [], // You'll need to include periods in the broadcast if needed
+      periodIdx: publicData.periodIdx,
+      defer: publicData.defer,
+      matchPoints: publicData.matchPoints,
+    };
+  }
 
-  // Handle real-time riding time updates when running
-  $effect(() => {
-    if (rideIsRunning && rideCurrentSide) {
-      // Start real-time updates for riding time
-      rideUpdateInterval = setInterval(() => {
-        if (rideIsRunning && rideCurrentSide) {
-          const elapsed = Date.now() - rideLastUpdate;
-          
-          // Calculate time change based on which side is on top
-          // Positive netTime = right advantage, negative = left advantage
-          const timeChange = rideCurrentSide === 'r' ? elapsed : -elapsed;
-          rideDisplayTime = rideNetTime + timeChange;
-        }
-      }, 50); // Update every 50ms for smooth display
-    } else {
-      // Stop updates when not running
-      if (rideUpdateInterval) {
-        clearInterval(rideUpdateInterval);
-        rideUpdateInterval = null;
-      }
-      // Show the exact static value when not running
-      rideDisplayTime = rideNetTime;
-    }
-
-    // Cleanup function
-    return () => {
-      if (rideUpdateInterval) {
-        clearInterval(rideUpdateInterval);
-        rideUpdateInterval = null;
+  function transformSide(publicSide: WStateSidePublicDisplay): WStateSide {
+    return {
+      ...publicSide,
+      clocks: {
+        blood: publicSide.clockStates.blood ? ZonkClock.fromState(publicSide.clockStates.blood) : undefined,
+        injury: publicSide.clockStates.injury ? ZonkClock.fromState(publicSide.clockStates.injury) : undefined,
+        recovery: publicSide.clockStates.recovery ? ZonkClock.fromState(publicSide.clockStates.recovery) : undefined,
+        headneck: publicSide.clockStates.headneck ? ZonkClock.fromState(publicSide.clockStates.headneck) : undefined,
       }
     };
-  });
+  }
 
+  // Set up the listener in onMount
   onMount(() => {
-    receiver.initialize();
+    const unsubscribe = broadcast.listen('state', (data: WStateMainPublicDisplay) => {
+      // Transform WStateMainPublicDisplay back to WStateMain
+      wrestlingState = transformToMainState(data);
+    });
+
+    // Request initial data
+    broadcast.sendGeneric('control', 'request_data');
+
+    // Cleanup
+    onDestroy(() => {
+      unsubscribe();
+    });
   });
 
-  onDestroy(() => {
-    receiver.cleanup();
-    if (clockInterval) {
-      clearInterval(clockInterval);
-    }
-    if (rideUpdateInterval) {
-      clearInterval(rideUpdateInterval);
-    }
-  });
 
-  // Handle clock updates
-  $effect(() => {
-    if (clockData) {
-      switch (clockData.type) {
-        case 'start':
-          isClockRunning = true;
-          startClockDisplay(clockData.timeLeft || 0, clockData.timestamp);
-          break;
-        case 'stop':
-          isClockRunning = false;
-          if (clockInterval) {
-            clearInterval(clockInterval);
-            clockInterval = null;
-          }
-          break;
-        case 'reset':
-          isClockRunning = false;
-          if (clockInterval) {
-            clearInterval(clockInterval);
-            clockInterval = null;
-          }
-          updateClockDisplay(clockData.timeLeft || 0);
-          break;
-      }
-    }
-  });
+  // interface SerializedClockData {
+  //   timeLeft: number;
+  //   elapsed: number;
+  //   isRunning: boolean;
+  //   isComplete: boolean;
+  // }
 
-  let lastClockEvent = $state<string | null>(null);
+  // interface SerializedRideData {
+  //   netTime: number;
+  //   isRunning: boolean;
+  //   currentSide: WSide | null;
+  //   advantage: WSide | null;
+  //   leftAdvantageTime: number;
+  //   rightAdvantageTime: number;
+  // }
 
-  $effect(() => {
-    if (clockData) {
-      const eventType = clockData.type;
-      lastClockEvent = eventType;
-      // Clear the flag after 2 seconds to allow normal state updates
-      setTimeout(() => {
-        if (lastClockEvent === eventType) {
-          lastClockEvent = null;
-        }
-      }, 2000);
-    }
-  });
+  // interface SerializedClocks {
+  //   mc: SerializedClockData;
+  //   ride?: SerializedRideData;
+  //   rest?: SerializedClockData;
+  //   shotclock?: SerializedClockData;
+  // }
 
-  $effect(() => {
-    // Only update from state data if:
-    // 1. Clock is not running 
-    // 2. No recent clock events (to preserve stopped time)
-    // 3. We have state data
-    if (stateData && !isClockRunning && !lastClockEvent) {
-      const timeLeft = stateData.clocks?.mc?.timeLeft || 0;
-      updateClockDisplay(timeLeft);
-      clockTitle = `Period ${(stateData.periodIdx || 0) + 1}`;
-    }
-  });
+  // interface ScoreboardStateData {
+  //   config: WConfig;
+  //   periodIdx: number;
+  //   periods: WPeriod[];
+  //   matchPoints: { l: number; r: number };
+  //   clocks: SerializedClocks;
+  //   l: WStateSide;
+  //   r: WStateSide;
+  //   clockInfo: {
+  //     activeId: string;
+  //     lastActivatedId: string;
+  //     lastActivatedAction: string;
+  //   };
+  // }
 
-  function updateClockDisplay(timeMs: number): void {
-    const totalSeconds = Math.floor(timeMs / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    clockDisplay = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  }
+  // interface ClockEvent {
+  //   type: 'start' | 'stop' | 'reset';
+  //   clockId: string;
+  //   timeLeft?: number;
+  //   timestamp: number;
+  //   title?: string;
+  // }
 
-  function startClockDisplay(initialTimeMs: number, startTimestamp: number): void {
-    if (clockInterval) {
-      clearInterval(clockInterval);
-    }
 
-    clockInterval = setInterval(() => {
-      if (!isClockRunning) {
-        if (clockInterval) {
-          clearInterval(clockInterval);
-          clockInterval = null;
-        }
-        return;
-      }
+  // const receiver = createScoreboardReceiver();
+  
+  // // state
+  // let stateData = $state<ScoreboardStateData | null>(null);
+  // let clockData = $state<ClockEvent | null>(null);
+  // let clockDisplay = $state<string>('0:00');
+  // let isClockRunning = $state<boolean>(false);
+  // let clockTitle = $state<string>('Period 1');
+  // let clockInterval: ReturnType<typeof setInterval> | null = null;
 
-      const elapsed = Date.now() - startTimestamp;
-      const currentTime = Math.max(0, initialTimeMs - elapsed);
-      updateClockDisplay(currentTime);
+  // // riding time
+  // let rideNetTime = $state<number>(0);
+  // let rideIsRunning = $state<boolean>(false);
+  // let rideLastUpdate = $state<number>(0);
+  // let rideCurrentSide = $state<WSide | null>(null);
+  // let rideDisplayTime = $state<number>(0);
+  // let rideUpdateInterval: ReturnType<typeof setInterval> | null = null;
 
-      if (currentTime <= 0) {
-        isClockRunning = false;
-        if (clockInterval) {
-          clearInterval(clockInterval);
-          clockInterval = null;
-        }
-      }
-    }, 100);
-  }
+  // // Get reactive data from receiver
+  // $effect(() => {
+  //   stateData = receiver.stateData;
+  // });
+
+  // $effect(() => {
+  //   clockData = receiver.clockData;
+  // });
+
+  // // Update riding time data when state changes
+  // $effect(() => {
+  //   if (stateData?.clocks?.ride) {
+  //     const rideData = stateData.clocks.ride;
+  //     rideNetTime = rideData.netTime || 0;
+  //     rideIsRunning = rideData.isRunning || false;
+  //     rideCurrentSide = rideData.currentSide || null;
+  //     rideLastUpdate = Date.now();
+      
+  //     // Update display time immediately
+  //     rideDisplayTime = rideNetTime;
+  //   }
+  // });
+
+  // // Handle real-time riding time updates when running
+  // $effect(() => {
+  //   if (rideIsRunning && rideCurrentSide) {
+  //     // Start real-time updates for riding time
+  //     rideUpdateInterval = setInterval(() => {
+  //       if (rideIsRunning && rideCurrentSide) {
+  //         const elapsed = Date.now() - rideLastUpdate;
+          
+  //         // Calculate time change based on which side is on top
+  //         // Positive netTime = right advantage, negative = left advantage
+  //         const timeChange = rideCurrentSide === 'r' ? elapsed : -elapsed;
+  //         rideDisplayTime = rideNetTime + timeChange;
+  //       }
+  //     }, 50); // Update every 50ms for smooth display
+  //   } else {
+  //     // Stop updates when not running
+  //     if (rideUpdateInterval) {
+  //       clearInterval(rideUpdateInterval);
+  //       rideUpdateInterval = null;
+  //     }
+  //     // Show the exact static value when not running
+  //     rideDisplayTime = rideNetTime;
+  //   }
+
+  //   // Cleanup function
+  //   return () => {
+  //     if (rideUpdateInterval) {
+  //       clearInterval(rideUpdateInterval);
+  //       rideUpdateInterval = null;
+  //     }
+  //   };
+  // });
+
+  // onMount(() => {
+  //   receiver.initialize();
+  // });
+
+  // onDestroy(() => {
+  //   receiver.cleanup();
+  //   if (clockInterval) {
+  //     clearInterval(clockInterval);
+  //   }
+  //   if (rideUpdateInterval) {
+  //     clearInterval(rideUpdateInterval);
+  //   }
+  // });
+
+  // // Handle clock updates
+  // $effect(() => {
+  //   if (clockData) {
+  //     switch (clockData.type) {
+  //       case 'start':
+  //         isClockRunning = true;
+  //         startClockDisplay(clockData.timeLeft || 0, clockData.timestamp);
+  //         break;
+  //       case 'stop':
+  //         isClockRunning = false;
+  //         if (clockInterval) {
+  //           clearInterval(clockInterval);
+  //           clockInterval = null;
+  //         }
+  //         break;
+  //       case 'reset':
+  //         isClockRunning = false;
+  //         if (clockInterval) {
+  //           clearInterval(clockInterval);
+  //           clockInterval = null;
+  //         }
+  //         updateClockDisplay(clockData.timeLeft || 0);
+  //         break;
+  //     }
+  //   }
+  // });
+
+  // let lastClockEvent = $state<string | null>(null);
+
+  // $effect(() => {
+  //   if (clockData) {
+  //     const eventType = clockData.type;
+  //     lastClockEvent = eventType;
+  //     // Clear the flag after 2 seconds to allow normal state updates
+  //     setTimeout(() => {
+  //       if (lastClockEvent === eventType) {
+  //         lastClockEvent = null;
+  //       }
+  //     }, 2000);
+  //   }
+  // });
+
+  // $effect(() => {
+  //   // Only update from state data if:
+  //   // 1. Clock is not running 
+  //   // 2. No recent clock events (to preserve stopped time)
+  //   // 3. We have state data
+  //   if (stateData && !isClockRunning && !lastClockEvent) {
+  //     const timeLeft = stateData.clocks?.mc?.timeLeft || 0;
+  //     updateClockDisplay(timeLeft);
+  //     clockTitle = `Period ${(stateData.periodIdx || 0) + 1}`;
+  //   }
+  // });
+
+  // function updateClockDisplay(timeMs: number): void {
+  //   const totalSeconds = Math.floor(timeMs / 1000);
+  //   const minutes = Math.floor(totalSeconds / 60);
+  //   const seconds = totalSeconds % 60;
+  //   clockDisplay = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  // }
+
+  // function startClockDisplay(initialTimeMs: number, startTimestamp: number): void {
+  //   if (clockInterval) {
+  //     clearInterval(clockInterval);
+  //   }
+
+  //   clockInterval = setInterval(() => {
+  //     if (!isClockRunning) {
+  //       if (clockInterval) {
+  //         clearInterval(clockInterval);
+  //         clockInterval = null;
+  //       }
+  //       return;
+  //     }
+
+  //     const elapsed = Date.now() - startTimestamp;
+  //     const currentTime = Math.max(0, initialTimeMs - elapsed);
+  //     updateClockDisplay(currentTime);
+
+  //     if (currentTime <= 0) {
+  //       isClockRunning = false;
+  //       if (clockInterval) {
+  //         clearInterval(clockInterval);
+  //         clockInterval = null;
+  //       }
+  //     }
+  //   }, 100);
+  // }
 
   function getColorClass(color: SideColor): string {
     switch (color) {
@@ -239,9 +315,9 @@
   }
 
   function getTeamName(side: WSide): string {
-    if (!stateData) return side.toUpperCase();
+    if (!wrestlingState) return side.toUpperCase();
     
-    const sideData = stateData[side];
+    const sideData = wrestlingState[side];
     if (sideData?.teamName) return sideData.teamName;
     if (sideData?.athleteName) return sideData.athleteName;
     
@@ -249,48 +325,49 @@
   }
 
   function getMatchPoints(side: WSide): number {
-    return stateData?.matchPoints?.[side] || 0;
+    // return 0;
+    return wrestlingState?.matchPoints?.[side] || 0;
   }
 
-  // Updated riding time functions to use the real-time display time
-  const getRideColor = (): SideColor | '' => {
-    if (rideDisplayTime > 0)
-      return stateData?.r?.color || '';
-    else if (rideDisplayTime < 0)
-      return stateData?.l?.color || '';
-    return '';
-  };
+  // // Updated riding time functions to use the real-time display time
+  // const getRideColor = (): SideColor | '' => {
+  //   if (rideDisplayTime > 0)
+  //     return stateData?.r?.color || '';
+  //   else if (rideDisplayTime < 0)
+  //     return stateData?.l?.color || '';
+  //   return '';
+  // };
   
-  const getRideClockClass = (): string => {
-    const rideColor = getRideColor();
-    if (!rideColor) return '';
-    return `sb-ride-clock-${rideColor}`;
-  }
+  // const getRideClockClass = (): string => {
+  //   const rideColor = getRideColor();
+  //   if (!rideColor) return '';
+  //   return `sb-ride-clock-${rideColor}`;
+  // }
 
-  const getRideLabelClass = (): string => {
-    const rideColor = getRideColor();
-    if (!rideColor) return '';
-    return `sb-ride-label-${rideColor}`;
-  }
+  // const getRideLabelClass = (): string => {
+  //   const rideColor = getRideColor();
+  //   if (!rideColor) return '';
+  //   return `sb-ride-label-${rideColor}`;
+  // }
 
-  const formatRideTime = (netTime: number): string => {
-    const pad = (num: number): string => {
-      return num.toString().padStart(2, '0');
-    };
+  // const formatRideTime = (netTime: number): string => {
+  //   const pad = (num: number): string => {
+  //     return num.toString().padStart(2, '0');
+  //   };
 
-    const absTime = Math.abs(netTime);
-    const minutes = Math.floor(absTime / 60000);
-    const seconds = Math.floor((absTime % 60000) / 1000);
+  //   const absTime = Math.abs(netTime);
+  //   const minutes = Math.floor(absTime / 60000);
+  //   const seconds = Math.floor((absTime % 60000) / 1000);
     
-    return `${pad(minutes)}:${pad(seconds)}`;
-  };
+  //   return `${pad(minutes)}:${pad(seconds)}`;
+  // };
 
-  // Check if riding time should be shown
+  // // Check if riding time should be shown
   const showRideTime = $derived((): boolean => {
-    return stateData?.config?.style === "Folkstyle" && 
-           stateData?.config?.age === "College" &&
-           stateData?.clocks?.ride !== undefined &&
-           rideDisplayTime !== 0;
+    return wrestlingState?.config?.style === "Folkstyle" && 
+      wrestlingState?.config?.age === "College" &&
+      wrestlingState?.clocks?.ride !== undefined;
+      // also check if ride time is 0:00!
   });
 </script>
 
@@ -323,29 +400,29 @@
   </div>
 
   <div class="sb-row h-[50%]" id="row-b">
-    <div class="w-1/4 sb-border c {getColorClass(stateData?.l?.color || 'red')}">
+    <div class="w-1/4 sb-border c {getColorClass(wrestlingState?.l?.color || 'red')}">
       <div class='sb-text-max'>
         {getMatchPoints('l')}
       </div>
     </div>
     <div class="w-1/2 sb-border sb-cell-clock c">
       <div class='flex flex-col items-center justify-center'>
-        {#if clockData?.clockId === "mc"}
+        {#if wrestlingState?.clockInfo?.activeId === "mc"}
         <div class='w-full text-left sb-text-large flex flex-row'>
           <!-- Period markers could go here -->
         </div>
         {/if}
         <div class={`sb-text-max`}>
-          {clockDisplay}
+          clock
         </div>
-        {#if clockData?.clockId !== "mc"}
+        {#if wrestlingState?.clockInfo?.activeId !== "mc"}
           <div>
-            {clockData?.title || ''}
+            {wrestlingState?.clockInfo?.activeId || ''}
           </div>
         {/if}
       </div>
     </div>
-    <div class="w-1/4 sb-border c {getColorClass(stateData?.r?.color || 'green')}">
+    <div class="w-1/4 sb-border c {getColorClass(wrestlingState?.r?.color || 'green')}">
       <div class='sb-text-max'>
         {getMatchPoints('r')}
       </div>
@@ -365,13 +442,13 @@
     </div>
 
     {#if showRideTime()}
-      <div class={`w-1/2 sb-border sb-cell-neutral sb-cell-split ${getRideClockClass()}`}>
+      <div class={`w-1/2 sb-border sb-cell-neutral sb-cell-split`}>
         <div class='sb-cell-split-main'>
           <div class='sb-text-xxl'> 
-            {formatRideTime(rideDisplayTime)}
+            0:00
           </div>
         </div>
-        <div class={`sb-cell-split-bottom ${getRideLabelClass()}`}>
+        <div class={`sb-cell-split-bottom`}>
           <div class='sb-cell-split-bottom-text'>
             Riding Time
           </div>
