@@ -24,17 +24,25 @@
 
   const handleChange = (event: Event) => {
     const target = event.target as HTMLSelectElement;
-    const newValue = target.value === "" ? null : 
-      (isNaN(Number(target.value)) ? target.value : Number(target.value));
+    let newValue: string | number | boolean | null;
+    
+    if (target.value === "") {
+      newValue = null;
+    } else {
+      const selectedOption = options.find(opt => String(opt.value) === target.value);
+      newValue = selectedOption ? selectedOption.value : target.value;
+    }
     
     value = newValue;
     onchange?.(newValue);
   }
 
+  const selectValue = $derived(value === null ? "" : String(value));
+
 </script>
 
 <select 
-  {value}
+  value={selectValue}
   {disabled}
   class={`${className}`}
   onchange={handleChange}
@@ -44,7 +52,7 @@
   {/if}
   
   {#each options as option}
-    <option value={option.value}>
+    <option value={String(option.value)}>
       {option.label}
     </option>
   {/each}

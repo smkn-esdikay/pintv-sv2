@@ -8,12 +8,14 @@
   import type { WAge, WConfig, WStyle } from "@/types";
 
   let selectedStyle: WStyle = $state("Folkstyle");
-  let selectedAge: Omit<WAge, 'undefined'> = $state("Highschool")
+  let selectedAge: Omit<WAge, 'undefined'> = $state("College");
   let selectedTime: number = $state(120);
   let selectedTeam: boolean = $state(false);
 
+
   const wrestlingTypeOptions: { label: WStyle, value: WStyle}[] = cnsStyles.
     map(st => ({ label: st.style, value: st.style }));
+
   const ageOptions: { label: WAge, value: WAge }[] | undefined = $derived(
     cnsStyles.
       find(el => el.style === selectedStyle)?.
@@ -70,10 +72,6 @@
 
     navigate("wrestling");
   };
-
-
-  $inspect('age', ageOptions);
-  $inspect('teamOptions', teamOptions, selectedTeam);
 </script>
 
 <div class="page">
@@ -87,7 +85,7 @@
           <h3>Wrestling Options</h3>
         </div>
 
-        <div id="dropdowns" class="grid grid-cols-2 gap-y-2 items-center">
+        <div id="dropdowns" class="grid grid-cols-2 gap-y-2 items-center w-full">
           <div class="text-center">Wrestling Style</div>
           <ZonkDropdown
             bind:value={selectedStyle}
@@ -130,7 +128,7 @@
 
 <style>
   .control-container {
-    @apply w-full min-h-[40vh];
+    @apply w-[70vw] min-h-[40vh];
   }
 
   .polar-col {
