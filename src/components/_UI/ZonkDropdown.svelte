@@ -1,16 +1,16 @@
 <script lang="ts">
   interface Option {
-    value: string | number | null;
+    value: string | number | boolean | null;
     label: string;
   }
 
   interface Props {
-    value: string | number | null;
+    value: string | number | boolean| null;
     options: Option[];
     placeholder?: string;
     disabled?: boolean;
     className?: string;
-    onchange?: (newValue: string | number | null) => void;
+    onchange?: (newValue: string | number | boolean | null) => void;
   }
 
   let {

@@ -1,32 +1,35 @@
 <script lang="ts">
   import { navigate } from '../lib/router.svelte';
   import { initStore } from "@/stores/init.svelte";
-  import type { WAge, WConfig, WStyle } from "@/types";
   import ZonkDropdown from "@/components/_UI/ZonkDropdown.svelte";
   import ZonkButton from "@/components/_UI/ZonkButton.svelte";
-    import { cnsClocks } from '@/constants/wrestling.constants';
-    import { formatSecondsArray } from '@/lib/math';
+  import { cnsStyles, cnsClocks } from '@/constants/wrestling.constants';
+  import { formatSecondsArray } from '@/lib/math';
+  import type { WAge, WConfig, WStyle } from "@/types";
 
-  let selectedType = $state(1);
-  let selectedTime = $state(1);
-  let selectedTeam = $state(1);
+  let selectedStyle: WStyle = $state("Folkstyle");
+  let selectedAge: Omit<WAge, 'undefined'> = $state("Highschool")
+  let selectedTime: number = $state(120);
+  let selectedTeam: boolean = $state(false);
 
-  const wrestlingTypeOptions = [
-    { value: 1, label: "Folkstyle Highschool" }, //  120, 90, 60
-    { value: 2, label: "Folkstyle College" }, // 180+120 (no choice)
-    { value: 3, label: "Greco" }, //  120, 90, 60
-    { value: 4, label: "Freestyle" }, //  120, 90, 60
-  ];
+  const wrestlingTypeOptions: { label: WStyle, value: WStyle}[] = cnsStyles.
+    map(st => ({ label: st.style, value: st.style }));
+  const ageOptions: { label: WAge, value: WAge }[] | undefined = $derived(
+    cnsStyles.
+      find(el => el.style === selectedStyle)?.
+      ages?.
+      map(age => ({ label: age, value: age }))
+  );
 
   const timeOptions = [
-    { value: 1, label: "2:00", seconds: 120 },
-    { value: 2, label: "1:30", seconds: 90 },
-    { value: 3, label: "1:00", seconds: 60 },
+    { value: 120, label: "2:00" },
+    { value: 90, label: "1:30" },
+    { value: 60, label: "1:00" },
   ];
 
   const teamOptions = [
-    { value: 1, label: "Individual" },
-    { value: 2, label: "Team" },
+    { value: false, label: "Individual" },
+    { value: true, label: "Team" },
   ];
 
   const folkstyleCollegeTimes: number[] = [];
@@ -37,53 +40,40 @@
     folkstyleCollegeTimes.push(cnsClocks[fcIdx].timers.p3 as number);
   }
 
-
-  const sec = $derived((): number => {
-    const idx = timeOptions.findIndex((el) => el.value === selectedTime);
-    return timeOptions[idx].seconds;
-  });
-
-  const showSelectTime = $derived(selectedType !== 2);
-  const canSubmit = $derived(!!selectedType && !!selectedTime);
+  const showSelectTime = $derived(
+    selectedStyle !== "Folkstyle" || selectedAge !== "College"
+  );
+  const canSubmit = $derived(!!selectedStyle && !!selectedTime);
 
   const initAndStart = () => {
 
-    let style: WStyle, age: WAge = undefined, periodLengths: number[];
+    let periodLengths: number[];
+    let age: WAge = selectedAge as WAge;
 
-    switch (selectedType) {
-      case 1:
-        style = "Folkstyle";
-        age = "Highschool";
-        periodLengths = [sec(), sec(), sec()];
-        break;
-      case 2:
-        style = "Folkstyle";
-        age = "College";
+    if (selectedStyle === "Freestyle" || selectedStyle === "Greco") {
+      periodLengths = [selectedTime, selectedTime];
+      age = undefined;
+    } else { // Folkstyle
+      if (selectedAge === "Highscool") {
+        periodLengths = [selectedTime, selectedTime, selectedTime];
+      } else { // College
         periodLengths = folkstyleCollegeTimes;
-        break;
-      case 3:
-        style = "Greco";
-        periodLengths = [sec(), sec()];
-        break;
-      case 4:
-        style = "Freestyle";
-        periodLengths = [sec(), sec()];
-        break;
-      default:
-        style = "Folkstyle";
-        age = "Highschool";
-        periodLengths = [sec(), sec(), sec()];
+      }
     }
 
     initStore.setAll({
-      style,
-      age,
+      style: selectedStyle,
+      age: selectedAge,
       periodLengths,
-      team: selectedTeam === 2
+      team: selectedTeam,
     } as WConfig)
 
     navigate("wrestling");
   };
+
+
+  $inspect('age', ageOptions);
+  $inspect('teamOptions', teamOptions, selectedTeam);
 </script>
 
 <div class="page">
@@ -91,24 +81,30 @@
     <div class="polar-col">
       <div
         id="dropdowns"
-        class="flex flex-col gap-4 justify-start items-center"
+        class="flex flex-col items-center gap-6"
       >
-        <h2>Wrestling Options</h2>
+        <div id="title">
+          <h3>Wrestling Options</h3>
+        </div>
 
-        <div>
+        <div id="dropdowns" class="grid grid-cols-2 gap-y-2 items-center">
           <div class="text-center">Wrestling Style</div>
           <ZonkDropdown
-            bind:value={selectedType}
+            bind:value={selectedStyle}
             options={wrestlingTypeOptions}
           />
-        </div>
 
-        <div>
+          {#if !!ageOptions && ageOptions.length > 0}
+            <div class="text-center">Age Group</div>
+            <ZonkDropdown
+              bind:value={selectedAge as string}
+              options={ageOptions as {label: string, value: string}[]}
+            />
+          {/if}
+
           <div class="text-center">Team</div>
           <ZonkDropdown bind:value={selectedTeam} options={teamOptions} />
-        </div>
 
-        <div>
           <div class="text-center">Periods</div>
           {#if !!showSelectTime}
             <ZonkDropdown bind:value={selectedTime} options={timeOptions} />
@@ -117,7 +113,8 @@
           {/if}
         </div>
       </div>
-      <div id="button" class="flex justify-center gap-4">
+
+      <div id="button" class="flex justify-center">
         <ZonkButton
           disabled={!canSubmit}
           color="green"
@@ -126,28 +123,14 @@
         >
           Start
         </ZonkButton>
-        <ZonkButton
-          disabled={!canSubmit}
-          color="grey"
-          size="lg"
-          onclick={() => navigate("home")}
-        >
-          Back
-        </ZonkButton>
       </div>
     </div>
   </div>
 </div>
 
 <style>
-
   .control-container {
-    @apply w-[60vw] h-[40vh]
-      overflow-y-auto
-      overflow-scroll
-      overflow-x-hidden
-      p-4
-      border-2 border-slate-300;
+    @apply w-full min-h-[40vh];
   }
 
   .polar-col {

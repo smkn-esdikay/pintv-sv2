@@ -1,5 +1,24 @@
 import type { SideColor, WAge, WConfig, WeightUnit, WPos, WStyle } from "@/types";
 
+
+export const cnsStyles: { 
+  style: WStyle; 
+  ages: WAge[] | undefined; 
+}[] = [
+  {
+    style: "Folkstyle",
+    ages: ["Highschool", "College"],
+  },
+  {
+    style: "Freestyle",
+    ages: undefined,
+  },
+  {
+    style: "Greco",
+    ages: undefined,
+  },
+];
+
 /**
  * All time values are in seconds unless otherwise noted.
  * 
