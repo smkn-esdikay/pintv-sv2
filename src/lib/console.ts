@@ -80,12 +80,12 @@ class ConsoleLogger {
     console.log(formattedMsg, styleStr, ...additionalArgs);
     
     // Log complex objects separately for better inspection
-    const complexArgs = additionalArgs.filter(arg => 
-      arg !== null && typeof arg === 'object'
-    );
-    if (complexArgs.length > 0) {
-      console.log(...complexArgs);
-    }
+    // const complexArgs = additionalArgs.filter(arg => 
+    //   arg !== null && typeof arg === 'object'
+    // );
+    // if (complexArgs.length > 0) {
+    //   console.log(...complexArgs);
+    // }
   }
 
   // Convenience methods

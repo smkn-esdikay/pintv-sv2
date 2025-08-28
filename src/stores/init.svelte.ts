@@ -2,8 +2,8 @@ import type { WConfig } from "@/types";
 
 const ur: WConfig = {
   style: 'Folkstyle',
-  age: 'Highschool',
-  periodLengths: [120],
+  age: 'College',
+  periodLengths: [180, 120, 120],
   team: false,
 };
 
