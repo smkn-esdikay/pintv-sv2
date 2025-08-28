@@ -86,7 +86,7 @@
   // Show precision when 5 seconds or less remain
   const showPrecision = $derived(remaining <= 5000 && isRunning);
   
-  const canEdit = $derived(allowEditing && (!isRunning && !isComplete));
+  const canEdit = $derived(allowEditing && !isRunning);
   
   const maxMinutes = 99; 
   const maxSeconds = 59; 

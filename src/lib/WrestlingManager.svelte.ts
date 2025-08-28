@@ -86,7 +86,6 @@ export class WrestlingManager {
   private initialized = false;
   private actionTitleMap: Map<string, ActionEntry> = new Map<string, ActionEntry>();
   private broadcastUnsubscribes: (() => void)[] = [];
-  private clockSubscriptions: (() => void)[] = [];
 
   private constructor() {
     // prevent direct instantiation
@@ -153,7 +152,6 @@ export class WrestlingManager {
     // Broadcast initial state
     this.broadcastCurrentState();
     this.setupBroadcastHandlers();
-    this.setupClockCompletionHandlers();
   }
 
   private initialize() { 
@@ -431,69 +429,11 @@ export class WrestlingManager {
     return false;
   }
 
-  private setupClockCompletionHandlers() {
+  handleClockComplete(id: ClockId) {
 
-    const mcUnsubscribe = this._current.clocks.mc.isComplete.subscribe(isComplete => {
-      if (isComplete) {
-        this.handleClockCompletion('mc');
-      }
-    });
-    this.clockSubscriptions.push(mcUnsubscribe);
+    console.log(' complete', id);
 
-    if (this._current.clocks.rest) {
-      const restUnsubscribe = this._current.clocks.rest.isComplete.subscribe(isComplete => {
-        if (isComplete) {
-          this.handleClockCompletion('rest');
-        }
-      });
-      this.clockSubscriptions.push(restUnsubscribe);
-    }
-
-    if (this._current.clocks.shotclock) {
-      const shotUnsubscribe = this._current.clocks.shotclock.isComplete.subscribe(isComplete => {
-        if (isComplete) {
-          this.handleClockCompletion('shotclock');
-        }
-      });
-      this.clockSubscriptions.push(shotUnsubscribe);
-    }
-
-    this.setupSideClockCompletionHandlers('l' as WSide);
-    this.setupSideClockCompletionHandlers('r' as WSide);
   }
-
-  private setupSideClockCompletionHandlers(side: WSide) {
-    const sideData = this._current[side];
-    
-    Object.entries(sideData.clocks).forEach(([clockType, clock]) => {
-      if (clock) {
-        const unsubscribe = clock.isComplete.subscribe(isComplete => {
-          if (isComplete) {
-            this.handleClockCompletion(`${side}_${clockType}` as ClockId);
-          }
-        });
-        this.clockSubscriptions.push(unsubscribe);
-      }
-    });
-  }
-
-  private handleClockCompletion(clockId: ClockId) {
-    co.info(`Clock completed: ${clockId}`);
-
-    const clockAction: WAction = {
-      id: generateId(),
-      clock: {
-        clockId,
-        event: 'complete',
-        timeLeft: 0
-      },
-      ts: Date.now(),
-      elapsed: Math.floor(this._current.clocks.mc.getTotalElapsed() / 1000)
-    };
-
-    this.processAction(clockAction);
-  }
-
 
   // ++++++++++++++++++++++++ 5. Action management ++++++++++++++++++++++++
 
@@ -732,40 +672,6 @@ export class WrestlingManager {
 
 
 
-  private canAdvancePeriod(): boolean {
-    return this._current.periodIdx < this._current.periods.length - 1;
-  }
-
-  private advanceToNextPeriod() {
-    this._current.periodIdx++;
-    const nextPeriod = this._current.periods[this._current.periodIdx];
-    
-    if (nextPeriod) {
-      // Create new main clock for next period
-      const nextPeriodMs = nextPeriod.seconds * 1000;
-      this._current.clocks.mc = new ZonkClock(nextPeriodMs);
-      
-      // Set up completion handler for new clock
-      const mcUnsubscribe = this._current.clocks.mc.isComplete.subscribe(isComplete => {
-        if (isComplete) {
-          this.handleClockCompletion('mc');
-        }
-      });
-      this.clockSubscriptions.push(mcUnsubscribe);
-      
-      co.success(`Advanced to ${nextPeriod.title}`);
-    }
-  }
-
-  private handleMatchEnd() {
-    co.success("Match completed!");
-    // Handle end of match logic
-    // Calculate winner, update history, etc.
-  }
-
-
-
-
 
   // ++++++++++++++++++++++++ 8. Scoring ++++++++++++++++++++++++
 
@@ -912,11 +818,6 @@ export class WrestlingManager {
   // ++++++++++++++++++++++++ 99. Cleanup ++++++++++++++++++++++++
 
 
-  private cleanupClockSubscriptions() {
-    this.clockSubscriptions.forEach(unsub => unsub());
-    this.clockSubscriptions = [];
-  }
-
   private destroyMainClocks() {
     this._current.clocks.mc?.destroy();
     this._current.clocks.rest?.destroy();
@@ -933,7 +834,6 @@ export class WrestlingManager {
 
   resetMatch() {
     co.info("WrestlingManager: Resetting match");
-    this.cleanupClockSubscriptions();
     this.destroyMainClocks();
     this.destroySideClocks();
     this.initialized = false;
@@ -942,7 +842,6 @@ export class WrestlingManager {
 
   static destroy() {
     if (WrestlingManager.instance) {
-      WrestlingManager.instance.cleanupClockSubscriptions();
       WrestlingManager.instance.destroyMainClocks();
       WrestlingManager.instance.destroySideClocks();
       WrestlingManager.instance.cleanupBroadcast();

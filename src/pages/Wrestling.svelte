@@ -96,12 +96,14 @@
           className="bg-white"
         />
         <TimeControls 
+          id='l_blood'
           size="md"
           clock={current.l.clocks.blood}
           canReset={false}
-          onClockUpdate={(eventName) => {
-            if (eventName === 'start') manager.startClock('l_blood');
-            else if (eventName === 'stop') manager.stopClock('l_blood');
+          onClockUpdate={(eventName, id) => {
+            if (eventName === 'start') manager.startClock(id);
+            else if (eventName === 'stop') manager.stopClock(id);
+            else if (eventName === 'complete') manager.handleClockComplete(id);
           }}
         />
       </div>
@@ -118,12 +120,14 @@
           className="bg-white"
         />
         <TimeControls 
+          id='l_injury'
           size="md"
           clock={current.l.clocks.injury}
           canReset={false}
-          onClockUpdate={(eventName) => {
-            if (eventName === 'start') manager.startClock('l_injury');
-            else if (eventName === 'stop') manager.stopClock('l_injury');
+          onClockUpdate={(eventName, id) => {
+            if (eventName === 'start') manager.startClock(id);
+            else if (eventName === 'stop') manager.stopClock(id);
+            else if (eventName === 'complete') manager.handleClockComplete(id);
           }}
         />
       </div>
@@ -140,12 +144,14 @@
           className="bg-white"
         />
         <TimeControls 
+          id='l_recovery'
           size="md"
           clock={current.l.clocks.recovery}
           canReset={false}
-          onClockUpdate={(eventName) => {
-            if (eventName === 'start') manager.startClock('l_recovery');
-            else if (eventName === 'stop') manager.stopClock('l_recovery');
+          onClockUpdate={(eventName, id) => {
+            if (eventName === 'start') manager.startClock(id);
+            else if (eventName === 'stop') manager.stopClock(id);
+            else if (eventName === 'complete') manager.handleClockComplete(id);
           }}
         />
       </div>
@@ -162,12 +168,14 @@
           className="bg-white"
         />
         <TimeControls 
+          id='l_headneck'
           size="md"
           clock={current.l.clocks.headneck}
           canReset={false}
-          onClockUpdate={(eventName) => {
-            if (eventName === 'start') manager.startClock('l_headneck');
-            else if (eventName === 'stop') manager.stopClock('l_headneck');
+          onClockUpdate={(eventName, id) => {
+            if (eventName === 'start') manager.startClock(id);
+            else if (eventName === 'stop') manager.stopClock(id);
+            else if (eventName === 'complete') manager.handleClockComplete(id);
           }}
         />
       </div>
@@ -240,12 +248,14 @@
       />
       
       <TimeControls 
+        id='mc'
         clock={current.clocks.mc}
         canReset={true}
-        onClockUpdate={(eventName) => {
-          if (eventName === 'start') manager.startClock('mc');
-          else if (eventName === 'stop') manager.stopClock('mc');
-          else if (eventName === 'reset') manager.resetClock('mc');
+        onClockUpdate={(eventName, id) => {
+          if (eventName === 'start') manager.startClock(id);
+          else if (eventName === 'stop') manager.stopClock(id);
+          else if (eventName === 'reset') manager.resetClock(id);
+          else if (eventName === 'complete') manager.handleClockComplete(id);
         }}
         className="mt-1"
       />
@@ -316,12 +326,14 @@
           className="bg-white"
         />
         <TimeControls 
+          id='r_blood'
           size="md"
           clock={current.r.clocks.blood}
           canReset={false}
-          onClockUpdate={(eventName) => {
-            if (eventName === 'start') manager.startClock('r_blood');
-            else if (eventName === 'stop') manager.stopClock('r_blood');
+          onClockUpdate={(eventName, id) => {
+            if (eventName === 'start') manager.startClock(id);
+            else if (eventName === 'stop') manager.stopClock(id);
+            else if (eventName === 'complete') manager.handleClockComplete(id);
           }}
         />
       </div>
@@ -338,12 +350,14 @@
           className="bg-white"
         />
         <TimeControls 
+          id='r_injury'
           size="md"
           clock={current.r.clocks.injury}
           canReset={false}
-          onClockUpdate={(eventName) => {
-            if (eventName === 'start') manager.startClock('r_injury');
-            else if (eventName === 'stop') manager.stopClock('r_injury');
+          onClockUpdate={(eventName, id) => {
+            if (eventName === 'start') manager.startClock(id);
+            else if (eventName === 'stop') manager.stopClock(id);
+            else if (eventName === 'complete') manager.handleClockComplete(id);
           }}
         />
       </div>
@@ -360,12 +374,14 @@
           className="bg-white"
         />
         <TimeControls 
+          id='r_recovery'
           size="md"
           clock={current.r.clocks.recovery}
           canReset={false}
-          onClockUpdate={(eventName) => {
-            if (eventName === 'start') manager.startClock('r_recovery');
-            else if (eventName === 'stop') manager.stopClock('r_recovery');
+          onClockUpdate={(eventName, id) => {
+            if (eventName === 'start') manager.startClock(id);
+            else if (eventName === 'stop') manager.stopClock(id);
+            else if (eventName === 'complete') manager.handleClockComplete(id);
           }}
         />
       </div>
@@ -382,12 +398,14 @@
           className="bg-white"
         />
         <TimeControls 
+          id='r_headneck'
           size="md"
           clock={current.r.clocks.headneck}
           canReset={false}
-          onClockUpdate={(eventName) => {
-            if (eventName === 'start') manager.startClock('r_headneck');
-            else if (eventName === 'stop') manager.stopClock('r_headneck');
+          onClockUpdate={(eventName, id) => {
+            if (eventName === 'start') manager.startClock(id);
+            else if (eventName === 'stop') manager.stopClock(id);
+            else if (eventName === 'complete') manager.handleClockComplete(id);
           }}
         />
       </div>
