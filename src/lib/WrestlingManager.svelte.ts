@@ -465,20 +465,23 @@ export class WrestlingManager {
       return;
     }
 
-    // Prevent negative scores for manual actions
-    if (actn.wrestle?.action === "manual") {
-      const matchPoints = this.getPointsForMatch();
-      if (matchPoints[actn.side] + actn.wrestle.pt < 0) {
-        co.warn("WrestlingManager: Cannot make score negative with manual action");
-        return;
-      }
-    }
+
 
     // Add elapsed time
     const mainClockElapsed = this._current.clocks.mc.getTotalElapsed();
     actn.elapsed = Math.floor(mainClockElapsed / 1000);
 
-    if (actn.wrestle) {
+    if (actn.wrestle) { // wrestle event
+
+      // Prevent negative scores for manual actions
+      if (actn.wrestle.action === "manual") {
+        const matchPoints = this.getPointsForMatch();
+        if (matchPoints[actn.side] + actn.wrestle.pt < 0) {
+          co.warn("WrestlingManager: Cannot make score negative with manual action");
+          return;
+        }
+      }
+
       const actionCount = this.countActionsBySide(actn.side, actn.wrestle.action);
       actn.wrestle.cnt = actionCount + 1;
       
@@ -529,6 +532,14 @@ export class WrestlingManager {
       
       // Broadcast state update
       this.broadcastCurrentState();
+
+    } else if (actn.clock) { // clock event
+
+      if (actn.clock.clockId === "mc") {
+        if (actn.clock.event === "complete") {
+          this.processPeriodComplete();
+        }
+      }
     }
   }
 
@@ -632,6 +643,11 @@ export class WrestlingManager {
     const points = this.getPointsForMatch();
     return points.l >= 15 || points.r >= 15; // Tech fall example
   }
+  
+  processPeriodComplete(): void {
+    
+  }
+
 
   // ++++++++++++++++++++++++ 8. Scoring ++++++++++++++++++++++++
 
