@@ -1,12 +1,21 @@
 import { writable, type Writable } from 'svelte/store';
 
+/**
+ * @member {number} max - milliseconds
+ * @member {number | null} started - milliseconds timestamp using Date.now()
+ * @member {number | null} stopped - milliseconds timestamp using Date.now()
+ * @member {number} timestampUponComplete - milliseconds timestamp using Date.now()
+ * @member {number} durStop - milliseconds
+ * @member {number} durRun - milliseconds
+ * @member {boolean} isRunning
+ */
 export interface ZonkClockState {
   max: number;
   started: number | null;
   stopped: number | null;
   timestampUponComplete: number | null;
   durStop: number;
-  durRun: number;
+  durRun: number; 
   isRunning: boolean;
 }
 
@@ -19,7 +28,9 @@ export class ZonkClock {
   private durStop: number = 0;
   private durRun: number = 0;
   
+  /** elapsed time in ms */
   public elapsed: Writable<number> = writable(0);
+  /** elapsed time in ms */
   public remaining: Writable<number> = writable(0);
   public isRunning: Writable<boolean> = writable(false);
   public isComplete: Writable<boolean> = writable(false);
@@ -68,9 +79,10 @@ export class ZonkClock {
     }
   }
 
-  public reset() {
+  public reset(resetTimeMs: number) {
     this.stopUpdateLoop();
     
+    this.max = resetTimeMs;
     this.started = null;
     this.stopped = null;
     this.timestampUponComplete = null;

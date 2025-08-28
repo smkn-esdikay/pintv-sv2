@@ -8,7 +8,8 @@ import type {
   WHistory,
   SideColor,
   WAction,
-  ClockId
+  ClockId,
+  WPeriod
 } from "@/types";
 import { 
   cnsActions,
@@ -336,14 +337,13 @@ export class WrestlingManager {
   }
 
   resetClock(clockId: string) {
+    const currentPeriod = this.getCurrentPeriod();
     const clock = this.getClockById(clockId);
-    if (clock) {
-      clock.reset();
+    if (!!currentPeriod && !!clock) {
+      const resetTime = currentPeriod.seconds * 1000;
+      clock.reset(resetTime);
       this._current.clockInfo.lastActivatedAction = 'reset';
       
-      // Broadcast clock reset
-      const timeLeft = clock instanceof RidingClock ? 0 : clock.getRemainingTime();
-      // broadcastClockReset(clockId, timeLeft);
       this.broadcastCurrentState();
     }
   }
@@ -677,8 +677,9 @@ export class WrestlingManager {
 
   // ++++++++++++++++++++++++ 7. Advance periods or matches ++++++++++++++++++++++++
 
-  getCurrentPeriod(): number {
-    return this._current.periodIdx + 1;
+  getCurrentPeriod(): WPeriod | undefined {
+    return this._current.periods.
+      find(p => p.realIdx === this._current.periodIdx);
   }
 
   isMatchComplete(): boolean {
@@ -688,8 +689,7 @@ export class WrestlingManager {
   }
   
   processPeriodComplete(): void {
-    const currentPeriod = this._current.periods.
-      find(p => p.realIdx === this._current.periodIdx);
+    const currentPeriod = this.getCurrentPeriod();
 
     if (!currentPeriod) {
       co.error("processPeriodComplete: currentPeriod not found");
