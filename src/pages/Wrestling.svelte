@@ -14,6 +14,7 @@
   import ActionBoard from "@/components/ActionBoard.svelte";
   import ScoreDisplay from "@/components/ScoreDisplay.svelte";
   import Recap from "@/components/Recap.svelte";
+  import Period from "@/components/Period.svelte";
 
   import Button from "@/components/_UI/ZonkButton.svelte";
   import Confirm from "@/components/_UI/ConfirmModal.svelte";
@@ -56,12 +57,17 @@
     };
   });
 
+  $inspect('must choose position', current.mustChoosePosition)
+
 </script>
 
 <div class="master-grid">
   <!-- LEFT -->
   <div class={`card-${current.l.color}`}>
 
+    {#if current.mustChoosePosition && current.canChooseSides?.l}
+    <div>choose</div>
+    {:else}
     <div class="flex flex-row gap-4 items-center mb-2">
       <Position 
         bind:selected={current.l.pos}
@@ -72,6 +78,7 @@
         onSelected={(color) => manager.setColor('l', color)}
       />
     </div>
+    {/if}
 
     <div class="mb-4">
       <ActionBoard 
@@ -216,6 +223,10 @@
       </div>
     </section>
 
+    <section id="period">
+      <Period period={manager.getCurrentPeriod()} />
+    </section>
+
     <section id="match-score">
       <div class="w-full flex flex-row items-center justify-between">
         <ScoreDisplay 
@@ -294,6 +305,9 @@
   <!-- RIGHT -->
   <div class={`card-${current.r.color}`}>
 
+    {#if current.mustChoosePosition && current.canChooseSides?.r}
+    <div>choose</div>
+    {:else}
     <div class="flex flex-row gap-4 items-center mb-2">
       <Position 
         bind:selected={current.r.pos}
@@ -304,6 +318,8 @@
         onSelected={(color) => manager.setColor("r", color)}
       />
     </div>
+    {/if}
+
 
     <div class="mb-4">
       <ActionBoard 

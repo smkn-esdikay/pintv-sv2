@@ -23,6 +23,10 @@ export type WStyle =      'Folkstyle' | 'Freestyle' | 'Greco';
 export type WAge =        'Highschool' | 'College' | undefined;
 export type WSide =       'l' | 'r';
 export type WPos =        't' | 'n' | 'b';
+export type ChoosePositionParty = 'both' | 'none' | 'notprevious' | 'firstblood';
+
+
+
 
 export type WMatchWeight = {
   weight: number;
@@ -74,7 +78,6 @@ export type WAction = {
   elapsed?: number;
 }
 
-export type ChoosePositionParty = 'both' | 'none' | 'notprevious' | 'firstblood';
 export type WPeriodDefinition = {
   code: string;
   name: string;
@@ -156,8 +159,13 @@ export type WStateMain = {
   r: WStateSide;
   periods: WPeriod[];
   periodIdx: number;
+  firstblood?: WSide;
   defer?: WSide;
   mustChoosePosition: boolean;
+  canChooseSides?: { 
+    l?: boolean;
+    r?: boolean; 
+  };
   weight?: WMatchWeight;
 }
 

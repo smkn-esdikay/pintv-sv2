@@ -108,6 +108,7 @@ export class WrestlingManager {
     // computed:
 
     let mustChoosePosition: boolean = false;
+    let canChooseSides = undefined;
     const currentPeriod = this.getCurrentPeriod();
     const matchPoints = this.getPointsForMatch();
 
@@ -119,14 +120,43 @@ export class WrestlingManager {
         ( // 
           !currentPeriod.definition.decisive ||
           matchPoints.l === matchPoints.r
-        )
+        );
+      if (!!mustChoosePosition) {
+        if (currentPeriod.definition.whoChooses === "both") {
+          canChooseSides = { l: true, r: true, };
+        } else if (currentPeriod.definition.whoChooses === "notprevious") {
+          const prev = this.getPreviousPeriod();
+          if (!!prev) {
+            if (prev.positionChoice) { 
+              if (prev.positionChoice.side === "l") {
+                canChooseSides = { l: true, };
+              } else {
+                canChooseSides = { r: true, };
+              }
+            } else { // no position was chosen!
+              canChooseSides = { l: true, r: true, };
+            }
+          } else { // no previous period!
+            canChooseSides = { l: true, r: true, };
+          }
+        } else if (currentPeriod.definition.whoChooses === "firstblood") {
+          if (this._current.firstblood === "l") {
+            canChooseSides = { l: true, };
+          } else if (this._current.firstblood === "r") {
+            canChooseSides = { r: true, };
+          } else {
+            canChooseSides = { l: true, r: true, }; // no first blood!
+          }
+        }
+      }
     } else {
       co.warn("WrestlingManager: Cannot compute mustChoosePosition");
     }
 
     return {
       ...this._current,
-      mustChoosePosition
+      mustChoosePosition,
+      canChooseSides,
     };
   }
 
@@ -294,7 +324,7 @@ export class WrestlingManager {
 
   // ++++++++++++++++++++++++ 4. Clock management ++++++++++++++++++++++++
 
-  startClock(clockId: string) {
+  startClock(clockId: string): void {
     const clock = this.getClockById(clockId);
     if (clock) {
       this.stopActiveClock();
@@ -337,7 +367,7 @@ export class WrestlingManager {
     }
   }
 
-  stopClock(clockId: string) {
+  stopClock(clockId: string): void {
     const clock = this.getClockById(clockId);
     if (clock) {
       clock.stop();
@@ -358,7 +388,7 @@ export class WrestlingManager {
     }
   }
 
-  resetClock(clockId: string) {
+  resetClock(clockId: string): void {
     const currentPeriod = this.getCurrentPeriod();
     const clock = this.getClockById(clockId);
     if (!!currentPeriod && !!clock) {
@@ -370,7 +400,7 @@ export class WrestlingManager {
     }
   }
 
-  setClockTime(clockId: string, newTimeMs: number) {
+  setClockTime(clockId: string, newTimeMs: number): void {
     if (clockId === 'ride') {
       // For riding clock, set the net time directly
       const rideClock = this._current.clocks.ride;
@@ -385,7 +415,7 @@ export class WrestlingManager {
     }
   }
 
-  private stopActiveClock() {
+  private stopActiveClock(): void {
     if (this._current.clockInfo.activeId) {
       const activeClock = this.getClockById(this._current.clockInfo.activeId);
       activeClock?.stop();
@@ -466,7 +496,7 @@ export class WrestlingManager {
       }
       this.processAction(actn);
     } else {
-      console.error(`handleClockComplete: clock not found:`, id);
+      co.error(`handleClockComplete: clock not found:`, id);
       return;
     }
   }
@@ -578,12 +608,9 @@ export class WrestlingManager {
     } else if (actn.clock) { // clock event
 
       if (actn.clock.event === "complete") {
-        console.log('complete', actn.clock.clockId);
         if (actn.clock.clockId === "mc") {
-          console.log('complete main clock');
-
-          this.processPeriodComplete();
           this.stopRidingClockMaybe();
+          this.processPeriodComplete();
           // play audio
         }
 
@@ -698,6 +725,10 @@ export class WrestlingManager {
 
   // ++++++++++++++++++++++++ 7. Advance periods or matches ++++++++++++++++++++++++
 
+  getPreviousPeriod(): WPeriod | undefined {
+    return this._current.periods.
+      find(p => p.realIdx === this._current.periodIdx - 1);
+  }
   getCurrentPeriod(): WPeriod | undefined {
     return this._current.periods.
       find(p => p.realIdx === this._current.periodIdx);
@@ -717,8 +748,17 @@ export class WrestlingManager {
       return;
     }
 
-    $state.snapshot(currentPeriod);
-    
+    if (currentPeriod.definition.decisive) {
+
+    } else { // not a decisive period
+      this.goToNextPeriod();
+    } 
+  }
+
+  goToNextPeriod(): void {
+    this._current.periodIdx++;    
+    this.resetClock('mc');
+    this.setPosition('l', 'n');
   }
 
 
