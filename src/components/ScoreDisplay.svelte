@@ -22,6 +22,7 @@
     const action = {
       id: generateId(),
       wrestle: {
+        side,
         action: "manual",
         actionTitle: "Manual",
         clean: true,
@@ -29,7 +30,6 @@
         oppPt: 0,
         dq: false,
       },
-      side,
       ts: Date.now(),
     } as WAction;
     return action;

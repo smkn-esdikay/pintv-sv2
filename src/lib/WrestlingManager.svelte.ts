@@ -54,7 +54,7 @@ const placeholderState: WStateMain = {
   r: getSideState('green'),
   periods: [],
   periodIdx: 0,
-  defer: '',
+  mustChoosePosition: false,
 };
 
 
@@ -102,9 +102,32 @@ export class WrestlingManager {
   // getters
   get current(): WStateMain {
     if (!this.initialized) {
-      co.warn("WrestlingManager: Accessing state before initialization");
+      co.warn("WrestlingManager: Accessing state before initialization or Period not ready");
     }
-    return this._current;
+
+    // computed:
+
+    let mustChoosePosition: boolean = false;
+    const currentPeriod = this.getCurrentPeriod();
+    const matchPoints = this.getPointsForMatch();
+
+    if (!!currentPeriod) {
+      mustChoosePosition = 
+        this.peekStoreValue(this._current.clocks.mc.isComplete) &&
+        currentPeriod.definition.whoChooses !== "none" &&
+        !currentPeriod.positionChoice &&
+        ( // 
+          !currentPeriod.definition.decisive ||
+          matchPoints.l === matchPoints.r
+        )
+    } else {
+      co.warn("WrestlingManager: Cannot compute mustChoosePosition");
+    }
+
+    return {
+      ...this._current,
+      mustChoosePosition
+    };
   }
 
   get history(): WHistory {
@@ -239,7 +262,6 @@ export class WrestlingManager {
       lastActivatedAction: '',
     };
     this._current.periodIdx = 0;
-    this._current.defer = '';
 
     co.success("WrestlingManager: Match initialized", {
       style: this.config.style,
@@ -487,13 +509,12 @@ export class WrestlingManager {
       return;
     }
 
-
-
-    // Add elapsed time
-    const mainClockElapsed = this._current.clocks.mc.getTotalElapsed();
-    actn.elapsed = Math.floor(mainClockElapsed / 1000);
-
+    
     if (actn.wrestle) { // wrestle event
+
+      // Add elapsed time ( time events set their own elapsed time )
+      const mainClockElapsed = this._current.clocks.mc.getTotalElapsed();
+      actn.elapsed = Math.floor(mainClockElapsed / 1000);
 
       // Prevent negative scores for manual actions
       if (actn.wrestle.action === "manual") {

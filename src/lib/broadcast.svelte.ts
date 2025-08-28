@@ -41,8 +41,9 @@ class SimpleBroadcast {
       const channel = this.getOrCreateChannel(channelName);
 
       const pl: WStateMainPublicDisplay = JSON.parse(JSON.stringify({
-        config: data.config,
-        clockInfo: data.clockInfo,
+        ...data,
+        // config: data.config,
+        // clockInfo: data.clockInfo,
         clockStates: {
           mc: data.clocks.mc.getState(),
           rest: data.clocks.rest ? data.clocks.rest.getState() : undefined,
@@ -50,13 +51,14 @@ class SimpleBroadcast {
           ride: data.clocks.ride ? data.clocks.ride.getState() : undefined,
         },
         l: {
-          color: data.l.color,
-          showChoosePos: data.l.showChoosePos,
-          pos: data.l.pos,
-          teamName: data.l.teamName,
-          teamNameAbbr: data.l.teamNameAbbr,
-          athleteName: data.l.athleteName,
-          winbyIdx: data.l.winbyIdx,
+          ...data.l,
+          // color: data.l.color,
+          // showChoosePos: data.l.showChoosePos,
+          // pos: data.l.pos,
+          // teamName: data.l.teamName,
+          // teamNameAbbr: data.l.teamNameAbbr,
+          // athleteName: data.l.athleteName,
+          // winbyIdx: data.l.winbyIdx,
           clockStates: {
             blood: data.l.clocks.blood ? {...data.l.clocks.blood.getState()} : undefined,
             injury: data.l.clocks.injury ? data.l.clocks.injury.getState() : undefined,
@@ -65,13 +67,14 @@ class SimpleBroadcast {
           },
         },
         r: {
-          color: data.r.color,
-          showChoosePos: data.r.showChoosePos,
-          pos: data.r.pos,
-          teamName: data.r.teamName,
-          teamNameAbbr: data.r.teamNameAbbr,
-          athleteName: data.r.athleteName,
-          winbyIdx: data.r.winbyIdx,
+          ...data.r,
+          // color: data.r.color,
+          // showChoosePos: data.r.showChoosePos,
+          // pos: data.r.pos,
+          // teamName: data.r.teamName,
+          // teamNameAbbr: data.r.teamNameAbbr,
+          // athleteName: data.r.athleteName,
+          // winbyIdx: data.r.winbyIdx,
           clockStates: {
             blood: data.r.clocks.blood ? data.r.clocks.blood.getState() : undefined,
             injury: data.r.clocks.injury ? data.r.clocks.injury.getState() : undefined,
@@ -79,9 +82,11 @@ class SimpleBroadcast {
             headneck: data.r.clocks.headneck ? data.r.clocks.headneck.getState() : undefined,
           },
         },
-        periodIdx: data.periodIdx,
-        defer: data.defer,
-        matchPoints: data.matchPoints,
+        // periodIdx: data.periodIdx,
+        // mustChoosePosition: data.mustChoosePosition,
+        // sideThatChosePosition: data.sideThatChosePosition,
+        // defer: data.defer,
+        // matchPoints: data.matchPoints,
       }));
       
       channel.postMessage(pl);

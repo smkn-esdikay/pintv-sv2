@@ -68,8 +68,10 @@ export type WAction = {
   id: string;
   clock?: ClockAction;
   wrestle?: WrestlingAction;
-  ts: number;         // Date.now()
-  elapsed?: number;   // seconds into current period
+  /** timestamp in ms using Date.now() */
+  ts: number;
+  /** elapsed time in ms */
+  elapsed?: number;
 }
 
 export type ChoosePositionParty = 'both' | 'none' | 'notprevious' | 'firstblood';
@@ -77,7 +79,8 @@ export type WPeriodDefinition = {
   code: string;
   name: string;
   decisive: boolean;
-  chooseAfter: ChoosePositionParty;
+  /** // who chooses position for next period */
+  whoChooses: ChoosePositionParty; 
   overtime?: boolean;
   restAfter?: boolean;
 }
@@ -87,6 +90,10 @@ export type WPeriod = {
   displayIdx: number;   // used for display purposes
   realIdx: number;      // true index
   definition: WPeriodDefinition;
+  positionChoice?: {
+    side: WSide;
+    position: WPos;
+  };
   actions: WAction[];
 }
 
@@ -149,7 +156,8 @@ export type WStateMain = {
   r: WStateSide;
   periods: WPeriod[];
   periodIdx: number;
-  defer: string;
+  defer?: WSide;
+  mustChoosePosition: boolean;
   weight?: WMatchWeight;
 }
 

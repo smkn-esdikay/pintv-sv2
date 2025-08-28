@@ -28,9 +28,7 @@
 
   function transformToMainState(publicData: WStateMainPublicDisplay): WStateAdapted {
     return {
-      config: publicData.config,
-      clockInfo: publicData.clockInfo,
-      
+      ...publicData,      
       clocks: {
         mc: ZonkClock.fromState(publicData.clockStates.mc),
         rest: publicData.clockStates.rest ? ZonkClock.fromState(publicData.clockStates.rest) : undefined,
@@ -42,9 +40,6 @@
       r: transformSide(publicData.r),
       
       periods: [], 
-      periodIdx: publicData.periodIdx,
-      defer: publicData.defer,
-      matchPoints: publicData.matchPoints,
     };
   }
 
@@ -199,7 +194,7 @@
     </div>
     <div class="w-1/2 sb-border sb-cell-clock c">
       <div class='flex flex-col items-center justify-center'>
-        {#if wrestlingState?.clockInfo?.activeId === "mc"}
+        {#if wrestlingState?.clockInfo?.activeId === "mc" || wrestlingState?.clockInfo?.lastActivatedId === "mc"}
         <div class='w-full text-left sb-text-large flex flex-row'>
           {#each Array(wrestlingState.periodIdx + 1) as _, index}
             <Circle size={44} class="sb-period-marker" />
