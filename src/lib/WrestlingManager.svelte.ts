@@ -28,7 +28,6 @@ import { generateId } from "./math";
 const getSideState = (color: SideColor): WStateSide => {
   return {
     color: color,
-    showChoosePos: false,
     pos: 'n',
     teamName: color,
     athleteName: '',
@@ -122,32 +121,7 @@ export class WrestlingManager {
           matchPoints.l === matchPoints.r
         );
       if (!!mustChoosePosition) {
-        if (currentPeriod.definition.whoChooses === "both") {
-          canChooseSides = { l: true, r: true, };
-        } else if (currentPeriod.definition.whoChooses === "notprevious") {
-          const prev = this.getPreviousPeriod();
-          if (!!prev) {
-            if (prev.positionChoice) { 
-              if (prev.positionChoice.side === "l") {
-                canChooseSides = { l: true, };
-              } else {
-                canChooseSides = { r: true, };
-              }
-            } else { // no position was chosen!
-              canChooseSides = { l: true, r: true, };
-            }
-          } else { // no previous period!
-            canChooseSides = { l: true, r: true, };
-          }
-        } else if (currentPeriod.definition.whoChooses === "firstblood") {
-          if (this._current.firstblood === "l") {
-            canChooseSides = { l: true, };
-          } else if (this._current.firstblood === "r") {
-            canChooseSides = { r: true, };
-          } else {
-            canChooseSides = { l: true, r: true, }; // no first blood!
-          }
-        }
+        canChooseSides = this.determineWhoCanChoosePosition();
       }
     } else {
       co.warn("WrestlingManager: Cannot compute mustChoosePosition");
@@ -832,8 +806,40 @@ export class WrestlingManager {
     this.broadcastCurrentState();
   }
 
-  showPositionChoice(side: WSide, show: boolean = true) {
-    this._current[side].showChoosePos = show;
+  determineWhoCanChoosePosition(): { l?: boolean; r?: boolean } | undefined {
+    const currentPeriod = this.getCurrentPeriod();
+    let canChooseSides = undefined;
+    if (!currentPeriod)
+      return canChooseSides;
+
+
+    if (currentPeriod.definition.whoChooses === "both") {
+      canChooseSides = { l: true, r: true, };
+    } else if (currentPeriod.definition.whoChooses === "notprevious") {
+      const prev = this.getPreviousPeriod();
+      if (!!prev) {
+        if (prev.positionChoice) { 
+          if (prev.positionChoice.side === "l") {
+            canChooseSides = { l: true, };
+          } else {
+            canChooseSides = { r: true, };
+          }
+        } else { // no position was chosen!
+          canChooseSides = { l: true, r: true, };
+        }
+      } else { // no previous period!
+        canChooseSides = { l: true, r: true, };
+      }
+    } else if (currentPeriod.definition.whoChooses === "firstblood") {
+      if (this._current.firstblood === "l") {
+        canChooseSides = { l: true, };
+      } else if (this._current.firstblood === "r") {
+        canChooseSides = { r: true, };
+      } else {
+        canChooseSides = { l: true, r: true, }; // no first blood!
+      }
+    }
+    return canChooseSides;
   }
 
   // ++++++++++++++++++++++++ 10. Riding clock ++++++++++++++++++++++++

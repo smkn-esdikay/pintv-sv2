@@ -53,7 +53,6 @@ class SimpleBroadcast {
         l: {
           ...data.l,
           // color: data.l.color,
-          // showChoosePos: data.l.showChoosePos,
           // pos: data.l.pos,
           // teamName: data.l.teamName,
           // teamNameAbbr: data.l.teamNameAbbr,
@@ -69,7 +68,6 @@ class SimpleBroadcast {
         r: {
           ...data.r,
           // color: data.r.color,
-          // showChoosePos: data.r.showChoosePos,
           // pos: data.r.pos,
           // teamName: data.r.teamName,
           // teamNameAbbr: data.r.teamNameAbbr,

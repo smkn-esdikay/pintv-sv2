@@ -119,7 +119,6 @@ export type WHistory = {
 
 export type WStateSide = {
   color: SideColor;
-  showChoosePos: boolean;
   pos: WPos;
   teamName: string;
   teamNameAbbr?: string;
