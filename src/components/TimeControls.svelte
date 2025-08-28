@@ -7,6 +7,7 @@
     id: ClockId,
     clock: ZonkClock;
     canReset?: boolean;
+    oneSecondButton?: boolean;
     size?: 'lg' | 'md';
     className?: string;
     onClockUpdate?: (eventName: ClockEvent, id: ClockId) => void;
@@ -16,6 +17,7 @@
     id,
     clock,
     canReset = true,
+    oneSecondButton = false,
     size = 'lg',
     className = '',
     onClockUpdate
@@ -42,18 +44,19 @@
   });
 
   function handleStart() {
-    clock.start();
     onClockUpdate?.('start', id);
   }
 
   function handleStop() {
-    clock.stop();
     onClockUpdate?.('stop', id);
   }
 
   function handleReset() {
-    clock.reset();
     onClockUpdate?.('reset', id);
+  }
+
+  function handleOneSecond() {
+    onClockUpdate?.('onesecond', id);
   }
 
 </script>
@@ -87,6 +90,17 @@
         {size}
       >
         Reset
+      </Button>
+    {/if}
+    
+    {#if oneSecondButton}
+      <Button
+        disabled={isRunning}
+        onclick={handleOneSecond}
+        color="blue"
+        {size}
+      >
+        1
       </Button>
     {/if}
   </div>

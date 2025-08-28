@@ -11,7 +11,7 @@ export type SideColor =   'red' | 'green' | 'blue';
 /**
  * ----------------------- Clocks -----------------------
  */
-export type ClockEvent =  'start' | 'stop' | 'reset' | 'complete';
+export type ClockEvent =  'start' | 'stop' | 'reset' | 'complete' | 'onesecond';
 export type ClockId = 'mc' | 'rest' | 'shotclock' | 'ride' |
   'l_blood' | 'l_injury' | 'l_recovery' | 'l_headneck' |
   'r_blood' | 'r_injury' | 'r_recovery' | 'r_headneck' 

@@ -219,8 +219,6 @@ export class WrestlingManager {
       })
     });
 
-    $inspect('init periods: ', this._current.periods);
-
     // 4. Colors and sides
     const colorConstants = cnsColors[this.config.style];
     let lColor: SideColor = 'red', rColor: SideColor = 'green';
@@ -559,11 +557,12 @@ export class WrestlingManager {
     } else if (actn.clock) { // clock event
 
       if (actn.clock.event === "complete") {
-        console.log('complete', actn.clock.clockId)
+        console.log('complete', actn.clock.clockId);
         if (actn.clock.clockId === "mc") {
+          console.log('complete main clock');
 
           this.processPeriodComplete();
-          this.toggleRidingClockMaybe();
+          this.stopRidingClockMaybe();
           // play audio
         }
 
@@ -689,24 +688,15 @@ export class WrestlingManager {
   }
   
   processPeriodComplete(): void {
-    if (!this.config) {
-      co.error("processPeriodComplete: config not set");
-      return;
-    }
+    const currentPeriod = this._current.periods.
+      find(p => p.realIdx === this._current.periodIdx);
 
-    const periods = getCnsPeriods(this.config);
-    if (!periods) {
-      co.error("processPeriodComplete: periods not found for style");
-      return;
-    }
-
-    const currentPeriod = periods[this._current.periodIdx];
     if (!currentPeriod) {
       co.error("processPeriodComplete: currentPeriod not found");
       return;
     }
 
-    console.log(currentPeriod);
+    $state.snapshot(currentPeriod);
     
   }
 
@@ -770,7 +760,7 @@ export class WrestlingManager {
     this._current[side].pos = position;
     this._current[oppSide].pos = mirrorPos;
     
-    this.toggleRidingClockMaybe();
+    this.startRidingClockMaybe();
     
     co.info("WrestlingManager: Position changed", { 
       side, 
@@ -787,7 +777,7 @@ export class WrestlingManager {
 
   // ++++++++++++++++++++++++ 10. Riding clock ++++++++++++++++++++++++
 
-  toggleRidingClockMaybe() {
+  startRidingClockMaybe() {
     if (this._current.clocks.ride) {
       const leftPos = this._current.l.pos;
       const isMainClockRunning = this.peekStoreValue(this._current.clocks.mc.isRunning);
@@ -809,6 +799,13 @@ export class WrestlingManager {
       }
     }
   }
+  stopRidingClockMaybe() {
+    const isMainClockRunning = this.peekStoreValue(this._current.clocks.mc.isRunning);
+    if (this._current.clocks.ride && isMainClockRunning) {
+      this._current.clocks.ride.stop();
+      co.debug("WrestlingManager: Riding clock stopped");
+    }
+  }
 
   setRidingTime(netTimeMs: number) {
     if (this._current.clocks.ride) {
@@ -821,7 +818,7 @@ export class WrestlingManager {
   resetRidingClock() {
     if (this._current.clocks.ride) {
       this._current.clocks.ride.reset();
-      this.toggleRidingClockMaybe();
+      this.startRidingClockMaybe();
       co.info("WrestlingManager: Riding clock reset");
       this.broadcastCurrentState();
     }

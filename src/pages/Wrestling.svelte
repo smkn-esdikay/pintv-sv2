@@ -251,10 +251,12 @@
         id='mc'
         clock={current.clocks.mc}
         canReset={true}
+        oneSecondButton={true}
         onClockUpdate={(eventName, id) => {
           if (eventName === 'start') manager.startClock(id);
           else if (eventName === 'stop') manager.stopClock(id);
           else if (eventName === 'reset') manager.resetClock(id);
+          else if (eventName === 'onesecond') manager.setClockTime('mc', 1000);
           else if (eventName === 'complete') manager.handleClockComplete(id);
         }}
         className="mt-1"
