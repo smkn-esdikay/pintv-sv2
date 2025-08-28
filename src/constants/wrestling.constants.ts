@@ -1,4 +1,4 @@
-import type { SideColor, WAge, WConfig, WeightUnit, WPos, WStyle } from "@/types";
+import type { SideColor, WAge, WConfig, WeightUnit, WPeriodDefinition, WPos, WStyle } from "@/types";
 
 
 export const cnsStyles: { 
@@ -191,14 +191,7 @@ export const cnsWinby: WinbyEntry[] = [
   { display: 'DQ', value: 1, teamPoints: 6, selectable: true, },
 ];
 
-interface PeriodEntry {
-  code: string;
-  name: string;
-  decisive: boolean;
-  chooseAfter: string;
-  overtime?: boolean;
-  restAfter?: boolean;
-}
+
 export const cnsPeriods = {
   Folkstyle: [
     { code: 'p1', name: 'Period 1', decisive: false, chooseAfter: 'both', },
@@ -210,18 +203,18 @@ export const cnsPeriods = {
     { code: 'tb2', name: 'Tie Breaker II', decisive: true, chooseAfter: 'firstblood', overtime: true, },
     
     { code: 'tbu', name: 'Ultimate Tie Breaker', decisive: true, chooseAfter: 'none', }, // only for high school
-  ] as PeriodEntry[],
+  ] as WPeriodDefinition[],
 
   Freestyle: [
     { name: 'Period 1', decisive: false, chooseAfter: 'none', restAfter: true, },
     { name: 'Period 2', decisive: true, chooseAfter: 'none', },
-  ] as PeriodEntry[],
+  ] as WPeriodDefinition[],
   Greco: [
     { name: 'Period 1', decisive: false, chooseAfter: 'none', restAfter: true, },
     { name: 'Period 2', decisive: true, chooseAfter: 'none', },
-  ] as PeriodEntry[],
+  ] as WPeriodDefinition[],
 };
-export const getCnsPeriods = (config: WConfig): PeriodEntry[] | null => {
+export const getCnsPeriods = (config: WConfig): WPeriodDefinition[] | null => {
   return cnsPeriods[config.style] ?? null;
 };
 

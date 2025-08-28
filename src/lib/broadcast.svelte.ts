@@ -85,7 +85,7 @@ class SimpleBroadcast {
       }));
       
       channel.postMessage(pl);
-      co.debug(`(sendState) Sent to ${channelName}:`, pl);
+      // co.debug(`(sendState) Sent to ${channelName}:`, pl);
     } catch (error) {
       co.error(`(sendState) Failed to send to ${channelName}:`, error);
     }

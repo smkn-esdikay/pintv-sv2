@@ -183,7 +183,7 @@
       {#each periods as period, periodIndex (periodIndex)}
         {#if period.actions.length > 0}
           <div class="period-header">
-            {period.title}
+            {period.definition.name}
           </div>
 
           {#each period.actions as action (action.id)}

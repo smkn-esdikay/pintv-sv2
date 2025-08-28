@@ -72,11 +72,21 @@ export type WAction = {
   elapsed?: number;   // seconds into current period
 }
 
+export type ChoosePositionParty = 'both' | 'none' | 'notprevious' | 'firstblood';
+export type WPeriodDefinition = {
+  code: string;
+  name: string;
+  decisive: boolean;
+  chooseAfter: ChoosePositionParty;
+  overtime?: boolean;
+  restAfter?: boolean;
+}
+
 export type WPeriod = {
-  title: string;
   seconds: number;
   displayIdx: number;   // used for display purposes
   realIdx: number;      // true index
+  definition: WPeriodDefinition;
   actions: WAction[];
 }
 
