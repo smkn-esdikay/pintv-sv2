@@ -12,6 +12,9 @@ export type SideColor =   'red' | 'green' | 'blue';
  * ----------------------- Clocks -----------------------
  */
 export type ClockEvent =  'start' | 'stop' | 'reset' | 'complete';
+export type ClockId = 'mc' | 'rest' | 'shotclock' | 'ride' |
+  'l_blood' | 'l_injury' | 'l_recovery' | 'l_headneck' |
+  'r_blood' | 'r_injury' | 'r_recovery' | 'r_headneck' 
 
 /**
  * ----------------------- Wrestling -----------------------
@@ -40,12 +43,13 @@ export type WPosChoice = {
 }
 
 export type ClockAction = {
-  clockId: string;
+  clockId: ClockId;
   event: ClockEvent;
   timeLeft: number; // ms
 }
 
 export type WrestlingAction = {
+  side: WSide,
   action: string;       // code
   actionTitle: string;  // title
 
@@ -64,7 +68,6 @@ export type WAction = {
   id: string;
   clock?: ClockAction;
   wrestle?: WrestlingAction;
-  side: WSide;
   ts: number;         // Date.now()
   elapsed?: number;   // seconds into current period
 }

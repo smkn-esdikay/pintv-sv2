@@ -31,7 +31,7 @@
   const allSideActions = $derived(
     periods
      .flatMap(p => p.actions)
-     .filter(a => a.side === side && !!a.wrestle)
+     .filter(a => a.wrestle?.side === side && !!a.wrestle)
   );
 
   const actionCountMap = $derived(() => {
@@ -79,8 +79,8 @@
 
     const actn = {
       id: generateId(),
-      side,
       wrestle: {
+        side,
         action: code,
         actionTitle: '',
         clean: true,
@@ -90,11 +90,6 @@
       },
       ts: Date.now(),
     } as WAction;
-
-    // co.info('ActionBoard: Action button clicked', {
-    //   side, 
-    //   code, 
-    // });
 
     onClick(actn);
   };

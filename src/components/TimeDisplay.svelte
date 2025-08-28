@@ -1,9 +1,10 @@
 <script lang="ts">
   import EditableTimeSegment from './EditableTimeSegment.svelte';
+  import type { ClockId } from '@/types';
   import type { ZonkClock } from '@/lib/ZonkClock';
 
   interface Props {
-    id: string;
+    id: ClockId;
     clock: ZonkClock;
     className?: string;
     size?: 'clamp' | 'xl' | 'lg' | 'md' | 'sm';

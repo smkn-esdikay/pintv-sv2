@@ -190,20 +190,20 @@
             {@const isExpanded = expandedActions.has(action.id)}
             
             <div class="action-item" data-action-id={action.id}>
-              <div class="flexrow text-standard {getSideClass(action.side)}">
+              <div class="flexrow text-standard {getSideClass(action.wrestle?.side as WSide)}">
                 <span>{formatTime(action)}</span>
                 
                 {#if action.wrestle}
                   <span> - {action.wrestle.actionTitle} #{action.wrestle.cnt}</span>
                   
                   {#if !!action.wrestle.pt && action.wrestle.pt !== 0}
-                    <span class={getColorClass(action.side)}>
+                    <span class={getColorClass(action.wrestle.side)}>
                       {action.wrestle.pt} pts
                     </span>
                   {/if}
                   
                   {#if !!action.wrestle.oppPt && action.wrestle.oppPt !== 0}
-                    <span class={getColorClass(action.side, true)}>
+                    <span class={getColorClass(action.wrestle.side, true)}>
                       {#if action.wrestle.oppPt === "dq"}
                         DQ
                       {:else}
@@ -234,7 +234,7 @@
                 </button>
               </div>
               
-              <div class="flexrow text-grey {getSideClass(action.side)}">
+              <div class="flexrow text-grey {getSideClass(action.wrestle?.side as WSide)}">
                 {formatTimestamp(action)}
               </div>
 

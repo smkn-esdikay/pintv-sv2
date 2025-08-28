@@ -7,7 +7,8 @@ import type {
   ClockEvent, 
   WHistory,
   SideColor,
-  WAction
+  WAction,
+  ClockId
 } from "@/types";
 import { 
   cnsActions,
@@ -21,6 +22,7 @@ import { ZonkClock } from "./ZonkClock";
 import { RidingClock } from "./RidingClock";
 import { co } from "./console";
 import { broadcast, } from "./broadcast.svelte";
+import { generateId } from "./math";
 
 const getSideState = (color: SideColor): WStateSide => {
   return {
@@ -84,6 +86,7 @@ export class WrestlingManager {
   private initialized = false;
   private actionTitleMap: Map<string, ActionEntry> = new Map<string, ActionEntry>();
   private broadcastUnsubscribes: (() => void)[] = [];
+  private clockSubscriptions: (() => void)[] = [];
 
   private constructor() {
     // prevent direct instantiation
@@ -150,6 +153,7 @@ export class WrestlingManager {
     // Broadcast initial state
     this.broadcastCurrentState();
     this.setupBroadcastHandlers();
+    this.setupClockCompletionHandlers();
   }
 
   private initialize() { 
@@ -427,6 +431,70 @@ export class WrestlingManager {
     return false;
   }
 
+  private setupClockCompletionHandlers() {
+
+    const mcUnsubscribe = this._current.clocks.mc.isComplete.subscribe(isComplete => {
+      if (isComplete) {
+        this.handleClockCompletion('mc');
+      }
+    });
+    this.clockSubscriptions.push(mcUnsubscribe);
+
+    if (this._current.clocks.rest) {
+      const restUnsubscribe = this._current.clocks.rest.isComplete.subscribe(isComplete => {
+        if (isComplete) {
+          this.handleClockCompletion('rest');
+        }
+      });
+      this.clockSubscriptions.push(restUnsubscribe);
+    }
+
+    if (this._current.clocks.shotclock) {
+      const shotUnsubscribe = this._current.clocks.shotclock.isComplete.subscribe(isComplete => {
+        if (isComplete) {
+          this.handleClockCompletion('shotclock');
+        }
+      });
+      this.clockSubscriptions.push(shotUnsubscribe);
+    }
+
+    this.setupSideClockCompletionHandlers('l' as WSide);
+    this.setupSideClockCompletionHandlers('r' as WSide);
+  }
+
+  private setupSideClockCompletionHandlers(side: WSide) {
+    const sideData = this._current[side];
+    
+    Object.entries(sideData.clocks).forEach(([clockType, clock]) => {
+      if (clock) {
+        const unsubscribe = clock.isComplete.subscribe(isComplete => {
+          if (isComplete) {
+            this.handleClockCompletion(`${side}_${clockType}` as ClockId);
+          }
+        });
+        this.clockSubscriptions.push(unsubscribe);
+      }
+    });
+  }
+
+  private handleClockCompletion(clockId: ClockId) {
+    co.info(`Clock completed: ${clockId}`);
+
+    const clockAction: WAction = {
+      id: generateId(),
+      clock: {
+        clockId,
+        event: 'complete',
+        timeLeft: 0
+      },
+      ts: Date.now(),
+      elapsed: Math.floor(this._current.clocks.mc.getTotalElapsed() / 1000)
+    };
+
+    this.processAction(clockAction);
+  }
+
+
   // ++++++++++++++++++++++++ 5. Action management ++++++++++++++++++++++++
 
   getAllActions(): WAction[] {
@@ -454,7 +522,7 @@ export class WrestlingManager {
   private countActionsBySide(side: WSide, actionCode: string): number {
     return this.getAllActions()
       .filter(action => 
-        action.side === side && 
+        action.wrestle?.side === side && 
         action.wrestle?.action === actionCode
       ).length;
   }
@@ -476,13 +544,13 @@ export class WrestlingManager {
       // Prevent negative scores for manual actions
       if (actn.wrestle.action === "manual") {
         const matchPoints = this.getPointsForMatch();
-        if (matchPoints[actn.side] + actn.wrestle.pt < 0) {
+        if (matchPoints[actn.wrestle.side] + actn.wrestle.pt < 0) {
           co.warn("WrestlingManager: Cannot make score negative with manual action");
           return;
         }
       }
 
-      const actionCount = this.countActionsBySide(actn.side, actn.wrestle.action);
+      const actionCount = this.countActionsBySide(actn.wrestle.side, actn.wrestle.action);
       actn.wrestle.cnt = actionCount + 1;
       
       // Add info from constants (manual actions don't exist in constants)
@@ -515,7 +583,7 @@ export class WrestlingManager {
       }
 
       co.info("WrestlingManager: Processing action", {
-        side: actn.side,
+        side: actn.wrestle.side,
         action: actn.wrestle.action,
         points: actn.wrestle.pt,
         oppPoints: actn.wrestle.oppPt,
@@ -527,20 +595,31 @@ export class WrestlingManager {
       
       // Update position if action results in position change
       if (actn.wrestle.newPos) {
-        this.setPosition(actn.side, actn.wrestle.newPos);
+        this.setPosition(actn.wrestle.side, actn.wrestle.newPos);
       }
       
-      // Broadcast state update
-      this.broadcastCurrentState();
+
 
     } else if (actn.clock) { // clock event
 
-      if (actn.clock.clockId === "mc") {
-        if (actn.clock.event === "complete") {
+      if (actn.clock.event === "complete") {
+
+        if (actn.clock.clockId === "mc") {
           this.processPeriodComplete();
         }
+
+        else if (actn.clock.clockId === "shotclock") {
+
+        }
+        else if (actn.clock.clockId === "rest") {
+
+        }
+
+
       }
     }
+    
+    this.broadcastCurrentState();
   }
 
   // ++++++++++++++++++++++++ 6. Action Switch/Delete/Recompute ++++++++++++++++++++++++
@@ -554,7 +633,7 @@ export class WrestlingManager {
       for (const action of period.actions) {
         if (!action.wrestle) continue;
         
-        const key = `${action.side}_${action.wrestle.action}`;
+        const key = `${action.wrestle.side}_${action.wrestle.action}`;
         const currentCount = actionCounts.get(key) || 0;
         const newCount = currentCount + 1;
         actionCounts.set(key, newCount);
@@ -607,8 +686,10 @@ export class WrestlingManager {
     if (!result) return false;
 
     const { action } = result;
-    const newSide: WSide = action.side === "l" ? "r" : "l";
-    action.side = newSide;
+    if (!action.wrestle)
+      return false;
+    const newSide: WSide = action.wrestle.side === "l" ? "r" : "l";
+    action.wrestle.side = newSide;
 
     this.recomputeActionCounts();
     
@@ -649,6 +730,43 @@ export class WrestlingManager {
   }
 
 
+
+
+  private canAdvancePeriod(): boolean {
+    return this._current.periodIdx < this._current.periods.length - 1;
+  }
+
+  private advanceToNextPeriod() {
+    this._current.periodIdx++;
+    const nextPeriod = this._current.periods[this._current.periodIdx];
+    
+    if (nextPeriod) {
+      // Create new main clock for next period
+      const nextPeriodMs = nextPeriod.seconds * 1000;
+      this._current.clocks.mc = new ZonkClock(nextPeriodMs);
+      
+      // Set up completion handler for new clock
+      const mcUnsubscribe = this._current.clocks.mc.isComplete.subscribe(isComplete => {
+        if (isComplete) {
+          this.handleClockCompletion('mc');
+        }
+      });
+      this.clockSubscriptions.push(mcUnsubscribe);
+      
+      co.success(`Advanced to ${nextPeriod.title}`);
+    }
+  }
+
+  private handleMatchEnd() {
+    co.success("Match completed!");
+    // Handle end of match logic
+    // Calculate winner, update history, etc.
+  }
+
+
+
+
+
   // ++++++++++++++++++++++++ 8. Scoring ++++++++++++++++++++++++
 
   getPointsForMatch(): { l: number; r: number } {
@@ -656,10 +774,10 @@ export class WrestlingManager {
     
     const leftPoints = allActions.reduce((acc, a) => {
       let add = 0;
-      if (a.side === "l" && a.wrestle?.pt) {
+      if (a.wrestle?.side === "l" && a.wrestle?.pt) {
         add += a.wrestle.pt;
       }
-      if (a.side === "r" && a.wrestle?.oppPt && a.wrestle.oppPt !== "dq") {
+      if (a.wrestle?.side === "r" && a.wrestle?.oppPt && a.wrestle.oppPt !== "dq") {
         add += a.wrestle.oppPt as number;
       }
       return acc + add;
@@ -667,10 +785,10 @@ export class WrestlingManager {
     
     const rightPoints = allActions.reduce((acc, a) => {
       let add = 0;
-      if (a.side === "r" && a.wrestle?.pt) {
+      if (a.wrestle?.side === "r" && a.wrestle?.pt) {
         add += a.wrestle.pt;
       }
-      if (a.side === "l" && a.wrestle?.oppPt && a.wrestle.oppPt !== "dq") {
+      if (a.wrestle?.side === "l" && a.wrestle?.oppPt && a.wrestle.oppPt !== "dq") {
         add += a.wrestle.oppPt as number;
       }
       return acc + add;
@@ -793,6 +911,12 @@ export class WrestlingManager {
 
   // ++++++++++++++++++++++++ 99. Cleanup ++++++++++++++++++++++++
 
+
+  private cleanupClockSubscriptions() {
+    this.clockSubscriptions.forEach(unsub => unsub());
+    this.clockSubscriptions = [];
+  }
+
   private destroyMainClocks() {
     this._current.clocks.mc?.destroy();
     this._current.clocks.rest?.destroy();
@@ -809,6 +933,7 @@ export class WrestlingManager {
 
   resetMatch() {
     co.info("WrestlingManager: Resetting match");
+    this.cleanupClockSubscriptions();
     this.destroyMainClocks();
     this.destroySideClocks();
     this.initialized = false;
@@ -817,6 +942,7 @@ export class WrestlingManager {
 
   static destroy() {
     if (WrestlingManager.instance) {
+      WrestlingManager.instance.cleanupClockSubscriptions();
       WrestlingManager.instance.destroyMainClocks();
       WrestlingManager.instance.destroySideClocks();
       WrestlingManager.instance.cleanupBroadcast();
