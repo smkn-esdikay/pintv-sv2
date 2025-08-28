@@ -430,9 +430,23 @@ export class WrestlingManager {
   }
 
   handleClockComplete(id: ClockId) {
-
-    console.log(' complete', id);
-
+    const clock = this.getClockById(id);
+    if (!!clock && clock instanceof ZonkClock) {
+      const actn: WAction = {
+        id: generateId(),
+        clock: {
+          clockId: id,
+          event: "complete",
+          timeLeft: 0,
+        },
+        ts: Date.now(),
+        elapsed: this.peekStoreValue(clock.elapsed),
+      }
+      this.processAction(actn);
+    } else {
+      console.error(`handleClockComplete: clock not found:`, id);
+      return;
+    }
   }
 
   // ++++++++++++++++++++++++ 5. Action management ++++++++++++++++++++++++
@@ -543,8 +557,9 @@ export class WrestlingManager {
     } else if (actn.clock) { // clock event
 
       if (actn.clock.event === "complete") {
-
+        console.log('complete', actn.clock.clockId)
         if (actn.clock.clockId === "mc") {
+
           this.processPeriodComplete();
         }
 
