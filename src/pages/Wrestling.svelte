@@ -75,7 +75,7 @@
       {#if whoCanChooseSides?.l}
       <ChoosePosition 
         side="l"
-        onSelected={(pos) => console.log('selected L', pos)}
+        onSelected={(pos) => manager.setPosition("l", pos, true)}
         onDefer={() => manager.setDefer("l")}
       />
       {/if}
@@ -321,7 +321,7 @@
       {#if whoCanChooseSides?.r}
       <ChoosePosition 
         side="r"
-        onSelected={(pos) => console.log('selected R', pos)}
+        onSelected={(pos) => manager.setPosition("r", pos, true)}
         onDefer={() => manager.setDefer("r")}
       />
       {/if}
@@ -449,7 +449,13 @@
     <div class="h-full flex flex-col items-center justify-end">
       <div class="flex flex-col items-center justify-center">
         <div class="text-center mb-2">
-          <Button onclick={() => console.clear()}>clr</Button>
+          <Button 
+            onclick={() => console.clear()} 
+            color="dev"
+            size="lg"
+          >
+            clear console
+          </Button>
           <Button
             color="blue"
             size="lg"

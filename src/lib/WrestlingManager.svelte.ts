@@ -114,7 +114,7 @@ export class WrestlingManager {
 
     if (!!currentPeriod) {
       mustChoosePosition = 
-        this.peekStoreValue(this._current.clocks.mc.isComplete) &&
+        // this.peekStoreValue(this._current.clocks.mc.isComplete) &&
         currentPeriod.definition.whoChooses !== "none" &&
         !currentPeriod.positionChoice &&
         ( // 
@@ -129,11 +129,14 @@ export class WrestlingManager {
   }
 
   get whoCanChooseSides(): { l: boolean; r: boolean; } | undefined {
-    const whoCanChooseSides = this.mustChoosePosition 
-      ? this.determineWhoCanChoosePosition() 
-      : undefined;
+    const currentPeriod = this.getCurrentPeriod();
+    const mustChoose = this.mustChoosePosition;
+    
+    if (!mustChoose || !currentPeriod) {
+      return undefined;
+    }
 
-    return whoCanChooseSides;
+    return this.determineWhoCanChoosePosition();
   }
 
   get history(): WHistory {
@@ -784,7 +787,23 @@ export class WrestlingManager {
     this.broadcastCurrentState();
   }
 
-  setPosition(side: WSide, position: WPos) {
+  /**
+   * @param {WSide} side 
+   * @param {WPos} position 
+   * @param {boolean} preselection - pre-period selection ? if so, record so in current period
+   */
+  setPosition(side: WSide, position: WPos, preselection: boolean = false): void {
+
+    if (preselection) {
+      const currentPeriod = this.getCurrentPeriod();
+      if (!!currentPeriod) {
+        currentPeriod.positionChoice = { side, position };
+        co.info("setPosition: preselection", side, position, currentPeriod.realIdx);
+      } else {
+        co.warn("setPosition: current period not found")
+      }
+    }
+
     const oppSide: WSide = side === 'r' ? 'l' : 'r';
     let mirrorPos: WPos = 'n';
     if (position !== 'n') {
@@ -824,9 +843,9 @@ export class WrestlingManager {
     // defer overrides period definitions!
     if (!!currentPeriod.defer) {
       if (currentPeriod.defer === "l")
-        canChooseSides.r = false;
-      else
         canChooseSides.l = false;
+      else
+        canChooseSides.r = false;
       return canChooseSides;
     }
 
@@ -838,9 +857,9 @@ export class WrestlingManager {
       if (!!prev) {
         if (prev.positionChoice) { 
           if (prev.positionChoice.side === "l") {
-            canChooseSides.r = false;
-          } else {
             canChooseSides.l = false;
+          } else {
+            canChooseSides.r = false;
           }
         } else { 
           // no position was chosen!

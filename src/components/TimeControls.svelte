@@ -97,7 +97,7 @@
       <Button
         disabled={isRunning}
         onclick={handleOneSecond}
-        color="blue"
+        color="dev"
         {size}
       >
         1

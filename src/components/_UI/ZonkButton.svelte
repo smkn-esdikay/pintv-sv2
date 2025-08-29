@@ -1,6 +1,6 @@
 <script lang="ts">
   interface Props {
-    color?: 'green' | 'blue' | 'red' | 'grey';
+    color?: 'green' | 'blue' | 'red' | 'grey' | 'dev';
     size?: 'sm' | 'md' | 'lg';
     disabled?: boolean;
     className?: string;
@@ -66,6 +66,9 @@
   }
   .grey {
     @apply base text-white bg-slate-500;
+  }
+  .dev {
+    @apply base text-white bg-orange-500;
   }
 
 
