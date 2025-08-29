@@ -53,7 +53,6 @@ const placeholderState: WStateMain = {
   r: getSideState('green'),
   periods: [],
   periodIdx: 0,
-  mustChoosePosition: false,
 };
 
 
@@ -104,10 +103,12 @@ export class WrestlingManager {
       co.warn("WrestlingManager: Accessing state before initialization or Period not ready");
     }
 
-    // computed:
+    return this._current;
+  }
+
+  get mustChoosePosition(): boolean {
 
     let mustChoosePosition: boolean = false;
-    let canChooseSides = undefined;
     const currentPeriod = this.getCurrentPeriod();
     const matchPoints = this.getPointsForMatch();
 
@@ -120,18 +121,19 @@ export class WrestlingManager {
           !currentPeriod.definition.decisive ||
           matchPoints.l === matchPoints.r
         );
-      if (!!mustChoosePosition) {
-        canChooseSides = this.determineWhoCanChoosePosition();
-      }
     } else {
       co.warn("WrestlingManager: Cannot compute mustChoosePosition");
     }
 
-    return {
-      ...this._current,
-      mustChoosePosition,
-      canChooseSides,
-    };
+    return mustChoosePosition;
+  }
+
+  get whoCanChooseSides(): { l: boolean; r: boolean; } | undefined {
+    const whoCanChooseSides = this.mustChoosePosition 
+      ? this.determineWhoCanChoosePosition() 
+      : undefined;
+
+    return whoCanChooseSides;
   }
 
   get history(): WHistory {
@@ -812,7 +814,7 @@ export class WrestlingManager {
     currentPeriod.defer = side;
   }
 
-  determineWhoCanChoosePosition(): { l?: boolean; r?: boolean } {
+  determineWhoCanChoosePosition(): { l: boolean; r: boolean } {
     const currentPeriod = this.getCurrentPeriod();
     const canChooseSides = { l: true, r: true, };
 

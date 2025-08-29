@@ -157,11 +157,6 @@ export type WStateMain = {
   periods: WPeriod[];
   periodIdx: number;
   firstblood?: WSide;
-  mustChoosePosition: boolean;
-  canChooseSides?: { 
-    l?: boolean;
-    r?: boolean; 
-  };
   weight?: WMatchWeight;
 }
 

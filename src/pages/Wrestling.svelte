@@ -25,6 +25,8 @@
   const manager = WrestlingManager.getInstance();
   manager.initializeMatch(config);
   let current = $derived(manager.current);
+  let mustChoosePosition = $derived(manager.mustChoosePosition);
+  let whoCanChooseSides = $derived(manager.whoCanChooseSides);
 
   let keyboardHandler: KeyboardHandler;
   let showResetConfirm = $state(false);
@@ -58,9 +60,10 @@
     };
   });
 
-  const choosePosDisabledClass = $derived(current.mustChoosePosition ? "disable-section" : "");
+  const choosePosDisabledClass = $derived(mustChoosePosition ? "disable-section" : "");
 
-  $inspect('current', current);
+  $inspect('mustChoosePosition', mustChoosePosition);
+  $inspect('whoCanChooseSides', whoCanChooseSides);
 
 </script>
 
@@ -68,8 +71,8 @@
   <!-- LEFT -->
   <div class={`card-${current.l.color}`}>
 
-    {#if current.mustChoosePosition}
-      {#if current.canChooseSides?.l}
+    {#if mustChoosePosition}
+      {#if whoCanChooseSides?.l}
       <ChoosePosition 
         side="l"
         onSelected={(pos) => console.log('selected L', pos)}
@@ -314,8 +317,8 @@
   <!-- RIGHT -->
   <div class={`card-${current.r.color}`}>
 
-    {#if current.mustChoosePosition}
-      {#if current.canChooseSides?.r}
+    {#if mustChoosePosition}
+      {#if whoCanChooseSides?.r}
       <ChoosePosition 
         side="r"
         onSelected={(pos) => console.log('selected R', pos)}
