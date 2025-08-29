@@ -83,7 +83,6 @@ class SimpleBroadcast {
         // periodIdx: data.periodIdx,
         // mustChoosePosition: data.mustChoosePosition,
         // sideThatChosePosition: data.sideThatChosePosition,
-        // defer: data.defer,
         // matchPoints: data.matchPoints,
       }));
       

@@ -40,12 +40,6 @@ export type WConfig = {
   team: boolean;
 }
 
-export type WPosChoice = {
-  periodIdx: number;
-  side: WSide;
-  choice: WPos | 'defer';
-}
-
 export type ClockAction = {
   clockId: ClockId;
   event: ClockEvent;
@@ -90,13 +84,17 @@ export type WPeriodDefinition = {
 
 export type WPeriod = {
   seconds: number;
-  displayIdx: number;   // used for display purposes
-  realIdx: number;      // true index
+  /** used for display purposes */
+  displayIdx: number;
+  /** true index */
+  realIdx: number;
   definition: WPeriodDefinition;
   positionChoice?: {
     side: WSide;
     position: WPos;
   };
+  /** the defer benefactor (not the recipient) */
+  defer?: WSide;
   actions: WAction[];
 }
 
@@ -159,7 +157,6 @@ export type WStateMain = {
   periods: WPeriod[];
   periodIdx: number;
   firstblood?: WSide;
-  defer?: WSide;
   mustChoosePosition: boolean;
   canChooseSides?: { 
     l?: boolean;

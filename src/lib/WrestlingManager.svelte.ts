@@ -736,9 +736,6 @@ export class WrestlingManager {
   }
 
 
-
-
-
   // ++++++++++++++++++++++++ 8. Scoring ++++++++++++++++++++++++
 
   getPointsForMatch(): { l: number; r: number } {
@@ -806,37 +803,56 @@ export class WrestlingManager {
     this.broadcastCurrentState();
   }
 
-  determineWhoCanChoosePosition(): { l?: boolean; r?: boolean } | undefined {
+  setDefer(side: WSide): void {
     const currentPeriod = this.getCurrentPeriod();
-    let canChooseSides = undefined;
+    if (!currentPeriod) {
+      co.warn("setDefer: current period not found");
+      return;
+    }
+    currentPeriod.defer = side;
+  }
+
+  determineWhoCanChoosePosition(): { l?: boolean; r?: boolean } {
+    const currentPeriod = this.getCurrentPeriod();
+    const canChooseSides = { l: true, r: true, };
+
     if (!currentPeriod)
       return canChooseSides;
 
+    // defer overrides period definitions!
+    if (!!currentPeriod.defer) {
+      if (currentPeriod.defer === "l")
+        canChooseSides.r = false;
+      else
+        canChooseSides.l = false;
+      return canChooseSides;
+    }
 
+    // no defer set
     if (currentPeriod.definition.whoChooses === "both") {
-      canChooseSides = { l: true, r: true, };
+      // 
     } else if (currentPeriod.definition.whoChooses === "notprevious") {
       const prev = this.getPreviousPeriod();
       if (!!prev) {
         if (prev.positionChoice) { 
           if (prev.positionChoice.side === "l") {
-            canChooseSides = { l: true, };
+            canChooseSides.r = false;
           } else {
-            canChooseSides = { r: true, };
+            canChooseSides.l = false;
           }
-        } else { // no position was chosen!
-          canChooseSides = { l: true, r: true, };
+        } else { 
+          // no position was chosen!
         }
-      } else { // no previous period!
-        canChooseSides = { l: true, r: true, };
+      } else { 
+        // no previous period!
       }
     } else if (currentPeriod.definition.whoChooses === "firstblood") {
       if (this._current.firstblood === "l") {
-        canChooseSides = { l: true, };
+        canChooseSides.r = false;
       } else if (this._current.firstblood === "r") {
-        canChooseSides = { r: true, };
+        canChooseSides.l = false;
       } else {
-        canChooseSides = { l: true, r: true, }; // no first blood!
+        // no first blood!
       }
     }
     return canChooseSides;

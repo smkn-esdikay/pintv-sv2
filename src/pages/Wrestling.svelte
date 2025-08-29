@@ -18,6 +18,7 @@
 
   import Button from "@/components/_UI/ZonkButton.svelte";
   import Confirm from "@/components/_UI/ConfirmModal.svelte";
+  import ChoosePosition from "@/components/ChoosePosition.svelte";
 
 
   const config = initStore.config;
@@ -57,7 +58,9 @@
     };
   });
 
-  $inspect('must choose position', current.mustChoosePosition)
+  const choosePosDisabledClass = $derived(current.mustChoosePosition ? "disable-section" : "");
+
+  $inspect('current', current);
 
 </script>
 
@@ -65,8 +68,14 @@
   <!-- LEFT -->
   <div class={`card-${current.l.color}`}>
 
-    {#if current.mustChoosePosition && current.canChooseSides?.l}
-    <div>choose</div>
+    {#if current.mustChoosePosition}
+      {#if current.canChooseSides?.l}
+      <ChoosePosition 
+        side="l"
+        onSelected={(pos) => console.log('selected L', pos)}
+        onDefer={() => manager.setDefer("l")}
+      />
+      {/if}
     {:else}
     <div class="flex flex-row gap-4 items-center mb-2">
       <Position 
@@ -80,7 +89,7 @@
     </div>
     {/if}
 
-    <div class="mb-4">
+    <div id="left_actionboard" class="mb-4 {choosePosDisabledClass}">
       <ActionBoard 
         side='l'
         pos={current.l.pos}
@@ -90,7 +99,7 @@
       />
     </div>
 
-    <div class="flex flex-col gap-1 mb-4" id="left_sideclocks">
+    <div id="left_sideclocks" class="flex flex-col gap-1 mb-4 {choosePosDisabledClass}">
       {#if current.l.clocks.blood}
       <div class="side-clock-container">
         <span>Blood</span>
@@ -246,7 +255,7 @@
       </div>
     </section>
 
-    <section>
+    <section class="{choosePosDisabledClass}">
       <h3>Main Clock</h3>
 
       <TimeDisplay 
@@ -305,8 +314,14 @@
   <!-- RIGHT -->
   <div class={`card-${current.r.color}`}>
 
-    {#if current.mustChoosePosition && current.canChooseSides?.r}
-    <div>choose</div>
+    {#if current.mustChoosePosition}
+      {#if current.canChooseSides?.r}
+      <ChoosePosition 
+        side="r"
+        onSelected={(pos) => console.log('selected R', pos)}
+        onDefer={() => manager.setDefer("r")}
+      />
+      {/if}
     {:else}
     <div class="flex flex-row gap-4 items-center mb-2">
       <Position 
@@ -320,8 +335,7 @@
     </div>
     {/if}
 
-
-    <div class="mb-4">
+    <div id="right_actionboard" class="mb-4 {choosePosDisabledClass}">
       <ActionBoard 
         side='r'
         pos={current.r.pos}
@@ -330,8 +344,8 @@
         onClick={(actn) => { manager.processAction(actn) }}
       />
     </div>
-
-    <div class="flex flex-col gap-1 mb-4" id="right_sideclocks">
+    
+    <div id="right_sideclocks" class="flex flex-col gap-1 mb-4 {choosePosDisabledClass}">
       {#if current.r.clocks.blood}
       <div class="side-clock-container">
         <span>Blood</span>
@@ -432,6 +446,7 @@
     <div class="h-full flex flex-col items-center justify-end">
       <div class="flex flex-col items-center justify-center">
         <div class="text-center mb-2">
+          <Button onclick={() => console.clear()}>clr</Button>
           <Button
             color="blue"
             size="lg"
@@ -515,6 +530,10 @@
   }
   .side-clock-container > span {
     @apply text-xl text-white;
+  }
+
+  .disable-section {
+    @apply pointer-events-none opacity-70 blur-[1.5px];
   }
 
 </style>
