@@ -19,6 +19,7 @@
   import Button from "@/components/_UI/ZonkButton.svelte";
   import Confirm from "@/components/_UI/ConfirmModal.svelte";
   import ChoosePosition from "@/components/ChoosePosition.svelte";
+    import ChoosePositionNotice from "@/components/ChoosePositionNotice.svelte";
 
 
   const config = initStore.config;
@@ -239,6 +240,15 @@
       <Period period={manager.getCurrentPeriod()} />
     </section>
 
+    {#if mustChoosePosition}
+    <section>
+      <ChoosePositionNotice 
+        periodIdx={current.periodIdx}
+        periods={current.periods}
+      />
+    </section>
+    {/if}
+
     <section id="match-score">
       <div class="w-full flex flex-row items-center justify-between">
         <ScoreDisplay 
@@ -260,7 +270,6 @@
 
     <section class="{choosePosDisabledClass}">
       <h3>Main Clock</h3>
-
       <TimeDisplay 
         id='mc'
         size="lg"
