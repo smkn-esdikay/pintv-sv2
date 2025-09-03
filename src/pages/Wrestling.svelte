@@ -20,6 +20,7 @@
   import Confirm from "@/components/_UI/ConfirmModal.svelte";
   import ChoosePosition from "@/components/ChoosePosition.svelte";
     import ChoosePositionNotice from "@/components/ChoosePositionNotice.svelte";
+    import NextPeriodNotice from "@/components/NextPeriodNotice.svelte";
 
 
   const config = initStore.config;
@@ -28,6 +29,7 @@
   let current = $derived(manager.current);
   let mustChoosePosition = $derived(manager.mustChoosePosition);
   let whoCanChooseSides = $derived(manager.whoCanChooseSides);
+  let mainClockIsComplete = $derived(manager.clockPhases?.mc === "complete");
 
   let keyboardHandler: KeyboardHandler;
   let showResetConfirm = $state(false);
@@ -124,6 +126,7 @@
             if (eventName === 'start') manager.startClock(id);
             else if (eventName === 'stop') manager.stopClock(id);
             else if (eventName === 'complete') manager.handleClockComplete(id);
+            manager.updateClockPhase(id, eventName);
           }}
         />
       </div>
@@ -148,6 +151,7 @@
             if (eventName === 'start') manager.startClock(id);
             else if (eventName === 'stop') manager.stopClock(id);
             else if (eventName === 'complete') manager.handleClockComplete(id);
+            manager.updateClockPhase(id, eventName);
           }}
         />
       </div>
@@ -172,6 +176,7 @@
             if (eventName === 'start') manager.startClock(id);
             else if (eventName === 'stop') manager.stopClock(id);
             else if (eventName === 'complete') manager.handleClockComplete(id);
+            manager.updateClockPhase(id, eventName);
           }}
         />
       </div>
@@ -196,6 +201,7 @@
             if (eventName === 'start') manager.startClock(id);
             else if (eventName === 'stop') manager.stopClock(id);
             else if (eventName === 'complete') manager.handleClockComplete(id);
+            manager.updateClockPhase(id, eventName);
           }}
         />
       </div>
@@ -239,6 +245,14 @@
     <section id="period">
       <Period period={manager.getCurrentPeriod()} />
     </section>
+
+    {#if mainClockIsComplete}
+    <section>
+      <NextPeriodNotice 
+        onGoNext={() => manager.processPeriodComplete()}
+      />
+    </section>
+    {/if}
 
     {#if mustChoosePosition}
     <section>
@@ -290,6 +304,7 @@
           else if (eventName === 'reset') manager.resetClock(id);
           else if (eventName === 'onesecond') manager.setClockTime('mc', 1000);
           else if (eventName === 'complete') manager.handleClockComplete(id);
+          manager.updateClockPhase(id, eventName);
         }}
         className="mt-1"
       />
@@ -378,6 +393,7 @@
             if (eventName === 'start') manager.startClock(id);
             else if (eventName === 'stop') manager.stopClock(id);
             else if (eventName === 'complete') manager.handleClockComplete(id);
+            manager.updateClockPhase(id, eventName);
           }}
         />
       </div>
@@ -402,6 +418,7 @@
             if (eventName === 'start') manager.startClock(id);
             else if (eventName === 'stop') manager.stopClock(id);
             else if (eventName === 'complete') manager.handleClockComplete(id);
+            manager.updateClockPhase(id, eventName);
           }}
         />
       </div>
@@ -426,6 +443,7 @@
             if (eventName === 'start') manager.startClock(id);
             else if (eventName === 'stop') manager.stopClock(id);
             else if (eventName === 'complete') manager.handleClockComplete(id);
+            manager.updateClockPhase(id, eventName);
           }}
         />
       </div>
@@ -450,6 +468,7 @@
             if (eventName === 'start') manager.startClock(id);
             else if (eventName === 'stop') manager.stopClock(id);
             else if (eventName === 'complete') manager.handleClockComplete(id);
+            manager.updateClockPhase(id, eventName);
           }}
         />
       </div>

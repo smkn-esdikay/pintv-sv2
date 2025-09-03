@@ -3,6 +3,10 @@ import type { ZonkClock, ZonkClockState } from "@/lib/ZonkClock";
 import type { RidingClock, RidingClockState } from "@/lib/RidingClock";
 
 /**
+ * ++++++++++++++++++++++++++++++++++++++++++++++++ SIMPLE TYPES ++++++++++++++++++++++++++++++++++++++++++++++++
+ */
+
+/**
  * ----------------------- General -----------------------
  */
 export type WeightUnit =  'lbs' | 'kg';
@@ -11,7 +15,7 @@ export type SideColor =   'red' | 'green' | 'blue';
 /**
  * ----------------------- Clocks -----------------------
  */
-export type ClockEvent =  'start' | 'stop' | 'reset' | 'complete' | 'onesecond';
+export type ClockEvent =  'start' | 'stop' | 'reset' | 'complete' | 'onesecond' | 'unknown';
 export type ClockId = 'mc' | 'rest' | 'shotclock' | 'ride' |
   'l_blood' | 'l_injury' | 'l_recovery' | 'l_headneck' |
   'r_blood' | 'r_injury' | 'r_recovery' | 'r_headneck' 
@@ -26,6 +30,28 @@ export type WPos =        't' | 'n' | 'b';
 export type ChoosePositionParty = 'both' | 'none' | 'notprevious' | 'firstblood';
 
 
+
+/**
+ * ++++++++++++++++++++++++++++++++++++++++++++++++ STANDARD TYPES ++++++++++++++++++++++++++++++++++++++++++++++++
+ */
+
+export type WClockPhases = {
+  mc: ClockEvent;
+  rest?: ClockEvent;
+  shotclock?: ClockEvent;
+  l: {
+    blood?: ClockEvent;
+    injury?: ClockEvent;
+    recovery?: ClockEvent;
+    headneck?: ClockEvent;
+  };
+  r: {
+    blood?: ClockEvent;
+    injury?: ClockEvent;
+    recovery?: ClockEvent;
+    headneck?: ClockEvent;
+  };
+};
 
 
 export type WMatchWeight = {

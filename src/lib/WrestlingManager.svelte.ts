@@ -4,12 +4,13 @@ import type {
   WStateSide, 
   WPos, 
   WSide, 
-  ClockEvent, 
   WHistory,
   SideColor,
   WAction,
   ClockId,
-  WPeriod
+  ClockEvent,
+  WClockPhases,
+  WPeriod,
 } from "@/types";
 import { 
   cnsActions,
@@ -22,7 +23,7 @@ import {
 import { ZonkClock } from "./ZonkClock";
 import { RidingClock } from "./RidingClock";
 import { co } from "./console";
-import { broadcast, } from "./broadcast.svelte";
+import { broadcast } from "./broadcast.svelte";
 import { generateId } from "./math";
 
 const getSideState = (color: SideColor): WStateSide => {
@@ -81,6 +82,7 @@ export class WrestlingManager {
   
   private _current = $state<WStateMain>({...placeholderState});
   private _history = $state<WHistory>({ matches: [], });
+  private _clockPhases = $state<WClockPhases>();
   private config: WConfig | null = null;
   private initialized = false;
   private actionTitleMap: Map<string, ActionEntry> = new Map<string, ActionEntry>();
@@ -137,6 +139,10 @@ export class WrestlingManager {
     }
 
     return this.determineWhoCanChoosePosition();
+  }
+
+  get clockPhases(): WClockPhases | undefined {
+    return this._clockPhases;
   }
 
   get history(): WHistory {
@@ -262,6 +268,8 @@ export class WrestlingManager {
     this._current.l = getSideState(lColor);
     this._current.r = getSideState(rColor);
     this.initializeSideClocks(timeConstants);
+
+    this.resetClockPhases();
     
     // 5. Remaining fields
     this._current.config = this.config;
@@ -302,6 +310,40 @@ export class WrestlingManager {
   }
 
   // ++++++++++++++++++++++++ 4. Clock management ++++++++++++++++++++++++
+
+  resetClockPhases(): void {
+    this._clockPhases = {
+      mc: 'reset',
+      rest: this._current.clocks.rest ? 'reset' : 'unknown',
+      shotclock: this._current.clocks.shotclock ? 'reset' : 'unknown',
+      l: {
+        blood: this._current.l.clocks.blood ? 'reset' : 'unknown',
+        injury: this._current.l.clocks.injury ? 'reset' : 'unknown',
+        recovery: this._current.l.clocks.recovery ? 'reset' : 'unknown',
+        headneck: this._current.l.clocks.headneck ? 'reset' : 'unknown',
+      },
+      r: {
+        blood: this._current.r.clocks.blood ? 'reset' : 'unknown',
+        injury: this._current.r.clocks.injury ? 'reset' : 'unknown',
+        recovery: this._current.r.clocks.recovery ? 'reset' : 'unknown',
+        headneck: this._current.r.clocks.headneck ? 'reset' : 'unknown',
+      },
+    }
+  }
+
+  updateClockPhase(clockId: ClockId, event: ClockEvent): void {
+    const [prefix, suffix] = clockId.split('_');
+
+    if (!this._clockPhases)
+      return;
+
+    if (suffix && (prefix === 'l' || prefix === 'r')) {
+      this._clockPhases[prefix][suffix as keyof WClockPhases['l']] = event;
+    } else {
+      if (prefix === 'mc' || prefix === 'rest' || prefix === 'shotclock')
+      this._clockPhases[prefix] = event;
+    }
+  }
 
   startClock(clockId: string): void {
     const clock = this.getClockById(clockId);
@@ -367,7 +409,7 @@ export class WrestlingManager {
     }
   }
 
-  resetClock(clockId: string): void {
+  resetClock(clockId: ClockId): void {
     const currentPeriod = this.getCurrentPeriod();
     const clock = this.getClockById(clockId);
     if (!!currentPeriod && !!clock) {
@@ -377,6 +419,7 @@ export class WrestlingManager {
       
       this.broadcastCurrentState();
     }
+    this.updateClockPhase(clockId, "reset");
   }
 
   setClockTime(clockId: string, newTimeMs: number): void {
@@ -589,7 +632,7 @@ export class WrestlingManager {
       if (actn.clock.event === "complete") {
         if (actn.clock.clockId === "mc") {
           this.stopRidingClockMaybe();
-          this.processPeriodComplete();
+          // this.processPeriodComplete(); // let user push a button
           // play audio
         }
 
