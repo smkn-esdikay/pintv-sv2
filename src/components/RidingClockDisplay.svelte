@@ -153,7 +153,7 @@
     <ChevronsRight class={`${rightChevronColorClass} ${chevronSizeClass}`} size={16} />
   </div>
   {#if allowEditing}
-  <div class="flex items-center justify-center gap-2 mt-2">
+  <div class="flex items-center justify-center gap-2 mt-1">
     <ZonkButton
       size="sm"
       color="grey"

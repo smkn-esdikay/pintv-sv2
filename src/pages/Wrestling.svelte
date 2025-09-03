@@ -283,7 +283,7 @@
     </section>
 
     <section class="{choosePosDisabledClass}">
-      <h3>Main Clock</h3>
+      <div class="title">Main Clock</div>
       <TimeDisplay 
         id='mc'
         size="lg"
@@ -306,13 +306,12 @@
           else if (eventName === 'complete') manager.handleClockComplete(id);
           manager.updateClockPhase(id, eventName);
         }}
-        className="mt-1"
       />
     </section>
 
     {#if current.clocks.ride}
     <section>
-      <h3>Riding Time</h3>
+      <div class="title mb-1">Riding Time</div>
       <RidingClockDisplay 
         id='ride'
         clock={current.clocks.ride}
@@ -551,10 +550,14 @@
   section {
     @apply flex flex-col w-full
       items-center
-      mb-2
-      sm:p-2 p-1 
+      mb-1 p-[4px]
       rounded-lg
       border-[0.6px] border-slate-500;
+  }
+  section div.title {
+    @apply text-[1rem] font-semibold;
+    line-height: 1;
+    font-feature-settings: "kern" 1;
   }
 
   .side-clock-container {
