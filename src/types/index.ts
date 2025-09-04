@@ -140,13 +140,20 @@ export type WHistory = {
   matches: WMatch[];
 }
 
+export type WTeam = {
+  name: string;
+  abbreviation: string;
+}
+export type WAthlete = {
+  firstName: string;
+  lastName: string;
+}
 
 export type WStateSide = {
   color: SideColor;
   pos: WPos;
-  teamName: string;
-  teamNameAbbr?: string;
-  athleteName?: string;
+  team: WTeam;
+  athlete: WAthlete;
   winbyIdx: number;
   clocks: {
     blood?: ZonkClock;

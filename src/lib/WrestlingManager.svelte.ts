@@ -30,8 +30,8 @@ const getSideState = (color: SideColor): WStateSide => {
   return {
     color: color,
     pos: 'n',
-    teamName: color,
-    athleteName: '',
+    team: { name: '', abbreviation: '' },
+    athlete: { firstName: '', lastName: '' },
     winbyIdx: 0,
     clocks: {}
   };
@@ -982,15 +982,16 @@ export class WrestlingManager {
   // ++++++++++++++++++++++++ 11. Team/athlete ++++++++++++++++++++++++
 
   setTeamName(side: WSide, name: string, abbr?: string) {
-    this._current[side].teamName = name;
+    this._current[side].team.name = name;
     if (abbr) {
-      this._current[side].teamNameAbbr = abbr;
+      this._current[side].team.abbreviation = abbr;
     }
     this.broadcastCurrentState();
   }
 
-  setAthleteName(side: WSide, name: string) {
-    this._current[side].athleteName = name;
+  setAthleteName(side: WSide, firstName: string, lastName: string) {
+    this._current[side].athlete.firstName = firstName;
+    this._current[side].athlete.lastName = lastName;
     this.broadcastCurrentState();
   }
 
