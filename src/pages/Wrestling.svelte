@@ -36,29 +36,33 @@
     if (current.l.athlete.firstName === '' && current.l.athlete.lastName === '')
       return undefined;
     else
-      return `${current.l.athlete.firstName} ${current.l.athlete.firstName}`.trim();
+      return `${current.l.athlete.firstName} ${current.l.athlete.lastName}`.trim();
   });
   let displayRightName = $derived.by(() => {
     if (current.r.athlete.firstName === '' && current.r.athlete.lastName === '')
       return undefined;
     else
-      return `${current.r.athlete.firstName} ${current.r.athlete.firstName}`.trim();
+      return `${current.r.athlete.firstName} ${current.r.athlete.lastName}`.trim();
   });
   let displayLeftTeam = $derived.by(() => {
     if (current.l.team.name === '' && current.l.team.abbreviation === '')
       return undefined;
-    else if (current.l.team.abbreviation !== '')
+    else if (current.l.team.abbreviation === '')
+      return current.l.team.name;
+    else if (current.l.team.name === '')
       return current.l.team.abbreviation;
     else
-      return current.l.team.name;
+      return `${current.l.team.name} [${current.l.team.abbreviation}]`;
   });
   let displayRightTeam = $derived.by(() => {
     if (current.r.team.name === '' && current.r.team.abbreviation === '')
       return undefined;
-    else if (current.r.team.abbreviation !== '')
+    else if (current.r.team.abbreviation === '')
+      return current.r.team.name;
+    else if (current.r.team.name === '')
       return current.r.team.abbreviation;
     else
-      return current.r.team.name;
+      return `${current.r.team.name} [${current.r.team.abbreviation}]`;
   });
 
   let keyboardHandler: KeyboardHandler;
@@ -107,23 +111,18 @@
     
     <div class="mb-2 text-white">
       <div class="w-full flex flex-row justify-between items-center">
-        {#if displayLeftName}
-          <div>
-            {displayLeftName}
-          </div>
-          <div>
-            <SquarePen />
-          </div>
-        {:else}
-          <div>
-            (set athlete name)
-          </div>
-          <div>
-            <button class="transparent-icon" onclick={() => { showEditNames = true }}>
-              <SquarePen size={16} />
-            </button>
-          </div>
-        {/if}
+        <div>
+          {#if displayLeftName}
+          {displayLeftName}
+          {:else}
+          (set athlete name)
+          {/if}
+        </div>
+        <div>
+          <button class="transparent-icon" onclick={() => { showEditNames = true }}>
+            <SquarePen size={16} />
+          </button>
+        </div>
       </div>
       {#if displayLeftTeam}
       <div>{displayLeftTeam}</div>
@@ -398,23 +397,18 @@
 
     <div class="mb-2 text-white">
       <div class="w-full flex flex-row justify-between items-center">
-        {#if displayRightName}
-          <div>
-            {displayRightName}
-          </div>
-          <div>
-            <SquarePen />
-          </div>
-        {:else}
-          <div>
-            (set athlete name)
-          </div>
-          <div>
-            <button class="transparent-icon" onclick={() => { showEditNames = true }}>
-              <SquarePen size={16} />
-            </button>
-          </div>
-        {/if}
+        <div>
+          {#if displayRightName}
+          {displayRightName}
+          {:else}
+          (set athlete name)
+          {/if}
+        </div>
+        <div>
+          <button class="transparent-icon" onclick={() => { showEditNames = true }}>
+            <SquarePen size={16} />
+          </button>
+        </div>
       </div>
       {#if displayRightTeam}
       <div>{displayRightTeam}</div>

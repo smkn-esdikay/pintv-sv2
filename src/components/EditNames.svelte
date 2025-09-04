@@ -12,7 +12,7 @@
     rightTeam: WTeam;
     leftColor: SideColor;
     rightColor: SideColor;
-    onsave: (updateDate: WNameUpdate) => void;
+    onsave: (updateData: WNameUpdate) => void;
     oncancel: () => void;
   }
 
@@ -28,19 +28,61 @@
     oncancel,
   }: Props = $props();
 
+  let editLeftAthlete = $state({
+    firstName: leftAthlete.firstName,
+    lastName: leftAthlete.lastName
+  });
+  
+  let editRightAthlete = $state({
+    firstName: rightAthlete.firstName,
+    lastName: rightAthlete.lastName
+  });
+  
+  let editLeftTeam = $state({
+    name: leftTeam.name,
+    abbreviation: leftTeam.abbreviation
+  });
+  
+  let editRightTeam = $state({
+    name: rightTeam.name,
+    abbreviation: rightTeam.abbreviation
+  });
+
+  $effect(() => {
+    if (open) {
+      editLeftAthlete = {
+        firstName: leftAthlete.firstName,
+        lastName: leftAthlete.lastName
+      };
+      editRightAthlete = {
+        firstName: rightAthlete.firstName,
+        lastName: rightAthlete.lastName
+      };
+      editLeftTeam = {
+        name: leftTeam.name,
+        abbreviation: leftTeam.abbreviation
+      };
+      editRightTeam = {
+        name: rightTeam.name,
+        abbreviation: rightTeam.abbreviation
+      };
+    }
+  });
+
   const handleClose = () => {
     open = false;
     oncancel();
   };
+  
   const handleSave = () => {
     onsave({
-      leftAthlete,
-      rightAthlete,
-      leftTeam,
-      rightTeam,
+      leftAthlete: editLeftAthlete,
+      rightAthlete: editRightAthlete,
+      leftTeam: editLeftTeam,
+      rightTeam: editRightTeam,
     });
+    open = false;
   };
-
 </script>
 
 <ZonkModal
@@ -56,19 +98,23 @@
       <h3>Athlete Name</h3>
       <div class="flex flex-row gap-2">
         <ZonkInput 
-          value={leftAthlete.firstName}
+          bind:value={editLeftAthlete.firstName}
+          placeholder="First Name"
         />
         <ZonkInput 
-          value={leftAthlete.lastName}
+          bind:value={editLeftAthlete.lastName}
+          placeholder="Last Name"
         />
       </div>
       <h3 class="mt-4">Team Name</h3>
       <div class="flex flex-row gap-2">
         <ZonkInput 
-          value={leftTeam.name}
+          bind:value={editLeftTeam.name}
+          placeholder="Team Name"
         />
         <ZonkInput 
-          value={leftTeam.abbreviation}
+          bind:value={editLeftTeam.abbreviation}
+          placeholder="Abbreviation"
         />
       </div>
     </div>
@@ -76,26 +122,30 @@
       <h3>Athlete Name</h3>
       <div class="flex flex-row gap-2">
         <ZonkInput 
-          value={rightAthlete.firstName}
+          bind:value={editRightAthlete.firstName}
+          placeholder="First Name"
         />
         <ZonkInput 
-          value={rightAthlete.lastName}
+          bind:value={editRightAthlete.lastName}
+          placeholder="Last Name"
         />
       </div>
       <h3 class="mt-4">Team Name</h3>
       <div class="flex flex-row gap-2">
         <ZonkInput 
-          value={rightTeam.name}
+          bind:value={editRightTeam.name}
+          placeholder="Team Name"
         />
         <ZonkInput 
-          value={rightTeam.abbreviation}
+          bind:value={editRightTeam.abbreviation}
+          placeholder="Abbreviation"
         />
       </div>
     </div>
   </div>
   <div class="w-full mt-4 p-2 flex flex-row gap-4 justify-center">
     <Button 
-      color="grey"
+      color="green"
       size="lg"
       onclick={handleSave}
     >
@@ -108,7 +158,6 @@
     >
       Cancel
     </Button>
-
   </div>
 </ZonkModal>
 
@@ -124,5 +173,4 @@
   .side-blue {
     @apply bg-blue-600/80 p-2;
   }
-
 </style>

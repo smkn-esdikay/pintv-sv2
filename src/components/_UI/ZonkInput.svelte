@@ -1,5 +1,6 @@
 <script lang="ts">
   import { editingMode } from '@/lib/inputModeHelpers';
+    import { randomId } from '@/lib/math';
 
   interface Props {
     value: string;
@@ -37,10 +38,23 @@
     onkeyup
   }: Props = $props();
 
+  const inputId = randomId();
+
   let inputElement: HTMLInputElement;
+  let isFocused = $state(false);
+
+  const containerClasses = $derived(
+    `input-container ${size} ${className}`.trim()
+  );
 
   const inputClasses = $derived(
-    `base ${size} ${className}`.trim()
+    `base ${size}`.trim()
+  );
+
+  const showFloatingLabel = $derived(value !== '');
+
+  const floatingLabelClasses = $derived(
+    `floating-label ${size} ${showFloatingLabel ? 'show' : 'hide'}`
   );
 
   function handleInput(event: Event) {
@@ -54,10 +68,12 @@
   }
 
   function handleFocus(event: FocusEvent) {
+    isFocused = true;
     onfocus?.(event);
   }
 
   function handleBlur(event: FocusEvent) {
+    isFocused = false;
     onblur?.(event);
   }
 
@@ -83,26 +99,39 @@
   }
 </script>
 
-<input
-  bind:this={inputElement}
-  bind:value
-  {type}
-  {placeholder}
-  {disabled}
-  {readonly}
-  {maxlength}
-  autocomplete={autocomplete}
-  class={inputClasses}
-  use:editingMode
-  oninput={handleInput}
-  onchange={handleChange}
-  onfocus={handleFocus}
-  onblur={handleBlur}
-  onkeydown={handleKeyDown}
-  onkeyup={handleKeyUp}
-/>
+<div class={containerClasses}>
+  <input
+    bind:this={inputElement}
+    bind:value
+    {type}
+    id={inputId}
+    placeholder={isFocused || !showFloatingLabel ? placeholder : ''}
+    {disabled}
+    {readonly}
+    {maxlength}
+    autocomplete={autocomplete}
+    class={inputClasses}
+    use:editingMode
+    oninput={handleInput}
+    onchange={handleChange}
+    onfocus={handleFocus}
+    onblur={handleBlur}
+    onkeydown={handleKeyDown}
+    onkeyup={handleKeyUp}
+  />
+  
+  {#if placeholder}
+    <label for={inputId} class={floatingLabelClasses}>
+      {placeholder}
+    </label>
+  {/if}
+</div>
 
 <style>
+  .input-container {
+    @apply relative w-full;
+  }
+
   .base {
     @apply w-full
       border border-gray-300 
@@ -138,13 +167,71 @@
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
 
+  /* Floating label styles */
+  .floating-label {
+    @apply absolute left-0 
+      bg-white p-1
+      rounded-md
+      text-gray-600
+      pointer-events-none
+      transition-all duration-200 ease-out
+      transform-gpu
+    ;
+  }
+
+  .floating-label.sm {
+    @apply text-xs;
+  }
+
+  .floating-label.md {
+    @apply text-sm;
+  }
+
+  .floating-label.lg {
+    @apply text-base;
+  }
+
+  /* Floating label positioning */
+  .floating-label.sm.show {
+    @apply -top-2 left-3;
+    transform: translateY(0) scale(0.85);
+  }
+
+  .floating-label.md.show {
+    @apply -top-1 left-4;
+    transform: translateY(0) scale(0.85);
+  }
+
+  .floating-label.lg.show {
+    @apply -top-3 left-5;
+    transform: translateY(0) scale(0.85);
+  }
+
+  .floating-label.hide {
+    @apply opacity-0;
+    transform: translateY(0) scale(1);
+  }
+
   /* Error state (can be added via className prop) */
-  :global(.error) {
+  :global(.error .base) {
     @apply border-red-500 focus:border-red-500 focus:ring-red-200;
   }
 
+  :global(.error .floating-label) {
+    @apply text-red-500;
+  }
+
   /* Success state (can be added via className prop) */
-  :global(.success) {
+  :global(.success .base) {
     @apply border-green-500 focus:border-green-500 focus:ring-green-200;
+  }
+
+  :global(.success .floating-label) {
+    @apply text-green-500;
+  }
+
+  /* When input is focused, make sure floating label stays visible */
+  .input-container:focus-within .floating-label.show {
+    @apply text-blue-500;
   }
 </style>
