@@ -42,6 +42,14 @@
   button.icon {
     @apply hover:bg-slate-100 hover:text-blue-700 rounded-lg p-1 transition-colors;
   }
+  button.transparent-icon {
+    @apply px-2 py-1 
+      bg-white/10 rounded-md 
+      border-[0.6px] border-white/50
+      hover:bg-white/30
+      transition-colors 
+      ;
+  }
 
   /* font colors */
   .c-f-green {

@@ -53,6 +53,13 @@ export type WClockPhases = {
   };
 };
 
+export type WNameUpdate = {
+  leftAthlete: WAthlete;
+  rightAthlete: WAthlete;
+  leftTeam: WTeam;
+  rightTeam: WTeam;
+}
+
 
 export type WMatchWeight = {
   weight: number;

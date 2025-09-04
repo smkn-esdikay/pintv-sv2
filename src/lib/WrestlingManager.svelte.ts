@@ -11,6 +11,7 @@ import type {
   ClockEvent,
   WClockPhases,
   WPeriod,
+  WNameUpdate,
 } from "@/types";
 import { 
   cnsActions,
@@ -980,6 +981,13 @@ export class WrestlingManager {
   }
 
   // ++++++++++++++++++++++++ 11. Team/athlete ++++++++++++++++++++++++
+
+  updateNames(updateData: WNameUpdate): void {
+    this.setAthleteName('l', updateData.leftAthlete.firstName, updateData.leftAthlete.lastName);
+    this.setAthleteName('r', updateData.rightAthlete.firstName, updateData.rightAthlete.lastName);
+    this.setTeamName('l', updateData.leftTeam.name, updateData.leftTeam.abbreviation);
+    this.setTeamName('r', updateData.rightTeam.name, updateData.rightTeam.abbreviation);
+  }
 
   setTeamName(side: WSide, name: string, abbr?: string) {
     this._current[side].team.name = name;
