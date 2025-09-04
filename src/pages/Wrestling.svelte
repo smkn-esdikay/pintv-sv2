@@ -22,6 +22,7 @@
   import ChoosePositionNotice from "@/components/ChoosePositionNotice.svelte";
   import NextPeriodNotice from "@/components/NextPeriodNotice.svelte";
   import EditNames from "@/components/EditNames.svelte";
+  import { outputAthleteName, outputTeamName } from "@/lib/strings";
 
 
   const config = initStore.config;
@@ -32,38 +33,10 @@
   let whoCanChooseSides = $derived(manager.whoCanChooseSides);
   let mainClockIsComplete = $derived(manager.clockPhases?.mc === "complete");
 
-  let displayLeftName = $derived.by(() => {
-    if (current.l.athlete.firstName === '' && current.l.athlete.lastName === '')
-      return undefined;
-    else
-      return `${current.l.athlete.firstName} ${current.l.athlete.lastName}`.trim();
-  });
-  let displayRightName = $derived.by(() => {
-    if (current.r.athlete.firstName === '' && current.r.athlete.lastName === '')
-      return undefined;
-    else
-      return `${current.r.athlete.firstName} ${current.r.athlete.lastName}`.trim();
-  });
-  let displayLeftTeam = $derived.by(() => {
-    if (current.l.team.name === '' && current.l.team.abbreviation === '')
-      return undefined;
-    else if (current.l.team.abbreviation === '')
-      return current.l.team.name;
-    else if (current.l.team.name === '')
-      return current.l.team.abbreviation;
-    else
-      return `${current.l.team.name} [${current.l.team.abbreviation}]`;
-  });
-  let displayRightTeam = $derived.by(() => {
-    if (current.r.team.name === '' && current.r.team.abbreviation === '')
-      return undefined;
-    else if (current.r.team.abbreviation === '')
-      return current.r.team.name;
-    else if (current.r.team.name === '')
-      return current.r.team.abbreviation;
-    else
-      return `${current.r.team.name} [${current.r.team.abbreviation}]`;
-  });
+  let displayLeftName = $derived(outputAthleteName(current.l.athlete));
+  let displayRightName = $derived(outputAthleteName(current.r.athlete));
+  let displayLeftTeam = $derived(outputTeamName(current.l.team));
+  let displayRightTeam = $derived(outputTeamName(current.r.team));
 
   let keyboardHandler: KeyboardHandler;
   let showEditNames = $state(false);
