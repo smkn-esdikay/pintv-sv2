@@ -23,6 +23,7 @@
   import NextPeriodNotice from "@/components/NextPeriodNotice.svelte";
   import EditNames from "@/components/EditNames.svelte";
   import { outputAthleteName, outputTeamName } from "@/lib/strings";
+    import EditBoutNumber from "@/components/EditBoutNumber.svelte";
 
 
   const config = initStore.config;
@@ -277,6 +278,12 @@
     <section id="period">
       <Period period={manager.getCurrentPeriod()} />
     </section>
+
+    {#if !current.config.team}
+    <section id="bout-number">
+      <EditBoutNumber boutNumber={current.boutNumber} />
+    </section>
+    {/if}
 
     {#if mainClockIsComplete}
     <section>

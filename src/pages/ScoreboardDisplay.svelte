@@ -159,6 +159,11 @@
       return undefined;
     return outputTeamName(wrestlingState.r.team);
   });
+  let displayBoutNumber = $derived.by(() => {
+    if (wrestlingState?.boutNumber)
+      return wrestlingState.boutNumber;
+    return '-';
+  })
 
   function getMatchPoints(side: WSide): number {
     return wrestlingState?.matchPoints?.[side] || 0;
@@ -287,7 +292,7 @@
     <div class="w-1/4 sb-border sb-cell-yellow sb-cell-split">
       <div class='sb-cell-split-main'>
         <div class='sb-text-xxl'> 
-          123
+          {displayBoutNumber}
         </div>
       </div>
       <div class='sb-cell-split-bottom'>

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { editingMode } from '@/lib/inputModeHelpers';
-    import { randomId } from '@/lib/math';
+  import { randomId } from '@/lib/math';
 
   interface Props {
     value: string;

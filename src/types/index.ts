@@ -197,6 +197,7 @@ export type WStateMain = {
   periods: WPeriod[];
   periodIdx: number;
   firstblood?: WSide;
+  boutNumber?: number;
   weight?: WMatchWeight;
 }
 
