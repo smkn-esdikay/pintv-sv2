@@ -16,6 +16,7 @@
     WStateSidePublicDisplay 
   } from '@/types';
   import { Circle } from "@lucide/svelte";
+    import { outputAthleteName, outputTeamName } from '@/lib/strings';
 
   type WStateAdapted = WStateMain & {
     matchPoints: {
@@ -135,15 +136,29 @@
     return wrestlingState[side].color?.toUpperCase() || side.toUpperCase();
   }
 
-  function getTeamName(side: WSide): string {
-    if (!wrestlingState) return side.toUpperCase();
-    
-    const sideData = wrestlingState[side];
-    if (sideData?.teamNameAbbr) return sideData.teamNameAbbr;
-    if (sideData?.teamName) return sideData.teamName;
-    
-    return getSideColorName(side);
-  }
+  let displayLeftName = $derived.by(() => {
+    if (!wrestlingState)
+      return getSideColorName('l');
+    const out = outputAthleteName(wrestlingState?.l.athlete);
+    return out || getSideColorName('l');
+  });
+  let displayRightName = $derived.by(() => {
+    if (!wrestlingState)
+      return getSideColorName('r');
+    const out = outputAthleteName(wrestlingState?.r.athlete);
+    return out || getSideColorName('r');
+  });
+
+  let displayLeftTeam = $derived.by(() => {
+    if (!wrestlingState?.l?.team)
+      return undefined;
+    return outputTeamName(wrestlingState.l.team);
+  });
+  let displayRightTeam = $derived.by(() => {
+    if (!wrestlingState?.r?.team)
+      return undefined;
+    return outputTeamName(wrestlingState.r.team);
+  });
 
   function getMatchPoints(side: WSide): number {
     return wrestlingState?.matchPoints?.[side] || 0;
@@ -165,22 +180,22 @@
 <div class="sb-wrapper">
   <div class="sb-row h-[27%]" id="row-a">
     <div class='sb-cell-neutral sb-border w-1/2 l'>
-      <div class='pl-4'>
-        <div class='sb-text-larger font-bold'>
-          Athlete 1  
+      <div class='pl-4 max-w-full overflow-hidden'>
+        <div class='sb-text-larger font-bold name-ellipsis'>
+          {displayLeftName}
         </div>
-        <div class='sb-text-large'>
-          {getTeamName('l')}
+        <div class='sb-text-large name-ellipsis'>
+          {displayLeftTeam}
         </div>       
       </div>
     </div>
     <div class='sb-cell-neutral sb-border w-1/2 l'>
-      <div class='pl-4'>
-        <div class='sb-text-larger font-bold'>
-          Athlete 2
+      <div class='pl-4 max-w-full overflow-hidden'>
+        <div class='sb-text-larger font-bold name-ellipsis'>
+          {displayRightName}
         </div>
-        <div class='sb-text-large'>
-          {getTeamName('r')}
+        <div class='sb-text-large name-ellipsis'>
+          {displayRightTeam}
         </div>       
       </div>
     </div>
@@ -380,6 +395,12 @@
     @apply text-[clamp(4rem,10vw,18rem)];
       line-height: 1;
       font-feature-settings: "kern" 1;
+  }
+
+  .sb-wrapper .name-ellipsis {
+    @apply overflow-hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
   }
 
   :global(.sb-period-marker) {

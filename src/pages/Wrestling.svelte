@@ -4,7 +4,7 @@
   import { WrestlingManager } from "@/lib/WrestlingManager.svelte";
   import { KeyboardHandler } from "@/lib/KeyboardHandler";
   import { openScoreboard } from '@/lib/broadcast.svelte';
-  import { Home, RotateCcw, Monitor, SquarePen } from "@lucide/svelte";
+  import { Home, RotateCcw, Monitor, SquarePen, ShieldHalf, User } from "@lucide/svelte";
 
   import Position from '@/components/Position.svelte';
   import Color from "@/components/Color.svelte";
@@ -84,9 +84,10 @@
     
     <div class="mb-2 text-white">
       <div class="w-full flex flex-row justify-between items-center">
-        <div>
+        <div class="flex flex-row items-center justify-start gap-2">
           {#if displayLeftName}
-          {displayLeftName}
+          <User size={16} />
+          <span>{displayLeftName}</span>
           {:else}
           (set athlete name)
           {/if}
@@ -98,7 +99,10 @@
         </div>
       </div>
       {#if displayLeftTeam}
-      <div>{displayLeftTeam}</div>
+      <div class="flex flex-row items-center justify-start gap-2">
+        <ShieldHalf size={16} />
+        <span>{displayLeftTeam}</span>
+      </div>
       {/if}
     </div>
 
@@ -370,9 +374,10 @@
 
     <div class="mb-2 text-white">
       <div class="w-full flex flex-row justify-between items-center">
-        <div>
+        <div class="flex flex-row items-center justify-start gap-2">
           {#if displayRightName}
-          {displayRightName}
+          <User size={16} />
+          <span>{displayRightName}</span>
           {:else}
           (set athlete name)
           {/if}
@@ -384,7 +389,10 @@
         </div>
       </div>
       {#if displayRightTeam}
-      <div>{displayRightTeam}</div>
+      <div class="flex flex-row items-center justify-start gap-2">
+        <ShieldHalf size={16} />
+        <span>{displayRightTeam}</span>
+      </div>
       {/if}
     </div>
 

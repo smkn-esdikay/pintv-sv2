@@ -28,6 +28,10 @@
     oncancel,
   }: Props = $props();
 
+  const maxAthleteNameLength = 20;
+  const maxTeamNameLength = 15;
+  const maxTeamAbrreviationLength = 4;
+
   let editLeftAthlete = $state({
     firstName: leftAthlete.firstName,
     lastName: leftAthlete.lastName
@@ -99,10 +103,12 @@
       <div class="flex flex-row gap-2">
         <ZonkInput 
           bind:value={editLeftAthlete.firstName}
+          maxlength={maxAthleteNameLength}
           placeholder="First Name"
         />
         <ZonkInput 
           bind:value={editLeftAthlete.lastName}
+          maxlength={maxAthleteNameLength}
           placeholder="Last Name"
         />
       </div>
@@ -110,10 +116,12 @@
       <div class="flex flex-row gap-2">
         <ZonkInput 
           bind:value={editLeftTeam.name}
+          maxlength={maxTeamNameLength}
           placeholder="Team Name"
         />
         <ZonkInput 
           bind:value={editLeftTeam.abbreviation}
+          maxlength={maxTeamAbrreviationLength}
           placeholder="Abbreviation"
         />
       </div>
@@ -123,10 +131,12 @@
       <div class="flex flex-row gap-2">
         <ZonkInput 
           bind:value={editRightAthlete.firstName}
+          maxlength={maxAthleteNameLength}
           placeholder="First Name"
         />
         <ZonkInput 
           bind:value={editRightAthlete.lastName}
+          maxlength={maxAthleteNameLength}
           placeholder="Last Name"
         />
       </div>
@@ -134,10 +144,12 @@
       <div class="flex flex-row gap-2">
         <ZonkInput 
           bind:value={editRightTeam.name}
+          maxlength={maxTeamNameLength}
           placeholder="Team Name"
         />
         <ZonkInput 
           bind:value={editRightTeam.abbreviation}
+          maxlength={maxTeamAbrreviationLength}
           placeholder="Abbreviation"
         />
       </div>
