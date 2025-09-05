@@ -42,10 +42,10 @@
     folkstyleCollegeTimes.push(cnsClocks[fcIdx].timers.p3 as number);
   }
 
-  const showSelectTime = $derived(
+  let showSelectTime = $derived(
     selectedStyle !== "Folkstyle" || selectedAge !== "College"
   );
-  const canSubmit = $derived(!!selectedStyle && !!selectedTime);
+  let canSubmit = $derived(!!selectedStyle && !!selectedTime);
 
   const initAndStart = () => {
 

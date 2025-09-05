@@ -43,17 +43,17 @@
   let inputElement: HTMLInputElement;
   let isFocused = $state(false);
 
-  const containerClasses = $derived(
+  let containerClasses = $derived(
     `input-container ${size} ${className}`.trim()
   );
 
-  const inputClasses = $derived(
+  let inputClasses = $derived(
     `base ${size}`.trim()
   );
 
-  const showFloatingLabel = $derived(value !== '');
+  let showFloatingLabel = $derived(value !== '');
 
-  const floatingLabelClasses = $derived(
+  let floatingLabelClasses = $derived(
     `floating-label ${size} ${showFloatingLabel ? 'show' : 'hide'}`
   );
 
@@ -151,15 +151,15 @@
   }
 
   .sm {
-    @apply px-3 py-1.5 text-sm;
+    @apply px-3 py-1 text-sm;
   }
   
   .md {
-    @apply px-4 py-2 text-base;
+    @apply px-4 py-1 text-base;
   }
   
   .lg {
-    @apply px-5 py-3 text-lg;
+    @apply px-5 py-1 text-lg;
   }
 
   /* Focus styles for better accessibility */
@@ -170,7 +170,7 @@
   /* Floating label styles */
   .floating-label {
     @apply absolute left-0 
-      bg-white p-1
+      bg-white p-[1px]
       rounded-md
       text-gray-600
       pointer-events-none
@@ -193,17 +193,17 @@
 
   /* Floating label positioning */
   .floating-label.sm.show {
-    @apply -top-2 left-3;
+    @apply -top-1.5 left-3;
     transform: translateY(0) scale(0.85);
   }
 
   .floating-label.md.show {
-    @apply -top-1 left-4;
+    @apply -top-1.5 left-4;
     transform: translateY(0) scale(0.85);
   }
 
   .floating-label.lg.show {
-    @apply -top-3 left-5;
+    @apply -top-1.5 left-5;
     transform: translateY(0) scale(0.85);
   }
 

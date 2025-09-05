@@ -53,7 +53,7 @@
   // Convert time components
   const { minutes, seconds, centiseconds, isNegative } = $derived(msToRidingComponents(netTime));
 
-  const clockFontClass = $derived(
+  let clockFontClass = $derived(
     size === "sm" ? 'text-lg' :
     size === "md" ? 'text-xl' :
     size === "lg" ? 'text-3xl' :
@@ -61,26 +61,26 @@
     'text-5xl' // xl
   );
   
-  const canEdit = $derived(allowEditing && !isRunning);
+  let canEdit = $derived(allowEditing && !isRunning);
   
   const maxMinutes = 99; 
   const maxSeconds = 59; 
   // const maxCentiseconds = 99;
 
-  const leftBgClass = $derived(
+  let leftBgClass = $derived(
     leftColor === 'red' ? 'bg-red-600 text-white' :
     leftColor === 'green' ? 'bg-green-600 text-white' :
     'bg-blue-600 text-white'
   );
-  const rightBgClass = $derived(
+  let rightBgClass = $derived(
     rightColor === 'red' ? 'bg-red-600 text-white' :
     rightColor === 'green' ? 'bg-green-600 text-white' :
     'bg-blue-600 text-white'
   );
 
-  const leftChevronColorClass = $derived(leftPos === "t" ? leftBgClass : 'text-slate-300');
-  const rightChevronColorClass = $derived(leftPos === "b" ? rightBgClass : 'text-slate-300');
-  const chevronSizeClass = $derived(size === "clamp" ? "chevron-clamp" : '');
+  let leftChevronColorClass = $derived(leftPos === "t" ? leftBgClass : 'text-slate-300');
+  let rightChevronColorClass = $derived(leftPos === "b" ? rightBgClass : 'text-slate-300');
+  let chevronSizeClass = $derived(size === "clamp" ? "chevron-clamp" : '');
   
   function getColorClasses(): string {
     if (netTime > 0) { // Right has advantage

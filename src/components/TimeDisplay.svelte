@@ -75,7 +75,7 @@
   const { minutes, seconds } = $derived(msToComponents(remaining));
 
   const clockBaseClasses = 'font-mono text-black text-center';
-  const clockFontClass = $derived(
+  let clockFontClass = $derived(
     size === "md" ? 'text-xl' :
     size === "lg" ? 'text-4xl' :
     size === "xl" ? 'text-6xl' :
@@ -84,9 +84,9 @@
   );
   
   // Show precision when 5 seconds or less remain
-  const showPrecision = $derived(remaining <= 5000 && isRunning);
+  let showPrecision = $derived(remaining <= 5000 && isRunning);
   
-  const canEdit = $derived(allowEditing && !isRunning);
+  let canEdit = $derived(allowEditing && !isRunning);
   
   const maxMinutes = 99; 
   const maxSeconds = 59; 
@@ -104,7 +104,7 @@
     handleTimeUpdate(minutes, newSeconds);
   }
 
-  const precisionClass = $derived(showPrecision ? 'text-red-600' : '');
+  let precisionClass = $derived(showPrecision ? 'text-red-600' : '');
 
   function handleEditingChange(isEditing: boolean) {
     onEditingChange?.(isEditing);

@@ -72,7 +72,7 @@
   });
 
 
-  const activeClockInfo = $derived((() => {
+  let activeClockInfo = $derived((() => {
     if (!wrestlingState) return null;
     
     const activeId = wrestlingState.clockInfo.activeId || 'mc';
@@ -159,17 +159,13 @@
       return undefined;
     return outputTeamName(wrestlingState.r.team);
   });
-  let displayBoutNumber = $derived.by(() => {
-    if (wrestlingState?.boutNumber)
-      return wrestlingState.boutNumber;
-    return '-';
-  })
+  let displayBoutNumber = $derived(wrestlingState?.boutNumber ?? '-');
 
   function getMatchPoints(side: WSide): number {
     return wrestlingState?.matchPoints?.[side] || 0;
   }
 
-  const showRideTime = $derived((): boolean => {
+  let showRideTime = $derived((): boolean => {
     return !!wrestlingState && 
       wrestlingState.config?.style === "Folkstyle" && 
       wrestlingState.config?.age === "College" &&

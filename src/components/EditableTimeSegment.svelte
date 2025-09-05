@@ -143,7 +143,7 @@
     handleSubmit();
   }
 
-  const dynamicClasses = $derived(
+  let dynamicClasses = $derived(
     isEditing
       ? 'bg-blue-100 text-blue-900 outline-none'
       : 'cursor-pointer hover:bg-blue-300'

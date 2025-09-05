@@ -16,7 +16,7 @@
     onClick,
   }: Props = $props();
 
-  const flexStyle = $derived(side === "r" ? " flex-row" : "flex-row-reverse");
+  let flexStyle = $derived(side === "r" ? " flex-row" : "flex-row-reverse");
 
   const buildAction = (delta: number): WAction => {
     const action = {

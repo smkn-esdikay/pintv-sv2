@@ -35,7 +35,7 @@
     full: 'max-w-full mx-4'
   };
 
-  const modalClasses = $derived(
+  let modalClasses = $derived(
     `modal-content ${sizeClasses[size]} ${isVisible ? 'modal-enter' : 'modal-exit'}`
   );
 

@@ -28,13 +28,13 @@
     currentOppPoints?: ActionPoint;
   };
 
-  const allSideActions = $derived(
+  let allSideActions = $derived(
     periods
      .flatMap(p => p.actions)
      .filter(a => a.wrestle?.side === side && !!a.wrestle)
   );
 
-  const actionCountMap = $derived(() => {
+  let actionCountMap = $derived(() => {
     const countMap = new Map<string, number>();
     
     allSideActions.forEach(action => {

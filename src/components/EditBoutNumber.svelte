@@ -3,34 +3,36 @@
 
   interface Props {
     boutNumber: number | undefined;
+    onUpdate: (newBoutNumber: number | undefined) => void;
   }
 
   let {
     boutNumber = $bindable(),
+    onUpdate
   }: Props = $props();
   
-  // Local string value for the input
   let inputValue = $state(boutNumber?.toString() ?? '');
   
-  // Sync inputValue with boutNumber when boutNumber changes externally
   $effect(() => {
     inputValue = boutNumber?.toString() ?? '';
   });
   
-  // Handle input changes and update boutNumber
   function handleInput(event: Event) {
     const target = event.target as HTMLInputElement;
-    const value = target.value;
+    let value = target.value;
+
+    if (parseInt(value) > 9999)
+      value = "9999";
+    else if (parseInt(value) < 0)
+      value = "0";
     
-    // Update local input value
     inputValue = value;
     
-    // Parse and update boutNumber
     const numValue = parseInt(value, 10);
     if (!isNaN(numValue) && numValue >= 0) {
-      boutNumber = numValue;
+      onUpdate(numValue);
     } else if (value === '') {
-      boutNumber = undefined;
+      onUpdate(undefined);
     }
   }
 </script>

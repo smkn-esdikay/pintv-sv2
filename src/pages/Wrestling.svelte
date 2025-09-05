@@ -44,7 +44,7 @@
   let showResetConfirm = $state(false);
   let showGoHomeConfirm = $state(false);
 
-  const matchPoints = $derived(() => {
+  let matchPoints = $derived(() => {
     // Re-compute whenever periods change (which happens when actions are added)
     const _ = current.periods;
     return manager.getPointsForMatch();
@@ -72,10 +72,11 @@
     };
   });
 
-  const choosePosDisabledClass = $derived(mustChoosePosition ? "disable-section" : "");
+  let choosePosDisabledClass = $derived(mustChoosePosition ? "disable-section" : "");
 
-  $inspect('mustChoosePosition', mustChoosePosition);
-  $inspect('whoCanChooseSides', whoCanChooseSides);
+  // $inspect('mustChoosePosition', mustChoosePosition);
+  // $inspect('whoCanChooseSides', whoCanChooseSides);
+  $inspect('bout', current?.boutNumber);
 
 </script>
 
@@ -281,7 +282,10 @@
 
     {#if !current.config.team}
     <section id="bout-number">
-      <EditBoutNumber boutNumber={current.boutNumber} />
+      <EditBoutNumber 
+        boutNumber={current.boutNumber} 
+        onUpdate={(newBoutNumber) => manager.setBoutNumber(newBoutNumber)}
+      />
     </section>
     {/if}
 

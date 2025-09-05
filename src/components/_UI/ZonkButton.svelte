@@ -19,7 +19,7 @@
     children
   }: Props = $props();
 
-  const buttonClasses = $derived(
+  let buttonClasses = $derived(
     `base ${color} ${size} ${className}`.trim()
   );
 

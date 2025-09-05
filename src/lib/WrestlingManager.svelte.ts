@@ -71,6 +71,7 @@ const placeholderState: WStateMain = {
  * 9. Position and Color
  * 10. Riding Clock
  * 11. Team/Athlete
+ * 12. Bout Number
  * 90. Utility Methods
  * 99. Cleanup
  */
@@ -1000,6 +1001,14 @@ export class WrestlingManager {
   setAthleteName(side: WSide, firstName: string, lastName: string) {
     this._current[side].athlete.firstName = firstName;
     this._current[side].athlete.lastName = lastName;
+    this.broadcastCurrentState();
+  }
+
+
+  // ++++++++++++++++++++++++ 12. Bout Number ++++++++++++++++++++++++
+
+  setBoutNumber(boutNumber: number | undefined): void {
+    this._current.boutNumber = boutNumber;
     this.broadcastCurrentState();
   }
 

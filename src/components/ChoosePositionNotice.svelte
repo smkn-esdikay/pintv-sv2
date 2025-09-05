@@ -11,7 +11,7 @@
     periods,
   }: Props = $props();
 
-  const currentPeriodName = $derived(
+  let currentPeriodName = $derived(
     periods[periodIdx]?.definition.name
   );
 </script>

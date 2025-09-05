@@ -37,7 +37,7 @@
     onchange?.(newValue);
   }
 
-  const selectValue = $derived(value === null ? "" : String(value));
+  let selectValue = $derived(value === null ? "" : String(value));
 
 </script>
 
