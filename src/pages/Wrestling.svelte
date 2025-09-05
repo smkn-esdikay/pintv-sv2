@@ -76,7 +76,7 @@
 
   // $inspect('mustChoosePosition', mustChoosePosition);
   // $inspect('whoCanChooseSides', whoCanChooseSides);
-  $inspect('bout', current?.boutNumber);
+  // $inspect('bout', current?.boutNumber);
 
 </script>
 
@@ -277,17 +277,15 @@
     </section>
 
     <section id="period">
-      <Period period={manager.getCurrentPeriod()} />
-    </section>
-
-    {#if !current.config.team}
-    <section id="bout-number">
+      {#if !current.config.team}
       <EditBoutNumber 
         boutNumber={current.boutNumber} 
         onUpdate={(newBoutNumber) => manager.setBoutNumber(newBoutNumber)}
       />
+      {/if}
+
+      <Period period={manager.getCurrentPeriod()} />
     </section>
-    {/if}
 
     {#if mainClockIsComplete}
     <section>
