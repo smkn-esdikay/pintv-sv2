@@ -4,7 +4,11 @@
   import { WrestlingManager } from "@/lib/WrestlingManager.svelte";
   import { KeyboardHandler } from "@/lib/KeyboardHandler";
   import { openScoreboard } from '@/lib/broadcast.svelte';
+  import { outputAthleteName, outputTeamName } from "@/lib/strings";
   import { Home, RotateCcw, Monitor, SquarePen, ShieldHalf, User } from "@lucide/svelte";
+
+  import Button from "@/components/_UI/ZonkButton.svelte";
+  import Confirm from "@/components/_UI/ConfirmModal.svelte";
 
   import Position from '@/components/Position.svelte';
   import Color from "@/components/Color.svelte";
@@ -15,15 +19,11 @@
   import ScoreDisplay from "@/components/ScoreDisplay.svelte";
   import Recap from "@/components/Recap.svelte";
   import Period from "@/components/Period.svelte";
-
-  import Button from "@/components/_UI/ZonkButton.svelte";
-  import Confirm from "@/components/_UI/ConfirmModal.svelte";
   import ChoosePosition from "@/components/ChoosePosition.svelte";
   import ChoosePositionNotice from "@/components/ChoosePositionNotice.svelte";
   import NextPeriodNotice from "@/components/NextPeriodNotice.svelte";
   import EditNames from "@/components/EditNames.svelte";
-  import { outputAthleteName, outputTeamName } from "@/lib/strings";
-    import EditBoutNumber from "@/components/EditBoutNumber.svelte";
+  import EditBoutNumber from "@/components/EditBoutNumber.svelte";
 
 
   const config = initStore.config;

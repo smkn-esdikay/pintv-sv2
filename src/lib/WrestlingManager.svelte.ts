@@ -282,12 +282,20 @@ export class WrestlingManager {
     };
     this._current.periodIdx = 0;
 
-    co.success("WrestlingManager: Match initialized", {
+    co.fire("+++++++++ WrestlingManager: Match initialized +++++++++", {
       style: this.config.style,
       age: this.config.age,
-      periods: this._current.periods,
+      periodsCount: this._current.periods.length,
       hasRidingClock: !!this._current.clocks.ride
     });
+
+    co.table(this._current.periods.map(p => ({
+      index: p.displayIdx,
+      name: p.definition.name,
+      seconds: p.seconds,
+      decisive: p.definition.decisive,
+      whoChooses: p.definition.whoChooses
+    })), "Periods");
   }
 
   private initializeSideClocks(timeConstants: TimersEntry) {

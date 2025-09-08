@@ -56,7 +56,7 @@
       periodLengths = [selectedTime, selectedTime];
       age = undefined;
     } else { // Folkstyle
-      if (selectedAge === "Highscool") {
+      if (selectedAge === "Highschool") {
         periodLengths = [selectedTime, selectedTime, selectedTime];
       } else { // College
         periodLengths = folkstyleCollegeTimes;
