@@ -28,12 +28,18 @@ export type WAge =        'Highschool' | 'College' | undefined;
 export type WSide =       'l' | 'r';
 export type WPos =        't' | 'n' | 'b';
 export type ChoosePositionParty = 'both' | 'none' | 'notprevious' | 'firstblood';
-
+export type WWinTypeCode = 'de' | 'md' | 'tf' | 'pf' | 'inj' | 'ff' | 'dq';
 
 
 /**
  * ++++++++++++++++++++++++++++++++++++++++++++++++ STANDARD TYPES ++++++++++++++++++++++++++++++++++++++++++++++++
  */
+
+export type WWinType = {
+  code: WWinTypeCode;
+  title: string;
+  teamPoints: number;
+};
 
 export type WClockPhases = {
   mc: ClockEvent;

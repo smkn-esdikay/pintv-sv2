@@ -15,7 +15,12 @@
 
 </script>
 
-<div class="w-full bg-yellow-300 p-2 text-center">
+<div class="w-full flex flex-col items-center gap-4 bg-yellow-300 p-2 text-center">
   <h2>Period has ended.</h2>
-  <Button onclick={handleClick}>Next</Button>
+  <Button 
+    onclick={handleClick}
+    size="lg"
+  >
+    Next
+  </Button>
 </div>

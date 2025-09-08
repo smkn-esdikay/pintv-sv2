@@ -12,10 +12,12 @@ import type {
   WClockPhases,
   WPeriod,
   WNameUpdate,
+  WWinTypeCode,
 } from "@/types";
 import { 
   cnsActions,
   cnsColors, 
+  cnsThresholds, 
   getCnsClock, 
   getCnsPeriods, 
   type ActionEntry, 
@@ -642,7 +644,7 @@ export class WrestlingManager {
       if (actn.clock.event === "complete") {
         if (actn.clock.clockId === "mc") {
           this.stopRidingClockMaybe();
-          // this.processPeriodComplete(); // let user push a button
+          this.processPeriodComplete();
           // play audio
         }
 
@@ -771,6 +773,36 @@ export class WrestlingManager {
     const points = this.getPointsForMatch();
     return points.l >= 15 || points.r >= 15; // Tech fall example
   }
+
+  private _evalPointDifference(): { 
+    tie: boolean; 
+    winnerSide: WSide | null; 
+    winType: WWinTypeCode | null; 
+  } {
+    const { l, r } = this.getPointsForMatch();
+    const pd = Math.abs(l - r);
+    let tie: boolean | null = null;
+    let winnerSide: WSide | null = null;
+    let winType: WWinTypeCode | null = null;
+
+    if (pd === 0) {
+      tie = true;
+    } else {
+      tie = false;
+      const style = this.config!.style;
+      const { techfall, major, decision } = cnsThresholds[style];
+      if (pd >= techfall)
+        winType = "tf";
+      else if (style === "Folkstyle" && pd >= major) // only folkstyle
+        winType = "md";
+      else // "decision" needs a 1-point difference. if it's not a tie, it's "decision"
+        winType = "de";
+
+      winnerSide = l > r ? "l" : "r";
+    }
+
+    return { tie, winnerSide, winType };
+  }
   
   processPeriodComplete(): void {
     const currentPeriod = this.getCurrentPeriod();
@@ -782,8 +814,25 @@ export class WrestlingManager {
 
     if (currentPeriod.definition.decisive) {
 
+      const pdEval = this._evalPointDifference();
+
+      if (!pdEval.tie) {
+        // update the winby component somehow to the winner side
+        // use the winType code
+      } else { // tie
+
+        // check wrestling.php > line 1008
+
+      }
+
+      if (this.config!.style === "Freestyle" || this.config!.style === "Greco") {
+
+
+
+      }
+
     } else { // not a decisive period
-      this.goToNextPeriod();
+
     } 
   }
 

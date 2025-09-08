@@ -1,4 +1,4 @@
-import type { SideColor, WAge, WConfig, WeightUnit, WPeriodDefinition, WPos, WStyle } from "@/types";
+import type { SideColor, WAge, WConfig, WeightUnit, WPeriodDefinition, WPos, WStyle, WWinType } from "@/types";
 
 
 export const cnsStyles: { 
@@ -174,23 +174,15 @@ export const cnsWeights = {
   ] as WeightListEntry[],
 };
 
-interface WinbyEntry {
-  display: string;
-  value: number;
-  teamPoints: number;
-  selectable: boolean;
-}
-export const cnsWinby: WinbyEntry[] = [
-  { display: 'Win By', value: 0, teamPoints: 0, selectable: true, },
-  { display: 'Decision', value: 1, teamPoints: 3, selectable: true, },
-  { display: 'Major Dec.', value: 1, teamPoints: 4, selectable: true, },
-  { display: 'Tech Fall', value: 1, teamPoints :5, selectable: true, },
-  { display: 'Pin Fall', value: 1, teamPoints: 6, selectable: true, },
-  { display: 'Injury', value: 1, teamPoints :6, selectable: true, },
-  { display: 'Forfeit', value: 1, teamPoints :6, selectable: true, },
-  { display: 'DQ', value: 1, teamPoints: 6, selectable: true, },
+export const cnsWinby: WWinType[] = [
+  { code: 'de', title: 'Decision', teamPoints: 3, },
+  { code: 'md', title: 'Major Dec.', teamPoints: 4, },
+  { code: 'tf', title: 'Tech Fall', teamPoints :5, },
+  { code: 'pf', title: 'Pin Fall', teamPoints: 6, },
+  { code: 'inj', title: 'Injury', teamPoints :6, },
+  { code: 'ff', title: 'Forfeit', teamPoints :6, },
+  { code: 'dq', title: 'DQ', teamPoints: 6, },
 ];
-
 
 export const cnsPeriods = {
   Folkstyle: [

@@ -290,7 +290,7 @@
     {#if mainClockIsComplete}
     <section>
       <NextPeriodNotice 
-        onGoNext={() => manager.processPeriodComplete()}
+        onGoNext={() => manager.goToNextPeriod()}
       />
     </section>
     {/if}
