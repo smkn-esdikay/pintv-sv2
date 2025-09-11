@@ -27,6 +27,6 @@
   <ZonkDropdown 
     value={winTypeCode}
     options={options}
-    onchange={() => handleChange}
+    onchange={(newVal) => handleChange(newVal as WWinTypeCode | null)}
   />
 </div>

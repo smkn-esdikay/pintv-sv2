@@ -198,12 +198,12 @@ export const cnsPeriods = {
   ] as WPeriodDefinition[],
 
   Freestyle: [
-    { name: 'Period 1', decisive: false, whoChooses: 'none', restAfter: true, },
-    { name: 'Period 2', decisive: true, whoChooses: 'none', },
+    { code: 'p1', name: 'Period 1', decisive: false, whoChooses: 'none', restAfter: true, },
+    { code: 'p2', name: 'Period 2', decisive: true, whoChooses: 'none', },
   ] as WPeriodDefinition[],
   Greco: [
-    { name: 'Period 1', decisive: false, whoChooses: 'none', restAfter: true, },
-    { name: 'Period 2', decisive: true, whoChooses: 'none', },
+    { code: 'p1', name: 'Period 1', decisive: false, whoChooses: 'none', restAfter: true, },
+    { code: 'p2', name: 'Period 2', decisive: true, whoChooses: 'none', },
   ] as WPeriodDefinition[],
 };
 export const getCnsPeriods = (config: WConfig): WPeriodDefinition[] | null => {

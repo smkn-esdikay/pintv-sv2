@@ -28,6 +28,7 @@ export type WAge =        'Highschool' | 'College' | undefined;
 export type WSide =       'l' | 'r';
 export type WPos =        't' | 'n' | 'b';
 export type ChoosePositionParty = 'both' | 'none' | 'notprevious' | 'firstblood';
+export type WPeriodCode = 'p1' | 'p2' | 'p3' | 'sv' | 'tb1' | 'tb2' | 'tbu';
 export type WWinTypeCode = 'de' | 'md' | 'tf' | 'pf' | 'inj' | 'ff' | 'dq';
 
 
@@ -112,7 +113,7 @@ export type WAction = {
 }
 
 export type WPeriodDefinition = {
-  code: string;
+  code: WPeriodCode;
   name: string;
   decisive: boolean;
   /** // who chooses position for next period */

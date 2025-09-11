@@ -68,6 +68,7 @@ const placeholderState: WStateMain = {
  * 4. Clock Management
  * 5. Action management
  * 6. Action Switch/Delete/Recompute
+ * 6.5. WinBy
  * 7. Advance periods or matches
  * 8. Scoring
  * 9. Position and Color
@@ -230,7 +231,7 @@ export class WrestlingManager {
     this._current.clocks.mc = new ZonkClock(firstPeriodMs);
     
     // Riding clock (only for folkstyle college)
-    if (!!timeConstants.rt) {
+    if (timeConstants.rt === true) {
       this._current.clocks.ride = new RidingClock();
       co.info("WrestlingManager: Riding clock initialized for Folkstyle College");
     }
@@ -757,6 +758,21 @@ export class WrestlingManager {
   }
 
 
+  // ++++++++++++++++++++++++ 6.5 WinBy ++++++++++++++++++++++++
+
+  updateWinby(side: WSide, code: WWinTypeCode | null): void {
+    if (code !== null) {
+      const oppSide: WSide = side === "l" ? "r" : "l";
+      this._current[oppSide].winTypeCode = null;
+    }
+    this._current[side].winTypeCode = code;
+  }
+
+  resetWinby(): void {
+    this._current.l.winTypeCode = null;
+    this._current.r.winTypeCode = null;
+  }
+
   // ++++++++++++++++++++++++ 7. Advance periods or matches ++++++++++++++++++++++++
 
   getPreviousPeriod(): WPeriod | undefined {
@@ -803,6 +819,48 @@ export class WrestlingManager {
 
     return { tie, winnerSide, winType };
   }
+
+  private _evalFreestyleGrecoPoints(): { 
+    winner: WSide | undefined; 
+    winReason: string | undefined;
+  } {
+    const maxPt = { l: 0, r: 0, };
+    const numCautions = { l: 0, r: 0, };
+    let lastPointScored: WSide | undefined = undefined;
+    let winner: WSide | undefined = undefined;
+    let winReason: string | undefined = undefined;
+    const getOppSide = (side: WSide): WSide => side === "l" ? "r" : "l";
+
+    for (const period of this._current.periods) {
+      for (const actn of period.actions) {
+        if (!!actn.wrestle?.pt && actn.wrestle.pt > 0) {
+          if (actn.wrestle.pt > maxPt[actn.wrestle.side]) {
+            maxPt[actn.wrestle.side] = actn.wrestle.pt
+          }
+          lastPointScored = actn.wrestle.side;
+        } else if (actn.wrestle?.oppPt && typeof actn.wrestle.oppPt === 'number' && actn.wrestle.oppPt > 0) {
+          lastPointScored = getOppSide(actn.wrestle.side);
+        }
+
+        if (actn.wrestle?.action === "caution") {
+          numCautions[actn.wrestle.side]++;
+        }
+      }
+    } // outer for
+
+    if (maxPt.l !== maxPt.r) {
+      winner = maxPt.l > maxPt.r ? 'l' : 'r';
+      winReason = "Larger point scoring move";
+    } else if (numCautions.l !== numCautions.r) {
+      winner = numCautions.l > numCautions.r ? 'l' : 'r';
+      winReason = "Number of cautions";
+    } else if (!!lastPointScored) {
+      winner = lastPointScored;
+      winReason = "Last point scored";
+    }
+
+    return { winner, winReason };
+  }
   
   processPeriodComplete(): void {
     const currentPeriod = this.getCurrentPeriod();
@@ -817,19 +875,79 @@ export class WrestlingManager {
       const pdEval = this._evalPointDifference();
 
       if (!pdEval.tie) {
-        // update the winby component somehow to the winner side
-        // use the winType code
+        this.updateWinby(pdEval.winnerSide!, pdEval.winType);
+
       } else { // tie
 
-        // check wrestling.php > line 1008
+        if (this.config!.style === "Folkstyle") {
 
+          if (currentPeriod.definition.code === "tbu" && this.config!.age === "Highschool") {
+            /**
+             * ultimate tie breaker ended for high school
+             * whoever chose top + point tie > winner
+             */
+            const previousPeriod = this.getPreviousPeriod();
+            if (!previousPeriod?.positionChoice) {
+              co.error('processPeriodComplete: previous period or its position choice not found');
+            } else {
+              const pppcSide = previousPeriod.positionChoice.side;
+              const pppcPosition = previousPeriod.positionChoice.position;
+
+              const winnerSide: WSide = 
+                (pppcSide === "l" && pppcPosition === "t" ||
+                  pppcSide === "r" && pppcPosition === "b")
+                ? "l"
+                : "r";
+
+              const actn: WAction = {
+                id: generateId(),
+                wrestle: {
+                  side: winnerSide,
+                  action: "keptTop",
+                  actionTitle: "kept top",
+                  clean: true,
+                  pt: 1,
+                  oppPt: 0,
+                  dq: false,
+                },
+                ts: Date.now(),
+                elapsed: this.peekStoreValue(this._current.clocks.mc.elapsed),
+              }
+
+              this.processAction(actn); // add point to winner side
+            }
+
+          } else {
+            this.resetWinby();
+          }
+
+        } else { // style: Freestyle / Greco
+
+          const fgEval = this._evalFreestyleGrecoPoints();
+
+            if (!!fgEval.winner) {
+              const actn: WAction = {
+                id: generateId(),
+                wrestle: {
+                  side: fgEval.winner,
+                  action: fgEval.winReason!,
+                  actionTitle: fgEval.winReason!,
+                  clean: true,
+                  pt: 0,
+                  oppPt: 0,
+                  dq: false,
+                },
+                ts: Date.now(),
+                elapsed: this.peekStoreValue(this._current.clocks.mc.elapsed),
+              }
+  
+              this.processAction(actn); // add point to winner side
+
+            }
+
+        }
       }
 
-      if (this.config!.style === "Freestyle" || this.config!.style === "Greco") {
-
-
-
-      }
 
     } else { // not a decisive period
 

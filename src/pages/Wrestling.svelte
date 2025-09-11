@@ -143,7 +143,7 @@
     <div id="left_winby" class="mb-4 {choosePosDisabledClass}">
       <WinBy 
         winTypeCode={current.l.winTypeCode} 
-        onclick={(code) => { console.log(code) }} 
+        onclick={(code) => { manager.updateWinby('l', code) }} 
       />
     </div>
 
@@ -443,7 +443,14 @@
         onClick={(actn) => { manager.processAction(actn) }}
       />
     </div>
-    
+
+    <div id="right_winby" class="mb-4 {choosePosDisabledClass}">
+      <WinBy 
+        winTypeCode={current.r.winTypeCode} 
+        onclick={(code) => { manager.updateWinby('r', code) }} 
+      />
+    </div>
+
     <div id="right_sideclocks" class="flex flex-col gap-1 mb-4 {choosePosDisabledClass}">
       {#if current.r.clocks.blood}
       <div class="side-clock-container">
