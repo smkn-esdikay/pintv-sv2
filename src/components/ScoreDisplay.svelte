@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { generateId } from "@/lib/math";
+  import { generateId } from "@/lib/math";
   import type { WAction, WSide } from "@/types";
   import { PlusCircle, MinusCircle } from "@lucide/svelte";
 

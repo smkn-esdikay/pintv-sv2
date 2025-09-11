@@ -24,6 +24,7 @@
   import NextPeriodNotice from "@/components/NextPeriodNotice.svelte";
   import EditNames from "@/components/EditNames.svelte";
   import EditBoutNumber from "@/components/EditBoutNumber.svelte";
+    import WinBy from "@/components/WinBy.svelte";
 
 
   const config = initStore.config;
@@ -136,6 +137,13 @@
         style={current.config.style}
         periods={current.periods}
         onClick={(actn) => { manager.processAction(actn) }}
+      />
+    </div>
+
+    <div id="left_winby" class="mb-4 {choosePosDisabledClass}">
+      <WinBy 
+        winTypeCode={current.l.winTypeCode} 
+        onclick={(code) => { console.log(code) }} 
       />
     </div>
 

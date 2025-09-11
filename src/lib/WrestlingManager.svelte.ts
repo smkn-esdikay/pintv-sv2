@@ -35,7 +35,7 @@ const getSideState = (color: SideColor): WStateSide => {
     pos: 'n',
     team: { name: '', abbreviation: '' },
     athlete: { firstName: '', lastName: '' },
-    winbyIdx: 0,
+    winTypeCode: null,
     clocks: {}
   };
 };
