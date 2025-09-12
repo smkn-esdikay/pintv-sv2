@@ -604,13 +604,19 @@ export class WrestlingManager {
         // Set opponent points (penalties)
         if (selectedAction.oppPoints) {
           actn.wrestle.clean = false;
+          let oppPtValue: number | 'dq' = 0;
+
           if (actn.wrestle.cnt <= selectedAction.oppPoints.length) {
-            actn.wrestle.oppPt = selectedAction.oppPoints[actn.wrestle.cnt - 1];
+            oppPtValue = selectedAction.oppPoints[actn.wrestle.cnt - 1];
           } else {
-            actn.wrestle.oppPt = selectedAction.oppPoints[selectedAction.oppPoints.length - 1];
+            oppPtValue = selectedAction.oppPoints[selectedAction.oppPoints.length - 1];
           }
-          if (actn.wrestle.oppPt === "dq") {
+
+          if (oppPtValue === 'dq') {
             actn.wrestle.dq = true;
+            actn.wrestle.oppPt = 0;
+          } else {
+            actn.wrestle.oppPt = oppPtValue;
           }
         }
 
@@ -709,8 +715,7 @@ export class WrestlingManager {
     if (selectedAction.oppPoints && selectedAction.oppPoints.length > 0) {
       action.wrestle.clean = false;
       
-      // Get the appropriate opponent points for this occurrence count
-      let oppPtValue;
+      let oppPtValue: number | 'dq' = 0;
       if (count <= selectedAction.oppPoints.length) {
         oppPtValue = selectedAction.oppPoints[count - 1];
       } else {
@@ -718,11 +723,14 @@ export class WrestlingManager {
         oppPtValue = selectedAction.oppPoints[selectedAction.oppPoints.length - 1];
       }
       
-      action.wrestle.oppPt = oppPtValue;
-      
-      if (oppPtValue === "dq") {
+
+      if (oppPtValue === 'dq') {
         action.wrestle.dq = true;
+        action.wrestle.oppPt = 0;
+      } else {
+        action.wrestle.oppPt = oppPtValue;
       }
+
     }
   }
 
@@ -971,8 +979,8 @@ export class WrestlingManager {
       if (a.wrestle?.side === "l" && a.wrestle?.pt) {
         add += a.wrestle.pt;
       }
-      if (a.wrestle?.side === "r" && a.wrestle?.oppPt && a.wrestle.oppPt !== "dq") {
-        add += a.wrestle.oppPt as number;
+      if (a.wrestle?.side === "r" && a.wrestle?.oppPt) {
+        add += a.wrestle.oppPt;
       }
       return acc + add;
     }, 0);
@@ -982,8 +990,8 @@ export class WrestlingManager {
       if (a.wrestle?.side === "r" && a.wrestle?.pt) {
         add += a.wrestle.pt;
       }
-      if (a.wrestle?.side === "l" && a.wrestle?.oppPt && a.wrestle.oppPt !== "dq") {
-        add += a.wrestle.oppPt as number;
+      if (a.wrestle?.side === "l" && a.wrestle?.oppPt) {
+        add += a.wrestle.oppPt;
       }
       return acc + add;
     }, 0);

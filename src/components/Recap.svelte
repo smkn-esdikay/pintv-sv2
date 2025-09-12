@@ -204,7 +204,7 @@
                   
                   {#if !!action.wrestle.oppPt && action.wrestle.oppPt !== 0}
                     <span class={getColorClass(action.wrestle.side, true)}>
-                      {#if action.wrestle.oppPt === "dq"}
+                      {#if action.wrestle.dq === true}
                         DQ
                       {:else}
                         {action.wrestle.oppPt} pts

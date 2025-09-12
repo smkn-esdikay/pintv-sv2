@@ -231,13 +231,12 @@ export const cnsColors = {
   Greco: { left: "red", right: "blue" } as ColorEntry,
 }
 
-export type ActionPoint = number | 'dq';
 export type ActionEntry = {
   code: string;
   title: string;
   show?: WPos;
-  points?: ActionPoint[];
-  oppPoints?: ActionPoint[];
+  points?: number[];
+  oppPoints?: (number | 'dq')[];
   resultingPos?: WPos;
 }
 
