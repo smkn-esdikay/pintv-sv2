@@ -30,27 +30,41 @@
   const config = initStore.config;
   const manager = WrestlingManager.getInstance();
   manager.initializeMatch(config);
+
+  // simple derived values
   let current = $derived(manager.current);
   let currentPeriod = $derived(manager.currentPeriod);
+  let hasNextPeriod = $derived(manager.hasNextPeriod);
   let mustChoosePosition = $derived(manager.mustChoosePosition);
   let whoCanChooseSides = $derived(manager.whoCanChooseSides);
   let mainClockIsComplete = $derived(manager.clockPhases?.mc === "complete");
+  let matchPoints = $derived.by(() => {
+    // Re-compute whenever periods change (which happens when actions are added)
+    const _ = current.periods;
+    return manager.getPointsForMatch();
+  });
 
   let displayLeftName = $derived(outputAthleteName(current.l.athlete));
   let displayRightName = $derived(outputAthleteName(current.r.athlete));
   let displayLeftTeam = $derived(outputTeamName(current.l.team));
   let displayRightTeam = $derived(outputTeamName(current.r.team));
 
+
+  // combined derived
+  let showGotoNextPeriod = $derived(mainClockIsComplete && hasNextPeriod);
+  let showMatchComplete = $derived(
+    mainClockIsComplete && (
+      !hasNextPeriod || (matchPoints.l !== matchPoints.r)
+    )
+  )
+
+
   let keyboardHandler: KeyboardHandler;
   let showEditNames = $state(false);
   let showResetConfirm = $state(false);
   let showGoHomeConfirm = $state(false);
 
-  let matchPoints = $derived(() => {
-    // Re-compute whenever periods change (which happens when actions are added)
-    const _ = current.periods;
-    return manager.getPointsForMatch();
-  });
+
 
   $effect(() => {
     keyboardHandler = new KeyboardHandler({
@@ -297,7 +311,7 @@
       <Period period={manager.getCurrentPeriod()} />
     </section>
 
-    {#if mainClockIsComplete}
+    {#if mainClockIsComplete && hasNextPeriod}
     <section>
       <NextPeriodNotice 
         onGoNext={() => manager.goToNextPeriod()}
@@ -318,7 +332,7 @@
       <div class="w-full flex flex-row items-center justify-between">
         <ScoreDisplay 
           side="l"
-          score={matchPoints().l}
+          score={matchPoints.l}
           onClick={(action) => manager.processAction(action)}
         />
         <h3>
@@ -326,7 +340,7 @@
         </h3>
         <ScoreDisplay 
           side="r"
-          score={matchPoints().r}
+          score={matchPoints.r}
           onClick={(action) => manager.processAction(action)}
         />
 
@@ -361,7 +375,7 @@
     </section>
 
     {#if current.clocks.ride}
-    <section>
+    <section class="{choosePosDisabledClass}">
       <div class="title mb-1">Riding Time</div>
       <RidingClockDisplay 
         id='ride'
@@ -558,6 +572,13 @@
     </div>
     <div class="h-full flex flex-col items-center justify-end">
       <div class="flex flex-col items-center justify-center">
+        <div id="config-display" class="text-white/60 mb-1">
+          <span>{ config.style }</span>
+          {#if config.style === "Folkstyle"}
+          <span>/ { config.age }</span>
+          {/if}
+          <span>/ { config.periodLengths }</span>
+        </div>
         <div class="text-center mb-2">
           <Button 
             onclick={() => console.clear()} 

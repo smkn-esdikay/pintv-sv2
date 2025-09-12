@@ -120,6 +120,11 @@ export class WrestlingManager {
     return undefined;
   }
 
+  get hasNextPeriod(): boolean {
+    // add a provision for Folkstyle College, which can repeat from Sudden Victory
+    return this._current.periodIdx < this._current.periods.length - 1;
+  }
+
   get mustChoosePosition(): boolean {
 
     let mustChoosePosition: boolean = false;
@@ -887,10 +892,13 @@ export class WrestlingManager {
 
     if (currentPeriod.definition.decisive) {
 
+      co.debug(`periodComplete decisive: ${currentPeriod.definition.name} [${currentPeriod.realIdx}]`);
+
       const pdEval = this._evalPointDifference();
 
       if (!pdEval.tie) {
         this.updateWinby(pdEval.winnerSide!, pdEval.winType);
+        co.debug(`NO TIE: ${pdEval.winnerSide} ${pdEval.winType}`);
 
       } else { // tie
 
@@ -930,40 +938,44 @@ export class WrestlingManager {
               }
 
               this.processAction(actn); // add point to winner side
+              this.updateWinby(winnerSide, 'de');
+              co.debug(`TIE (Folkstyle Highschool tbu): ${winnerSide} kept top`);
             }
 
           } else {
             this.resetWinby();
+            co.debug(`TIE (Folkstyle) - no action`);
           }
 
         } else { // style: Freestyle / Greco
 
           const fgEval = this._evalFreestyleGrecoPoints();
 
-            if (!!fgEval.winner) {
-              const actn: WAction = {
-                id: generateId(),
-                wrestle: {
-                  side: fgEval.winner,
-                  action: fgEval.winReason!,
-                  actionTitle: fgEval.winReason!,
-                  clean: true,
-                  pt: 0,
-                  oppPt: 0,
-                  dq: false,
-                },
-                ts: Date.now(),
-                elapsed: this.peekStoreValue(this._current.clocks.mc.elapsed),
-              }
-  
-              this.processAction(actn); // add point to winner side
-
+          if (!!fgEval.winner) {
+            const actn: WAction = {
+              id: generateId(),
+              wrestle: {
+                side: fgEval.winner,
+                action: fgEval.winReason!,
+                actionTitle: fgEval.winReason!,
+                clean: true,
+                pt: 1,
+                oppPt: 0,
+                dq: false,
+              },
+              ts: Date.now(),
+              elapsed: this.peekStoreValue(this._current.clocks.mc.elapsed),
             }
 
-        }
-      }
+            this.processAction(actn); // add point to winner side
+            this.updateWinby(fgEval.winner, 'de');
+            co.debug(`TIE (Freestyle / Greco) - ${fgEval.winner} ${fgEval.winReason}`);
 
-
+          } else {
+            co.debug(`TIE (Freestyle / Greco) - no winner found`);
+          }
+        } // end freestyle / greco
+      } // end tie
     } else { // not a decisive period
 
     } 
@@ -1050,12 +1062,12 @@ export class WrestlingManager {
     
     this.startRidingClockMaybe();
     
-    co.info("WrestlingManager: Position changed", { 
-      side, 
-      position, 
-      leftPos: this._current.l.pos, 
-      rightPos: this._current.r.pos 
-    });
+    // co.info("WrestlingManager: Position changed", { 
+    //   side, 
+    //   position, 
+    //   leftPos: this._current.l.pos, 
+    //   rightPos: this._current.r.pos 
+    // });
     this.broadcastCurrentState();
   }
 
