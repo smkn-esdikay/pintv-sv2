@@ -187,10 +187,10 @@ export const cnsWinby: WWinType[] = [
 export const cnsPeriods = {
   Folkstyle: [
     { code: 'p1', name: 'Period 1', decisive: false, whoChooses: 'none', },
-    { code: 'p2', name: 'Period 2', decisive: false, whoChooses: 'both', },
-    { code: 'p3', name: 'Period 3', decisive: true, whoChooses: 'notprevious', },
+    { code: 'p2', name: 'Period 2', decisive: false, whoChooses: 'both', chooseNeutral: true, },
+    { code: 'p3', name: 'Period 3', decisive: true, whoChooses: 'notprevious', chooseNeutral: true, },
 
-    { code: 'sv', name: 'Sudden Victory', decisive: true, whoChooses: 'none', overtime: true, }, // folkstyle college periods 4-6 can repeat 
+    { code: 'sv', name: 'Sudden Victory', decisive: true, whoChooses: 'none', overtime: true, }, // "Folkstyle" && "College" periods 4-6 can repeat 
     { code: 'tb1', name: 'Tie Breaker I', decisive: false, whoChooses: 'both', overtime: true, },
     { code: 'tb2', name: 'Tie Breaker II', decisive: true, whoChooses: 'notprevious', overtime: true, },
     

@@ -4,15 +4,19 @@
 
   interface Props {
     side: WSide;
+    chooseNeutral: boolean | undefined;
     onSelected: (pos: WPos) => void;
     onDefer: () => void;
   }
 
   let {
     side,
+    chooseNeutral,
     onSelected,
     onDefer,
   }: Props = $props();
+
+  const neutralClass = $derived(chooseNeutral === true ? '' : 'neutral-disabled');
 
   const handlePositionClick = (pos: WPos) => {
     onSelected(pos);
@@ -31,6 +35,8 @@
       Top
     </button>
     <button
+      class="{neutralClass}"
+      disabled={chooseNeutral !== true}
       onclick={() => handlePositionClick("n")}
     >
       Neutral
@@ -65,6 +71,16 @@
       border-white/65 border-[0.5px]
       bg-white/10 
       text-white font-bold
+      hover:border-white
+      hover:bg-white/20
+    ;
+  }
+  button.neutral-disabled {
+    @apply 
+      text-white/40 
+      blur-[1.5px] 
+      hover:border-white/60
+      hover:bg-white/10
     ;
   }
 </style>

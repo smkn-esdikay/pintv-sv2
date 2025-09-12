@@ -98,7 +98,7 @@ export type WrestlingAction = {
   newPos?: WPos;
 
   dq: boolean;
-  cnt?: number;       // count - might replace this with dynamic count
+  cnt?: number;       // count - set dynamically in wrestlingManager
 }
 
 export type WAction = {
@@ -115,8 +115,10 @@ export type WPeriodDefinition = {
   code: WPeriodCode;
   name: string;
   decisive: boolean;
-  /** // who chooses position for next period */
+  /** who chooses position for next period */
   whoChooses: ChoosePositionParty; 
+  /** when choosing a position for the next period includes neutral */
+  chooseNeutral?: boolean;
   overtime?: boolean;
   restAfter?: boolean;
 }

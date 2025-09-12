@@ -113,6 +113,13 @@ export class WrestlingManager {
     return this._current;
   }
 
+  get currentPeriod(): WPeriod | undefined {
+    const currentPeriod = this.getCurrentPeriod();
+    if (!!currentPeriod)
+      return currentPeriod;
+    return undefined;
+  }
+
   get mustChoosePosition(): boolean {
 
     let mustChoosePosition: boolean = false;

@@ -31,6 +31,7 @@
   const manager = WrestlingManager.getInstance();
   manager.initializeMatch(config);
   let current = $derived(manager.current);
+  let currentPeriod = $derived(manager.currentPeriod);
   let mustChoosePosition = $derived(manager.mustChoosePosition);
   let whoCanChooseSides = $derived(manager.whoCanChooseSides);
   let mainClockIsComplete = $derived(manager.clockPhases?.mc === "complete");
@@ -113,6 +114,7 @@
       {#if whoCanChooseSides?.l}
       <ChoosePosition 
         side="l"
+        chooseNeutral={currentPeriod?.definition.chooseNeutral}
         onSelected={(pos) => manager.setPosition("l", pos, true)}
         onDefer={() => manager.setDefer("l")}
       />
@@ -417,6 +419,7 @@
       {#if whoCanChooseSides?.r}
       <ChoosePosition 
         side="r"
+        chooseNeutral={currentPeriod?.definition.chooseNeutral}
         onSelected={(pos) => manager.setPosition("r", pos, true)}
         onDefer={() => manager.setDefer("r")}
       />
