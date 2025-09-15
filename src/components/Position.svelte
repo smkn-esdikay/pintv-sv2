@@ -23,6 +23,7 @@
 
 <div class="w-full">
   <ZonkDropdown
+    placeholder="Position"
     value={selected}
     options={positions}
     className="w-full"

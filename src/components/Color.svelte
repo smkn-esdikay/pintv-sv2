@@ -22,6 +22,7 @@
 
 <div class="w-full">
   <ZonkDropdown
+    placeholder="Color"
     value={selected}
     options={colors}
     className="w-full"

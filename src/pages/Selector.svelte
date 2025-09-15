@@ -88,6 +88,7 @@
         <div id="dropdowns" class="grid grid-cols-2 gap-y-2 items-center w-full">
           <div class="text-center">Wrestling Style</div>
           <ZonkDropdown
+            placeholder="Style"
             bind:value={selectedStyle}
             options={wrestlingTypeOptions}
           />
@@ -95,17 +96,26 @@
           {#if !!ageOptions && ageOptions.length > 0}
             <div class="text-center">Age Group</div>
             <ZonkDropdown
+              placeholder="Age Group"
               bind:value={selectedAge as string}
               options={ageOptions as {label: string, value: string}[]}
             />
           {/if}
 
           <div class="text-center">Team</div>
-          <ZonkDropdown bind:value={selectedTeam} options={teamOptions} />
+          <ZonkDropdown 
+            placeholder="Team?"
+            bind:value={selectedTeam} 
+            options={teamOptions} 
+          />
 
           <div class="text-center">Periods</div>
           {#if !!showSelectTime}
-            <ZonkDropdown bind:value={selectedTime} options={timeOptions} />
+            <ZonkDropdown 
+              placeholder="Periods"
+              bind:value={selectedTime} 
+              options={timeOptions} 
+            />
           {:else}
             <div>{formatSecondsArray(folkstyleCollegeTimes)}</div>
           {/if}
