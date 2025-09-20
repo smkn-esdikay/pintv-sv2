@@ -580,6 +580,40 @@ export class WrestlingManager {
       ).length;
   }
 
+  private _checkAndSetFirstBlood(currentAction: WAction): void {
+
+    let hasEarlierScoringAction = false;
+    
+    for (let periodIdx = 0; periodIdx < this._current.periods.length; periodIdx++) {
+      const period = this._current.periods[periodIdx];
+      
+      for (const action of period.actions) {
+        if (!action.wrestle || !action.elapsed) continue;
+        
+        const actionFromConstants = this.actionTitleMap.get(action.wrestle.action);
+        const actionAwardedPoints = actionFromConstants?.points && action.wrestle.pt > 0;
+        
+        if (actionAwardedPoints) {
+          const isEarlierPeriod = periodIdx < this._current.periodIdx;
+          const isSamePeriodEarlierTime = periodIdx === this._current.periodIdx && 
+                                        action.elapsed < (currentAction.elapsed || 0);
+          
+          if (isEarlierPeriod || isSamePeriodEarlierTime) {
+            hasEarlierScoringAction = true;
+            break;
+          }
+        }
+      }
+      
+      if (hasEarlierScoringAction) break;
+    }
+
+    if (!hasEarlierScoringAction && currentAction.wrestle) {
+      this._current.firstblood = currentAction.wrestle.side;
+      co.debug(`First blood: ${currentAction.wrestle.side}, ${currentAction.wrestle.action} at ${currentAction.elapsed}s in period ${this._current.periodIdx}`);
+    }
+  }
+
   processAction(actn: WAction) {
     if (!this._current.periods[this._current.periodIdx]) {
       co.warn("WrestlingManager: No current period to add action to");
@@ -611,6 +645,9 @@ export class WrestlingManager {
         // Set points
         if (selectedAction.points) {
           actn.wrestle.pt = selectedAction.points[0] as number;
+          if (actn.wrestle.pt > 0) {
+            this._checkAndSetFirstBlood(actn);
+          }
         }
         
         // Set opponent points (penalties)
