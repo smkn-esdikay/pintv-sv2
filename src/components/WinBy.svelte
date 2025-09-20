@@ -4,8 +4,8 @@
   import { cnsWinby } from "@/constants/wrestling.constants";
 
   interface Props {
-    winTypeCode: WWinTypeCode | null;
-    onclick: (code: WWinTypeCode | null) => void;
+    winTypeCode: WWinTypeCode | 'none';
+    onclick: (code: WWinTypeCode | 'none') => void;
   }
 
   let {
@@ -13,13 +13,13 @@
     onclick,
   }: Props = $props();
 
-  const options: { value: WWinTypeCode | null, label: string }[] = [
-    { value: null, label: ' - ' },
+  const options: { value: WWinTypeCode | 'none', label: string }[] = [
+    { value: 'none', label: ' - ' },
     ...cnsWinby.map(el => ({ value: el.code, label: el.title, })),
   ];
 
-  const handleChange = (newValue: WWinTypeCode | null) => {
-    onclick(newValue as WWinTypeCode | null);
+  const handleChange = (newValue: WWinTypeCode | 'none') => {
+    onclick(newValue as WWinTypeCode | 'none');
   }
 </script>
 
@@ -28,6 +28,6 @@
     placeholder="Win By"
     value={winTypeCode}
     options={options}
-    onchange={(newVal) => handleChange(newVal as WWinTypeCode | null)}
+    onchange={(newVal) => handleChange(newVal as WWinTypeCode | 'none')}
   />
 </div>

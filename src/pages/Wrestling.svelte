@@ -52,6 +52,7 @@
 
   // combined derived
   let showGotoNextPeriod = $derived(mainClockIsComplete && hasNextPeriod);
+  let canDecideMatch = $derived(current.l.winTypeCode !== 'none' || current.r.winTypeCode !== 'none')
   let showMatchComplete = $derived(
     mainClockIsComplete && (
       !hasNextPeriod || (matchPoints.l !== matchPoints.r)
@@ -311,7 +312,12 @@
       <Period period={manager.getCurrentPeriod()} />
     </section>
 
-    {#if mainClockIsComplete && hasNextPeriod}
+
+    {#if canDecideMatch}
+    <section>
+      go to next match
+    </section>
+    {:else if showGotoNextPeriod}
     <section>
       <NextPeriodNotice 
         onGoNext={() => manager.goToNextPeriod()}

@@ -35,7 +35,7 @@ const getSideState = (color: SideColor): WStateSide => {
     pos: 'n',
     team: { name: '', abbreviation: '' },
     athlete: { firstName: '', lastName: '' },
-    winTypeCode: null,
+    winTypeCode: 'none',
     clocks: {}
   };
 };
@@ -817,17 +817,17 @@ export class WrestlingManager {
 
   // ++++++++++++++++++++++++ 6.5 WinBy ++++++++++++++++++++++++
 
-  updateWinby(side: WSide, code: WWinTypeCode | null): void {
-    if (code !== null) {
+  updateWinby(side: WSide, code: WWinTypeCode | 'none'): void {
+    if (code !== 'none') {
       const oppSide: WSide = side === "l" ? "r" : "l";
-      this._current[oppSide].winTypeCode = null;
+      this._current[oppSide].winTypeCode = 'none';
     }
     this._current[side].winTypeCode = code;
   }
 
   resetWinby(): void {
-    this._current.l.winTypeCode = null;
-    this._current.r.winTypeCode = null;
+    this._current.l.winTypeCode = 'none';
+    this._current.r.winTypeCode = 'none';
   }
 
   // ++++++++++++++++++++++++ 7. Advance periods or matches ++++++++++++++++++++++++
@@ -850,13 +850,13 @@ export class WrestlingManager {
   private _evalPointDifference(): { 
     tie: boolean; 
     winnerSide: WSide | null; 
-    winType: WWinTypeCode | null; 
+    winType: WWinTypeCode | 'none'; 
   } {
     const { l, r } = this.getPointsForMatch();
     const pd = Math.abs(l - r);
     let tie: boolean | null = null;
     let winnerSide: WSide | null = null;
-    let winType: WWinTypeCode | null = null;
+    let winType: WWinTypeCode | 'none' = 'none';
 
     if (pd === 0) {
       tie = true;

@@ -169,7 +169,7 @@ export type WStateSide = {
   pos: WPos;
   team: WTeam;
   athlete: WAthlete;
-  winTypeCode: WWinTypeCode | null;
+  winTypeCode: WWinTypeCode | 'none';
   clocks: {
     blood?: ZonkClock;
     injury?: ZonkClock;
