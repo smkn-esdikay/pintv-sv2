@@ -20,6 +20,7 @@ import {
   cnsThresholds, 
   getCnsClock, 
   getCnsPeriods, 
+  rideTimeThreshold, 
   type ActionEntry, 
   type TimersEntry 
 } from "@/constants/wrestling.constants";
@@ -28,6 +29,7 @@ import { RidingClock } from "./RidingClock";
 import { co } from "./console";
 import { broadcast } from "./broadcast.svelte";
 import { generateId } from "./math";
+import { ActionBuilder } from "./ActionBuilder";
 
 const getSideState = (color: SideColor): WStateSide => {
   return {
@@ -879,13 +881,13 @@ export class WrestlingManager {
 
   private _evalFreestyleGrecoPoints(): { 
     winner: WSide | undefined; 
-    winReason: string | undefined;
+    winReason: ActionEntry['code'] | undefined;
   } {
     const maxPt = { l: 0, r: 0, };
     const numCautions = { l: 0, r: 0, };
     let lastPointScored: WSide | undefined = undefined;
     let winner: WSide | undefined = undefined;
-    let winReason: string | undefined = undefined;
+    let winReason: ActionEntry['code'] | undefined = undefined;
     const getOppSide = (side: WSide): WSide => side === "l" ? "r" : "l";
 
     for (const period of this._current.periods) {
@@ -907,16 +909,27 @@ export class WrestlingManager {
 
     if (maxPt.l !== maxPt.r) {
       winner = maxPt.l > maxPt.r ? 'l' : 'r';
-      winReason = "Larger point scoring move";
+      winReason = "tb_lrg_mv";
     } else if (numCautions.l !== numCautions.r) {
       winner = numCautions.l > numCautions.r ? 'l' : 'r';
-      winReason = "Number of cautions";
+      winReason = "tb_ctn";
     } else if (!!lastPointScored) {
       winner = lastPointScored;
-      winReason = "Last point scored";
+      winReason = "tb_lst_pt";
     }
 
     return { winner, winReason };
+  }
+
+  private _evalRidingTimes(): WSide | null {
+    if (!this.current.clocks.ride) 
+      return null;
+
+    const rideNetTime = this.current.clocks.ride.getNetTime();
+    if (Math.abs(rideNetTime) < rideTimeThreshold) 
+      return null;
+
+    return (rideNetTime > 0) ? 'r'  : 'l';
   }
   
   processPeriodComplete(): void {
@@ -925,6 +938,22 @@ export class WrestlingManager {
     if (!currentPeriod) {
       co.error("processPeriodComplete: currentPeriod not found");
       return;
+    }
+
+    const mcElapsed = this.peekStoreValue(this._current.clocks.mc.elapsed) as number;
+
+    if (currentPeriod.definition.evalRide) {
+      const rideSide = this._evalRidingTimes();
+      if (!!rideSide) {
+        const sysAction = ActionBuilder.buildSystemAction('ride', rideSide, 1, mcElapsed);
+
+        if (sysAction) {
+          this.processAction(sysAction); // add point to ride time advantage side
+          co.debug(`processPeriodComplete (Ride Time): ${rideSide} gets 1 pt`);
+        } else {
+          co.warn(`processPeriodComplete (Ride Time): action not found`);
+        }
+      }
     }
 
     if (currentPeriod.definition.decisive) {
@@ -959,24 +988,17 @@ export class WrestlingManager {
                 ? "l"
                 : "r";
 
-              const actn: WAction = {
-                id: generateId(),
-                wrestle: {
-                  side: winnerSide,
-                  action: "keptTop",
-                  actionTitle: "kept top",
-                  clean: true,
-                  pt: 1,
-                  oppPt: 0,
-                  dq: false,
-                },
-                ts: Date.now(),
-                elapsed: this.peekStoreValue(this._current.clocks.mc.elapsed),
+              const sysAction = 
+                ActionBuilder.buildSystemAction('tb_kp_top', winnerSide, 1, mcElapsed);
+
+              if (sysAction) {
+                this.processAction(sysAction); // add point to winner side
+                this.updateWinby(winnerSide, 'de');
+                co.debug(`TIE (Folkstyle Highschool tbu): ${winnerSide} kept top`);
+              } else {
+                co.warn(`TIE (Folkstyle Highschool tbu): action not found`);
               }
 
-              this.processAction(actn); // add point to winner side
-              this.updateWinby(winnerSide, 'de');
-              co.debug(`TIE (Folkstyle Highschool tbu): ${winnerSide} kept top`);
             }
 
           } else {
@@ -989,24 +1011,17 @@ export class WrestlingManager {
           const fgEval = this._evalFreestyleGrecoPoints();
 
           if (!!fgEval.winner) {
-            const actn: WAction = {
-              id: generateId(),
-              wrestle: {
-                side: fgEval.winner,
-                action: fgEval.winReason!,
-                actionTitle: fgEval.winReason!,
-                clean: true,
-                pt: 1,
-                oppPt: 0,
-                dq: false,
-              },
-              ts: Date.now(),
-              elapsed: this.peekStoreValue(this._current.clocks.mc.elapsed),
-            }
 
-            this.processAction(actn); // add point to winner side
-            this.updateWinby(fgEval.winner, 'de');
-            co.debug(`TIE (Freestyle / Greco) - ${fgEval.winner} ${fgEval.winReason}`);
+            const sysAction = 
+              ActionBuilder.buildSystemAction(fgEval.winReason!, fgEval.winner, 1, mcElapsed);
+
+            if (sysAction) {
+              this.processAction(sysAction); // add point to winner side
+              this.updateWinby(fgEval.winner, 'de');
+              co.debug(`TIE (Freestyle / Greco) - ${fgEval.winner} ${fgEval.winReason}`);
+            } else {
+              co.warn(`TIE (Freestyle / Greco): action not found`);
+            }
 
           } else {
             co.debug(`TIE (Freestyle / Greco) - no winner found`);

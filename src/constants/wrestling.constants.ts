@@ -117,6 +117,9 @@ export const getCnsClock = (config: WConfig): TimersEntry | null => {
   return cIdx > -1 ? cnsClocks[cIdx].timers : null;
 }
 
+/** ride time threshold in milliseconds */
+export const rideTimeThreshold = 60000;
+
 interface WeightListEntry {
   age?: WAge;
   title: string;
@@ -188,7 +191,7 @@ export const cnsPeriods = {
   Folkstyle: [
     { code: 'p1', name: 'Period 1', decisive: false, whoChooses: 'none', },
     { code: 'p2', name: 'Period 2', decisive: false, whoChooses: 'both', chooseNeutral: true, },
-    { code: 'p3', name: 'Period 3', decisive: true, whoChooses: 'notprevious', chooseNeutral: true, },
+    { code: 'p3', name: 'Period 3', decisive: true, whoChooses: 'notprevious', chooseNeutral: true, evalRide: true, },
 
     { code: 'sv', name: 'Sudden Victory', decisive: true, whoChooses: 'none', overtime: true, }, // "Folkstyle" && "College" periods 4-6 can repeat 
     { code: 'tb1', name: 'Tie Breaker I', decisive: false, whoChooses: 'both', overtime: true, },
@@ -234,7 +237,7 @@ export const cnsColors = {
 export type ActionEntry = {
   code: string;
   title: string;
-  show?: WPos;
+  show?: WPos;        // for button actions, restricts to that position
   points?: number[];
   oppPoints?: (number | 'dq')[];
   resultingPos?: WPos;
@@ -270,6 +273,18 @@ export const cnsActions = {
     { code: '+5', title: '5', points: [5], },
     { code: 'caution', title: 'Caution', oppPoints: [2, 2, 'dq'], },
     { code: 'passivity', title: 'Passivity', oppPoints: [0], },
+  ] as ActionEntry[],
+  System: [
+    /** manual */
+    { code: 'man_match', title: 'Manual Match Pt', points: [1], },
+    /** ride time */
+    { code: 'ride', title: 'Riding Time', points: [1], },
+    /** tiebreakers freestyle, greco */
+    { code: 'tb_lrg_mv', title: 'Larger Point Scoring Move', points: [1], },
+    { code: 'tb_ctn', title: 'Number of cautions', points: [1], },
+    { code: 'tb_lst_pt', title: 'Last point scored', points: [1], },
+    /** tiebreakers Folkstyle */
+    { code: 'tb_kp_top', title: 'Kept Top', points: [1], },
   ] as ActionEntry[],
 
 }

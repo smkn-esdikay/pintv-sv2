@@ -166,7 +166,7 @@ export class RidingClock {
   }
 
   /**
-   * Get current net time (non-reactive)
+   * Get current net time (non-reactive) in ms
    */
   public getNetTime(): number {
     if (this.state.isRunning) {

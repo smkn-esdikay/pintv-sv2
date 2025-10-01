@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { generateId } from "@/lib/math";
+  import { ActionBuilder } from "@/lib/ActionBuilder";
+  import { co } from "@/lib/console";
   import type { WAction, WSide } from "@/types";
   import { PlusCircle, MinusCircle } from "@lucide/svelte";
 
@@ -18,26 +19,13 @@
 
   let flexStyle = $derived(side === "r" ? " flex-row" : "flex-row-reverse");
 
-  const buildAction = (delta: number): WAction => {
-    const action = {
-      id: generateId(),
-      wrestle: {
-        side,
-        action: "manual",
-        actionTitle: "Manual",
-        clean: true,
-        pt: delta,
-        oppPt: 0,
-        dq: false,
-      },
-      ts: Date.now(),
-    } as WAction;
-    return action;
-  }
-
   const handleClick = (delta: number) => {
-    const action = buildAction(delta);
-    onClick(action);
+    const action = ActionBuilder.buildSystemAction("man_match", side, delta);
+    if (action) {
+      onClick(action);
+    } else {
+      co.warn("ScoreDisplay: handleClick: action not found");
+    }
   }
 
 </script>
