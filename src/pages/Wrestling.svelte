@@ -658,6 +658,7 @@
   
   .master-grid {
     @apply 
+      select-none
       min-w-[950px] w-full h-screen
       grid grid-cols-3 gap-1
       p-2;
