@@ -263,19 +263,17 @@ export class WrestlingManager {
     }
 
     // 3. Periods setup
-    this._current.periods = [];
-    periodConstants.forEach((p, idx) => {
-      const cnfLen = this.config!.periodLengths[idx] ?? null;
-      const cnsLen = timeConstants[p.code as keyof TimersEntry] as number ?? null;
-      
-      this._current.periods.push({
-        seconds: cnfLen || cnsLen || 120,
+    this._current.periods = periodConstants
+      .filter(p => !p.ageGroup || this.config?.age === p.ageGroup)
+      .map((p, idx) => ({
+        seconds: this.config!.periodLengths[idx] ?? 
+          (timeConstants[p.code as keyof TimersEntry] as number) ?? 
+          120,
         displayIdx: idx,
         realIdx: idx,
         definition: p,
         actions: [],
-      })
-    });
+      }));
 
     // 4. Colors and sides
     const colorConstants = cnsColors[this.config.style];
@@ -302,6 +300,7 @@ export class WrestlingManager {
     co.fire("+++++++++ WrestlingManager: Match initialized +++++++++", {
       style: this.config.style,
       age: this.config.age,
+      team: this.config.team,
       periodsCount: this._current.periods.length,
       hasRidingClock: !!this._current.clocks.ride
     });

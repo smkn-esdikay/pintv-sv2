@@ -3,19 +3,23 @@ import type { SideColor, WAge, WConfig, WeightUnit, WPeriodDefinition, WPos, WSt
 
 export const cnsStyles: { 
   style: WStyle; 
-  ages: WAge[] | undefined; 
+  ages: WAge[] | undefined;
+  team: boolean;
 }[] = [
   {
     style: "Folkstyle",
     ages: ["Highschool", "College"],
+    team: true,
   },
   {
     style: "Freestyle",
     ages: undefined,
+    team: true,
   },
   {
     style: "Greco",
     ages: undefined,
+    team: false,
   },
 ];
 
@@ -197,7 +201,7 @@ export const cnsPeriods = {
     { code: 'tb1', name: 'Tie Breaker I', decisive: false, whoChooses: 'both', overtime: true, },
     { code: 'tb2', name: 'Tie Breaker II', decisive: true, whoChooses: 'notprevious', overtime: true, },
     
-    { code: 'tbu', name: 'Ultimate Tie Breaker', decisive: true, whoChooses: 'firstblood', }, // only for high school
+    { code: 'tbu', name: 'Ultimate Tie Breaker', decisive: true, whoChooses: 'firstblood', ageGroup: "Highschool" },
   ] as WPeriodDefinition[],
 
   Freestyle: [

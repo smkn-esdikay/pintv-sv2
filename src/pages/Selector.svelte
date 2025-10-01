@@ -8,7 +8,7 @@
   import type { WAge, WConfig, WStyle } from "@/types";
 
   let selectedStyle: WStyle = $state("Folkstyle");
-  let selectedAge: Omit<WAge, 'undefined'> = $state("College");
+  let selectedAge: WAge = $state("College");
   let selectedTime: number = $state(120);
   let selectedTeam: boolean = $state(false);
 
@@ -45,7 +45,22 @@
   let showSelectTime = $derived(
     selectedStyle !== "Folkstyle" || selectedAge !== "College"
   );
+  let showSelectTeam = $derived.by(() => {
+    const styleInfo = cnsStyles.find(el => el.style === selectedStyle);
+    return (styleInfo?.team === true);
+  });
   let canSubmit = $derived(!!selectedStyle && !!selectedTime);
+
+  $effect(() => {
+    if (showSelectTeam === false) {
+      selectedTeam = false;
+    }
+  });
+  $effect(() => {
+    if (ageOptions === undefined) {
+      selectedAge = undefined;
+    }
+  });
 
   const initAndStart = () => {
 
@@ -102,12 +117,14 @@
             />
           {/if}
 
+          {#if showSelectTeam}
           <div class="text-center">Team</div>
           <ZonkDropdown 
             placeholder="Team?"
             bind:value={selectedTeam} 
             options={teamOptions} 
           />
+          {/if}
 
           <div class="text-center">Periods</div>
           {#if !!showSelectTime}

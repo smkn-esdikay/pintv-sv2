@@ -119,6 +119,8 @@ export type WPeriodDefinition = {
   whoChooses: ChoosePositionParty; 
   /** when choosing a position for the next period includes neutral */
   chooseNeutral?: boolean;
+  /** if set, only for the specified age group */
+  ageGroup?: WAge;
   /** should riding times be evaluated */
   evalRide?: boolean;
   overtime?: boolean;
