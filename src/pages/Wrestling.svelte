@@ -24,7 +24,7 @@
   import NextPeriodNotice from "@/components/NextPeriodNotice.svelte";
   import EditNames from "@/components/EditNames.svelte";
   import EditBoutNumber from "@/components/EditBoutNumber.svelte";
-    import WinBy from "@/components/WinBy.svelte";
+  import WinBy from "@/components/WinBy.svelte";
 
 
   const config = initStore.config;
@@ -43,6 +43,7 @@
     const _ = current.periods;
     return manager.getPointsForMatch();
   });
+  let showNeutralPosButton = $derived(current.config.style !== "Folkstyle");
 
   let displayLeftName = $derived(outputAthleteName(current.l.athlete));
   let displayRightName = $derived(outputAthleteName(current.r.athlete));
@@ -94,6 +95,7 @@
   // $inspect('mustChoosePosition', mustChoosePosition);
   // $inspect('whoCanChooseSides', whoCanChooseSides);
   // $inspect('bout', current?.boutNumber);
+  $inspect('clocks', current.clocks);
 
 </script>
 
@@ -395,7 +397,20 @@
         onSwapAdvantage={() => manager.swapRidingAdvantage()}
       />
     </section>
-    {/if}    
+    {/if}
+
+    {#if showNeutralPosButton}
+    <section id="neutral-position-button">
+      <Button 
+        color="grey" 
+        size="lg" 
+        onclick={() => manager.setPosition('l', 'n')}
+        disabled={current.l.pos === 'n'}
+      >
+        Neutral Position
+      </Button>
+    </section>
+    {/if}
 
     <section>
       <Recap 

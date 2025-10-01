@@ -1283,6 +1283,7 @@ export class WrestlingManager {
     this._current.clocks.rest?.destroy();
     this._current.clocks.shotclock?.destroy();
     this._current.clocks.ride?.destroy();
+    this._current.clocks = { mc: new ZonkClock(0), };
   }
 
   private destroySideClocks() {
