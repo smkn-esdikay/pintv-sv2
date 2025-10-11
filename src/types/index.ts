@@ -144,7 +144,7 @@ export type WPeriod = {
 }
 
 export type WMatch = {
-  weight?: number;
+  weight?: WMatchWeight;
   ptLeft: number;
   ptRight: number;
   teamPtLeft: number;

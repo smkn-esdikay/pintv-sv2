@@ -13,6 +13,7 @@ import type {
   WPeriod,
   WNameUpdate,
   WWinTypeCode,
+  WMatch,
 } from "@/types";
 import { 
   cnsActions,
@@ -70,13 +71,14 @@ const placeholderState: WStateMain = {
  * 4. Clock Management
  * 5. Action management
  * 6. Action Switch/Delete/Recompute
- * 6.5. WinBy
- * 7. Advance periods or matches
- * 8. Scoring
- * 9. Position and Color
- * 10. Riding Clock
- * 11. Team/Athlete
- * 12. Bout Number
+ * 7. WinBy
+ * 8. Advance periods or matches
+ * 9. Match History
+ * 10. Scoring
+ * 11. Position and Color
+ * 12. Riding Clock
+ * 13. Team/Athlete
+ * 14. Bout Number
  * 90. Utility Methods
  * 99. Cleanup
  */
@@ -817,7 +819,7 @@ export class WrestlingManager {
   }
 
 
-  // ++++++++++++++++++++++++ 6.5 WinBy ++++++++++++++++++++++++
+  // ++++++++++++++++++++++++ 7. WinBy ++++++++++++++++++++++++
 
   updateWinby(side: WSide, code: WWinTypeCode | 'none'): void {
     if (code !== 'none') {
@@ -827,12 +829,24 @@ export class WrestlingManager {
     this._current[side].winTypeCode = code;
   }
 
+  getWinBy(): { side: WSide | undefined, code: WWinTypeCode | "none" } {
+    // both sides are the same. no winner or error
+    if (this._current.l.winTypeCode === this._current.r.winTypeCode) 
+      return { side: undefined, code: "none", };
+    
+    // we can assume l and r are different
+    const side: WSide = this._current.l.winTypeCode !== "none" ? "l" : "r";
+    const code = this._current[side].winTypeCode;
+
+    return { side, code };
+  }
+
   resetWinby(): void {
     this._current.l.winTypeCode = 'none';
     this._current.r.winTypeCode = 'none';
   }
 
-  // ++++++++++++++++++++++++ 7. Advance periods or matches ++++++++++++++++++++++++
+  // ++++++++++++++++++++++++ 8. Advance periods or matches ++++++++++++++++++++++++
 
   getPreviousPeriod(): WPeriod | undefined {
     return this._current.periods.
@@ -858,9 +872,9 @@ export class WrestlingManager {
       const winSide: WSide = points.l > points.r ? 'l' : 'r';
       this.updateWinby(winSide, 'tf');
     } else {
-      if (this.current.l.winTypeCode === 'tf') {
+      if (this._current.l.winTypeCode === 'tf') {
         this.updateWinby('l', "none");
-      } else if (this.current.r.winTypeCode === 'tf') {
+      } else if (this._current.r.winTypeCode === 'tf') {
         this.updateWinby('r', "none");
       }
     }
@@ -939,10 +953,10 @@ export class WrestlingManager {
   }
 
   private _evalRidingTimes(): WSide | null {
-    if (!this.current.clocks.ride) 
+    if (!this._current.clocks.ride) 
       return null;
 
-    const rideNetTime = this.current.clocks.ride.getNetTime();
+    const rideNetTime = this._current.clocks.ride.getNetTime();
     if (Math.abs(rideNetTime) < rideTimeThreshold) 
       return null;
 
@@ -1056,13 +1070,35 @@ export class WrestlingManager {
     this.setPosition('l', 'n');
   }
 
-  goToNextMatch(): void {
+  goToNextMatch(): WMatch {
     co.info("Go To Next Match");
     this.resetMatch();
+    return this.packageForMatchHistory();
   }
 
 
-  // ++++++++++++++++++++++++ 8. Scoring ++++++++++++++++++++++++
+  // ++++++++++++++++++++++++ 9. Match History ++++++++++++++++++++++++
+
+    packageForMatchHistory(): WMatch {
+      const points = this.getPointsForMatch();
+      const winBy = this.getWinBy();
+
+      const out: WMatch = {
+        weight: this._current.weight,
+        ptLeft: points.l,
+        ptRight: points.r,
+        teamPtLeft: 0,
+        teamPtRight: 0,
+        winner: winBy.side,
+        winTypeCode: winBy.code,
+        totalElapsedSeconds: 0,
+        winPeriod: this._current.periodIdx,
+      }
+      return out;
+    }
+
+
+  // ++++++++++++++++++++++++ 10. Scoring ++++++++++++++++++++++++
 
   getPointsForMatch(): { l: number; r: number } {
     const allActions = this.getAllActions().filter(a => a.wrestle);
@@ -1092,7 +1128,7 @@ export class WrestlingManager {
     return { l: leftPoints, r: rightPoints };
   }
 
-  // ++++++++++++++++++++++++ 9. Position and Color ++++++++++++++++++++++++
+  // ++++++++++++++++++++++++ 11. Position and Color ++++++++++++++++++++++++
 
   setColor(side: WSide, newColor: SideColor) {
     const oppSide: WSide = side === 'r' ? 'l' : 'r';
@@ -1200,7 +1236,7 @@ export class WrestlingManager {
     return canChooseSides;
   }
 
-  // ++++++++++++++++++++++++ 10. Riding clock ++++++++++++++++++++++++
+  // ++++++++++++++++++++++++ 12. Riding clock ++++++++++++++++++++++++
 
   startRidingClockMaybe() {
     if (this._current.clocks.ride) {
@@ -1257,7 +1293,7 @@ export class WrestlingManager {
     }
   }
 
-  // ++++++++++++++++++++++++ 11. Team/athlete ++++++++++++++++++++++++
+  // ++++++++++++++++++++++++ 13. Team/athlete ++++++++++++++++++++++++
 
   updateNames(updateData: WNameUpdate): void {
     this.setAthleteName('l', updateData.leftAthlete.firstName, updateData.leftAthlete.lastName);
@@ -1281,7 +1317,7 @@ export class WrestlingManager {
   }
 
 
-  // ++++++++++++++++++++++++ 12. Bout Number ++++++++++++++++++++++++
+  // ++++++++++++++++++++++++ 14. Bout Number ++++++++++++++++++++++++
 
   setBoutNumber(boutNumber: number | undefined): void {
     this._current.boutNumber = boutNumber;
