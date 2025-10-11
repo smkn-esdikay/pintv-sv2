@@ -857,6 +857,12 @@ export class WrestlingManager {
     if (diff >= tfThreshold) {
       const winSide: WSide = points.l > points.r ? 'l' : 'r';
       this.updateWinby(winSide, 'tf');
+    } else {
+      if (this.current.l.winTypeCode === 'tf') {
+        this.updateWinby('l', "none");
+      } else if (this.current.r.winTypeCode === 'tf') {
+        this.updateWinby('r', "none");
+      }
     }
   }
 
