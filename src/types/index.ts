@@ -150,7 +150,7 @@ export type WMatch = {
   teamPtLeft: number;
   teamPtRight: number;
   winner?: WSide;
-  winbyIdx?: number; 
+  winTypeCode: WWinTypeCode | 'none';
   totalElapsedSeconds?: number;
   winPeriod?: number;
 }

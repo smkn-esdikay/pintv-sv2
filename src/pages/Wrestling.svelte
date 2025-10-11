@@ -2,6 +2,7 @@
   import { navigate } from "@/lib/router.svelte";
   import { initStore } from "@/stores/init.svelte";
   import { WrestlingManager } from "@/lib/WrestlingManager.svelte";
+  import { historyManager } from "@/lib/HistoryManager.svelte";
   import { KeyboardHandler } from "@/lib/KeyboardHandler";
   import { openScoreboard } from '@/lib/broadcast.svelte';
   import { outputAthleteName, outputTeamName } from "@/lib/strings";
@@ -31,6 +32,11 @@
   const config = initStore.config;
   const manager = WrestlingManager.getInstance();
   manager.initializeMatch(config);
+
+  // history
+  let matchHistory = $derived(historyManager.history);
+let totalTeamPoints = $derived(historyManager.getTotalTeamPoints());
+let winCounts = $derived(historyManager.getWinCounts());
 
   // simple derived values
   let current = $derived(manager.current);
