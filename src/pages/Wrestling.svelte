@@ -22,6 +22,7 @@
   import ChoosePosition from "@/components/ChoosePosition.svelte";
   import ChoosePositionNotice from "@/components/ChoosePositionNotice.svelte";
   import NextPeriodNotice from "@/components/NextPeriodNotice.svelte";
+  import DecideMatchButton from "@/components/DecideMatchButton.svelte";
   import EditNames from "@/components/EditNames.svelte";
   import EditBoutNumber from "@/components/EditBoutNumber.svelte";
   import WinBy from "@/components/WinBy.svelte";
@@ -317,7 +318,15 @@
 
     {#if canDecideMatch}
     <section>
-      go to next match
+      <DecideMatchButton 
+        leftCode={current.l.winTypeCode}
+        rightCode={current.r.winTypeCode}
+        leftColor={current.l.color}
+        rightColor={current.r.color}
+        leftAthlete={current.l.athlete}
+        rightAthlete={current.r.athlete}
+        onConfirm={() => { console.log('yayyy') }}
+      />
     </section>
     {:else if showGotoNextPeriod}
     <section>
