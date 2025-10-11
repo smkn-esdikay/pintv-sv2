@@ -325,7 +325,7 @@
         rightColor={current.r.color}
         leftAthlete={current.l.athlete}
         rightAthlete={current.r.athlete}
-        onConfirm={() => { console.log('yayyy') }}
+        onConfirm={() => manager.goToNextMatch()}
       />
     </section>
     {:else if showGotoNextPeriod}

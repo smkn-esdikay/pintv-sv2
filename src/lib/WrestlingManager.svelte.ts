@@ -693,9 +693,10 @@ export class WrestlingManager {
       if (actn.wrestle.newPos) {
         this.setPosition(actn.wrestle.side, actn.wrestle.newPos);
       }
+
+      // check for tech fall
+      this._checkTechFall();
       
-
-
     } else if (actn.clock) { // clock event
 
       if (actn.clock.event === "complete") {
@@ -846,6 +847,17 @@ export class WrestlingManager {
     // Basic logic - can be expanded
     const points = this.getPointsForMatch();
     return points.l >= 15 || points.r >= 15; // Tech fall example
+  }
+
+  private _checkTechFall(): void {
+    const points = this.getPointsForMatch();
+    const diff = Math.abs(points.l - points.r);
+    const tfThreshold = cnsThresholds[this.config!.style].techfall;
+
+    if (diff >= tfThreshold) {
+      const winSide: WSide = points.l > points.r ? 'l' : 'r';
+      this.updateWinby(winSide, 'tf');
+    }
   }
 
   private _evalPointDifference(): { 
@@ -1036,6 +1048,11 @@ export class WrestlingManager {
     this._current.periodIdx++;    
     this.resetClock('mc');
     this.setPosition('l', 'n');
+  }
+
+  goToNextMatch(): void {
+    co.info("Go To Next Match");
+    this.resetMatch();
   }
 
 
